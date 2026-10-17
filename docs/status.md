@@ -14,7 +14,7 @@ This is the only file that claims to be current.
 | Gate | G0 met late at 15:32 PT — public health is live; contracts drafted, not frozen |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
-| Contracts | Drafted in `docs/contracts.md`; freeze at the next huddle |
+| Contracts | `docs/contracts.md` now carries domain types and SSE ordering. One open shape — `Question` — is marked for A's sign-off, then frozen. |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
 | Owners | A: platform. B: catalog/trust. C: frontend. |
 | Blockers | B trust engine in progress; C frontend; contract huddle |

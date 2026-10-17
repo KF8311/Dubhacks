@@ -124,3 +124,11 @@ Format:
 - **Why:** `fly.toml` is the only file that controls where the machine runs. The earlier `sea` reference was a transcription artifact carried in from a branch merge, not a deployed setting.
 - **Alternatives considered:** `sea` (no functional benefit; would require a redeploy to a new region mid-hackathon).
 - **Consequences:** `status.md` updated; the region blocker is closed. Changing regions later is a new entry plus a redeploy.
+
+## D-014 — Remove `oldIdeas/` from the repo
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Delete `oldIdeas/visa-ideas.md`, `visa-ideas-round2.md`, and `project-test-kitchen.md`.
+- **Why:** They are pre-decision brainstorming that no code, doc, or task references. `D-001` already records the outcome of that comparison, which is the part worth keeping. Leaving 140 KB of rejected ideas at the repo root makes the project read as unfocused to a judge.
+- **Alternatives considered:** Keep them (no cost, but no value); move them to a branch (extra step for files nobody will open).
+- **Consequences:** `D-001`'s parenthetical "kept in `project-test-kitchen.md`" no longer resolves to a file; the decision itself stands. History retains both files if anyone actually wants them.
