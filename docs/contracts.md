@@ -54,9 +54,21 @@ Enums:
 
 ```json
 {"score": 22, "verdict": "danger", "confidence": 1.0, "penalties": [],
- "fatal_flags": ["domain_age_fatal"], "top_reason": "Domain registered 12 days ago.",
- "scoring_version": "1.0"}
+ "fatal_flags": ["domain_age"], "top_reason": "Domain registered 12 days ago.",
+ "scoring_version": "1.0", "allowlisted": false}
 ```
+
+`allowlisted` is set by scoring (D-015). It is the only reliable way to tell an allowlisted merchant from an ordinary zero: the allowlist rule returns `score: 0, verdict: "trusted"`.
+
+`Recommendation` — the payload of `recommendation.ready`:
+
+```json
+{"recommended_listing_id": "lst_hero", "median_trusted_cents": 24999,
+ "savings_cents": 7000, "eligible_ids": ["lst_hero", "lst_mid"],
+ "reason": "Cheapest of 2 trusted options.", "no_trusted_option": false}
+```
+
+Eligibility is `verdict == "trusted"` and `confidence >= 0.6` and (`score >= 70` or `allowlisted`). The pick is the cheapest eligible listing, ties broken by higher score. `median_trusted_cents` is the median price across eligible listings only; `savings_cents` is that median minus the pick. On no eligible listing, `recommended_listing_id` is `null`, `no_trusted_option` is `true`, and `reason` names the closest miss.
 
 `SearchSpec`:
 

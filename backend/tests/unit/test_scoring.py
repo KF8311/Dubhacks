@@ -20,6 +20,13 @@ def test_allowlist_wins():
     assert (result.score, result.verdict, result.confidence) == (0, Verdict.TRUSTED, 1.0)
 
 
+def test_allowlisted_is_carried_on_the_result():
+    """Downstream rules cannot re-derive allowlisting from a score of 0."""
+
+    assert score_investigation([], allowlisted=True).allowlisted is True
+    assert score_investigation([], allowlisted=False).allowlisted is False
+
+
 def test_safe_browsing_fatal():
     result = score_investigation(
         [check(CheckId.SAFE_BROWSING, TrustStatus.FAILED, 1.0)], allowlisted=False
