@@ -14,15 +14,15 @@ This is the only file that claims to be current.
 | Gate | G0 partial — health live, contracts not frozen. **G1 server side proven on PR #3** (8 `listing.found` events); the browser half is C's next step. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
-| Contracts | `docs/contracts.md` carries domain types and SSE ordering. One open shape — `Question` — needs A's sign-off, then frozen. |
+| Contracts | `docs/contracts.md` carries domain types, `Recommendation`, and SSE ordering. `Question` is the one open shape; `ScoreResult.allowlisted` (D-015) needs A's acknowledgement, then frozen. |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
-| Tests | Backend **46 passed** on `main`; frontend **3 files / 4 tests passed**, `npm run build` clean |
+| Tests | Backend **56 passed** (46 on `main`, +10 on `b/recommendation`); frontend **3 files / 4 tests passed**, `npm run build` clean |
 | Routes | Sessions create/answer/snapshot plus SSE events, all live on `main`. Orchestrator still runs `checks=[]` — no checks or scores emitted yet. |
 | Owners | A: platform + orchestrator. B: trust + data. C: frontend. |
-| Blockers | No session/SSE routes; contracts not frozen; C renders from mock data |
-| Branches | `main` `92de9cb` — PR #3 merged. Session routes, SSE, `search()`, and scoring are all on `main`. Existing branches should `git merge origin/main` before continuing. |
+| Blockers | Orchestrator still runs `checks=[]`; contracts not frozen; C renders from mock data |
+| Branches | `main` `4132b67` — PR #3 merged. `b/recommendation` adds `recommend()` + D-015, unmerged. Existing branches should `git merge origin/main` before continuing. |
 
-Last updated: 2026-10-17 16:10 PT
+Last updated: 2026-10-17 16:45 PT
 
 ## Gate board
 
@@ -54,12 +54,13 @@ Last updated: 2026-10-17 16:10 PT
 - [x] `docs/contracts.md` gained domain types and the SSE ordering guarantee
 - [x] Both suites verified on merged code: 15 backend, 4 frontend, build clean
 - [x] B: Task 4 search service with catalog fallback — 8 tests
-- [x] B: Task 14 scoring engine + golden tests — 16 tests; villain `0 danger`, hero `100 trusted`
+- [x] B: Task 14 scoring engine + golden tests — 17 tests; villain `0 danger`, hero `100 trusted`
+- [x] B: Task 15 `recommend()` + `Recommendation` + D-015 allowlist exemption — 9 tests
 
 ## Next three actions
 
-1. **Merge PR #3.** Everything below assumes it. Without it `main` has no session routes and no scoring engine.
-2. A wires `run_checks()` + `score_investigation()` into the orchestrator — the only thing between us and G2.
+1. A wires `run_checks()` + `score_investigation()` into the orchestrator — the only thing between us and G2.
+2. B writes the five checks, starting with domain age — until three complete, the coverage cap holds every score at 69.
 3. C points `api.ts` at the live SSE stream and renders `listing.found`; that closes G1's browser half.
 
 ## Risks that are currently live

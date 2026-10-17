@@ -132,3 +132,11 @@ Format:
 - **Why:** They are pre-decision brainstorming that no code, doc, or task references. `D-001` already records the outcome of that comparison, which is the part worth keeping. Leaving 140 KB of rejected ideas at the repo root makes the project read as unfocused to a judge.
 - **Alternatives considered:** Keep them (no cost, but no value); move them to a branch (extra step for files nobody will open).
 - **Consequences:** `D-001`'s parenthetical "kept in `project-test-kitchen.md`" no longer resolves to a file; the decision itself stands. History retains both files if anyone actually wants them.
+
+## D-015 — Carry allowlisting on `ScoreResult` and exempt allowlisted listings from the score floor
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** `ScoreResult` gains `allowlisted: bool = False`, set by `score_investigation()`. Recommendation eligibility becomes `verdict == trusted AND (score >= 70 OR allowlisted) AND confidence >= 0.6`. Payability keeps its existing rule, which already exempted allowlisted listings from the three-check floor.
+- **Why:** The allowlist rule scores a merchant 0 while declaring it `trusted`, because the score measures suspicion, not safety. Downstream logic that reads only the number sees "0" and treats a curated merchant as unpayable. With 8 of the catalog's listings allowlisted, the old eligibility rule would have excluded every safe option and made the demo end in `no_trusted_option`. The flag makes the exemption explicit instead of inferring it from a score that cannot express it.
+- **Alternatives considered:** Score allowlisted merchants 100 instead of 0 (loses the "no evidence needed" signal and diverges from the spec's scoring table); let `recommend()` re-read the allowlist file (duplicates a rule that belongs to scoring, and the caller may use a different allowlist); treat `verdict == trusted` alone as sufficient (also admits trusted listings under the 70 floor when coverage is thin).
+- **Consequences:** A listing can be eligible at score 0, so any UI that sorts or badges by score must consult `allowlisted` too. `ScoreResult` is a contract type — A should acknowledge the added field. Golden tests are unchanged; the scoring math is untouched.

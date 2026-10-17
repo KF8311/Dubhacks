@@ -58,6 +58,7 @@ def score_investigation(
             fatal_flags=[],
             top_reason=ALLOWLIST_REASON,
             scoring_version=scoring_version,
+            allowlisted=True,
         )
 
     by_id = _dedupe(checks)
@@ -107,4 +108,5 @@ def score_investigation(
         fatal_flags=fatal_flags,
         top_reason=top_reason,
         scoring_version=scoring_version,
+        allowlisted=False,
     )

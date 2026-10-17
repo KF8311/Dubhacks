@@ -50,6 +50,18 @@ class ScoreResult(BaseModel):
     fatal_flags: list[str] = Field(default_factory=list)
     top_reason: str
     scoring_version: str = "1.0"
+    # Allowlisted listings score 0 by design, so downstream payability and
+    # recommendation rules cannot recover this from the score alone.
+    allowlisted: bool = False
+
+
+class Recommendation(BaseModel):
+    recommended_listing_id: str | None = None
+    median_trusted_cents: int | None = None
+    savings_cents: int | None = None
+    eligible_ids: list[str] = Field(default_factory=list)
+    reason: str
+    no_trusted_option: bool = False
 
 
 class Investigation(BaseModel):

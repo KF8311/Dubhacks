@@ -11,14 +11,14 @@ One shared checklist. Personal scratch notes do not belong here.
 
 **How to use it:** Section 1 is once per machine. After that, work the timed block you are in — each block has a column per person and a proof you have to produce before moving on. Tick boxes in the commit that completes them. `docs/status.md` still wins if the two disagree.
 
-## Where we are now — 16:05 PT
+## Where we are now — 16:40 PT
 
 | Thing | State |
 |---|---|
-| `main` | `0a63237` — backend scaffold, trust foundation, data, docs, frontend. **15 backend / 4 frontend tests pass.** |
-| `b/search-scoring` | **PR #3, open — merge this first.** Adds session routes, SSE stream, catalog-backed `search()`, and `score_investigation()`. **46 backend tests pass**; G1 proven with `curl -N`. |
-| Live API | After PR #3: `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. |
-| Gates | G0 partial (health live, contracts not frozen). **G1 evidence exists on PR #3** — 8 `listing.found` events, closes on `investigation.complete`. |
+| `main` | `4132b67` — everything from PRs #1–#3: scaffold, frontend, session routes, SSE, `search()`, `score_investigation()`. **46 backend / 4 frontend tests pass.** |
+| `b/recommendation` | Adds `recommend()`, `Recommendation`, and the D-015 allowlist exemption. **56 backend tests pass.** Merge before G3. |
+| Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. |
+| Gates | G0 partial (health live, contracts not frozen). **G1 server side proven** — 8 `listing.found` events, closes on `investigation.complete`. Browser half is C's. |
 | Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c` fully merged. |
 
 **Before anyone starts:** merge **PR #3**. Branching from today's `main` gives you no session routes and no scoring engine. Every block below assumes PR #3 is merged.
@@ -38,7 +38,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **46 passed**; `npx vitest run` → 4 passed. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **46 passed** on `main` (**56** with `b/recommendation` merged); `npx vitest run` → 4 passed. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -69,7 +69,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Person | Do |
 |---|---|
 | **A** | ✅ **Done on PR #3** — session routes, SSE, orchestrator, event bus. Remaining: have the orchestrator call `run_checks()` then `score_investigation()` per listing instead of the current `checks=[]`, and parse a budget out of free text (`"under $300"` currently yields `budget_max_cents: null`). |
-| **B** | ✅ **Task 4** — `search(spec, limit)` in `app/search/service.py`, catalog fallback on any provider fault, budget filter. ✅ **Task 14** — `score_investigation()` with golden tests. Next: hand the signatures to A for orchestrator wiring. |
+| **B** | ✅ **Task 4** — `search(spec, limit)` in `app/search/service.py`, catalog fallback on any provider fault, budget filter. ✅ **Task 14** — `score_investigation()` with golden tests. ✅ **Task 15** — `recommend()` with the D-015 allowlist exemption. Next: **Task 9** domain age (the villain's headline reason), then SSL and page flags. |
 | **C** | Point `frontend/src/lib/api.ts` at `VITE_API_BASE_URL`. Replace the mock listings with `listing.found` events from the SSE stream. Keep the mock path behind `?mock=1` so a dead backend never kills the demo. |
 
 **Proof:** `curl -N http://127.0.0.1:8000/api/sessions/<id>/events` shows `seq` incrementing and 8 `listing.found` events; the same cards render in the browser.
@@ -99,7 +99,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Person | Do |
 |---|---|
 | **A** | Emit `recommendation.ready`; expose the recommendation in the snapshot. Wire `POST /api/demo/reset` to clear the session registry. |
-| **B** | **Task 15** `recommend()` — eligible = trusted ∧ ≥70 ∧ confidence ≥0.6; median of eligible; `no_trusted_option` names the best near-miss. **Task 12** Reddit sentiment. |
+| **B** | ✅ **Task 15** `recommend()` done — eligible = trusted ∧ (≥70 ∨ allowlisted) ∧ confidence ≥0.6 (D-015); median of eligible; `no_trusted_option` names the best near-miss. Remaining: **Task 12** Reddit sentiment if time. |
 | **C** | Recommended-pick banner plus a "why this one" panel: median price, savings, which checks each candidate passed. Empty-state for `no_trusted_option`. |
 
 **Proof:** browser — the cheapest *trusted* listing is the pick, the villain's lower price is visibly rejected with a reason, and savings matches the median minus the pick.
@@ -159,7 +159,8 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] C: frontend scaffold, discovery flow, results grid, trust badges, mock session — 4 tests
 - [x] All branches merged into `main`; `main` and `c/web` both green
 - [x] B: **Task 4** — `search()` with catalog fallback, budget filter, limit guard — 8 tests
-- [x] B: **Task 14** — `score_investigation()` with fatal rules, coverage cap, golden tests — villain `0 / danger`, hero `100 / trusted` — 16 tests
+- [x] B: **Task 14** — `score_investigation()` with fatal rules, coverage cap, golden tests — villain `0 / danger`, hero `100 / trusted` — 17 tests
+- [x] B: **Task 15** — `recommend()` with `Recommendation`, median/savings, `no_trusted_option` — 9 tests; allowlisted listings are eligible at score 0 (D-015)
 - [x] A: session routes, SSE stream, orchestrator, event bus — 7 integration tests (PR #3)
 - [x] G1 server proof: 8 `listing.found` events, `source: "catalog"`, closes on `investigation.complete`
 
