@@ -93,3 +93,11 @@ Format:
 - **Why:** One store, versioned with the code, readable by teammates and agents, no sync or stale-note problem. Obsidian is an optional viewer.
 - **Alternatives considered:** Obsidian vault as the primary brain (rejected: sync, merge conflicts, maintenance cost at 3 AM), handoffs only (rejected: no current truth).
 - **Consequences:** Update `status.md` at every gate; a handoff never overrides it.
+
+## D-010 — Backend deploys to Fly.io, not Cloud Run or Render
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** The FastAPI backend runs on one always-on Fly.io `shared-cpu-1x` 256 MB machine. The frontend stays on Vercel.
+- **Why:** No cold start during judging. Cloud Run was the stronger technical fit and is also free within quota, but it requires a Google Cloud billing account. Render free sleeps after 15 minutes and wakes in about 60 seconds, which is unacceptable when a judge clicks the link.
+- **Alternatives considered:** Cloud Run (free within quota, card required, cold start of a few seconds); Render free (no card, ~60 s cold start); laptop + Cloudflare Tunnel (no card, but the demo dies if the laptop sleeps).
+- **Consequences:** About $2.19 per 30 days billed per second — roughly $0.15 for the event. The free trial is only 2 machine hours, so a card is required. Fly has no hard spend cap, so destroy the machines after judging. `fly launch` generates the Dockerfile. Uvicorn runs `--workers 1` with no global gzip so SSE streams.

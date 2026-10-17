@@ -50,7 +50,7 @@ owner: rotating scribe
 - [x] Team skills and agents vendored under `.claude/` — 14 skills, 3 agents, licenses included
 - [x] Cross-tool bridge: `AGENTS.md` and `.cursor/rules/project.mdc` for Cursor teammates
 - [x] `.gitignore` with `.claude/settings.local.json` and secrets
-- [ ] `git init` + first commit (repo is still not versioned)
+- [x] Repo versioned and pushed to GitHub — `richard-dev` at `094305e`, 67 files
 
 ## Blocked
 
@@ -60,9 +60,9 @@ owner: rotating scribe
 
 ## Next three actions
 
-1. `git init` in `Dubhacks/`, commit the docs and `.claude/`, push to the team repo.
-2. Confirm the Saturday go/no-go keys: SerpAPI, Gemini, Safe Browsing, MongoDB Atlas.
-3. Everyone opens `Dubhacks/` and confirms `/` lists the skills. On Cursor, enable "Include third-party Plugins, Skills, and other configs."
+1. Confirm the Saturday go/no-go keys: SerpAPI, Gemini, Safe Browsing, MongoDB Atlas.
+2. **Deploy target decided: Fly.io** (D-010) — one always-on `shared-cpu-1x` 256 MB machine, ~$2.19/30 days, card required after the 2-hour trial. A: `fly launch`, ship `GET /api/health`, get a public health URL.
+3. Everyone opens `Dubhacks/` and confirms `/` lists the skills.
 
 ## Risks that are currently live
 
