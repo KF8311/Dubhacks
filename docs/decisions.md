@@ -115,4 +115,12 @@ Format:
 - **Decision:** Host the API on Fly.io as app `sniff-visa-dubhacks` in org `dubhacks`. Render remains the backup.
 - **Why:** D-010 chose Fly.io for the always-on machine. An account now exists and the health endpoint is live.
 - **Alternatives considered:** Render free (superseded by D-010 — cold start), local uvicorn + Cloudflare Tunnel (kept as the demo backup).
-- **Consequences:** Health is live at `https://sniff-visa-dubhacks.fly.dev/api/health`. **Region is inconsistent** — this log says `sea`, `status.md` says `sjc`; confirm and correct one of them.
+- **Consequences:** Health is live at `https://sniff-visa-dubhacks.fly.dev/api/health`. The region reference in this entry was inconsistent; resolved by D-013.
+
+## D-013 — Fly primary region is `sjc`
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** `sjc` is the region. `fly.toml` line 8 sets `primary_region = "sjc"` and is authoritative.
+- **Why:** `fly.toml` is the only file that controls where the machine runs. The earlier `sea` reference was a transcription artifact carried in from a branch merge, not a deployed setting.
+- **Alternatives considered:** `sea` (no functional benefit; would require a redeploy to a new region mid-hackathon).
+- **Consequences:** `status.md` updated; the region blocker is closed. Changing regions later is a new entry plus a redeploy.
