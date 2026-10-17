@@ -3029,6 +3029,10 @@ C is the bottleneck. A and B must contribute UI polish and copy in the last 4 ho
 
 **Never cut:** the payment moment, the score, the streaming investigation, the receipt.
 
+### 15.4 Three-Person Work Split
+
+The task-by-task ownership map, per-person time-blocked checklist, shared gates, handoffs, and cut assignments live in `docs/team-split-3.md`. Use that checklist during the event; this plan remains the architecture and contract source of truth.
+
 ---
 
 ## 16. Risk Register
@@ -3142,3 +3146,16 @@ Frontend: `VITE_API_BASE_URL` only.
 ## Appendix D — Glossary
 
 See `project-a-sniff-visa.md` §14.
+
+## Appendix E — Database Alternatives
+
+The `Repository` protocol (§7.11) isolates persistence to Task 27. Switching engines changes that task and the schema, not the trust, payment, or API code.
+
+| Engine | Best for here | Costs / gaps | Verdict |
+|---|---|---|---|
+| **MongoDB** (current) | Document-shaped investigations and receipts; built-in TTL for sessions and caches; mature async `motor`; MLH track | No foreign keys; integrity is app-enforced; aggregations less familiar than SQL | **Default.** Best fit for the data and the 21-hour budget. |
+| **PostgreSQL** | Strongest SQL option: `jsonb` + GIN, partial and unique indexes, `UPDATE … RETURNING` for atomic transitions, `pg_cron` for TTL, `asyncpg` | Migrations at hour 14; no native TTL; another vendor | **Only serious swap.** Choose it if relational integrity of the payment ledger is a pitch point. |
+| **MySQL** | Widely hosted; familiar | MySQL 8.0 lacks `UPDATE … RETURNING`; JSON indexing needs generated columns or multi-valued indexes; `CHECK` enforced only from 8.0.16; fewer async-friendly managed options | **Dominated by Postgres.** No reason to choose it here. |
+| **SQLite** | Zero ops; ideal for tests and offline replay; survives network outages; `aiosqlite` | Single writer; no network access; no TTL; needs a Fly volume; cannot serve multiple instances | **Resilience option.** Viable on one always-on machine; not for multi-instance. |
+
+**Decision rule:** stay on MongoDB unless the team is materially faster in SQL (then Postgres) or the demo must survive a total network outage on a single machine (then SQLite). Do not run two engines.
