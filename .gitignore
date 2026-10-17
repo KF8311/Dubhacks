@@ -1,0 +1,48 @@
+# Claude Code — personal overrides and permission approvals
+.claude/settings.local.json
+
+# Obsidian — per-machine workspace state
+.obsidian/workspace.json
+
+# Personal working checklists
+docs/person-b.md
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+/node_modules
+dist/
+/dist
+build/
+/build
+/coverage
+/logs
+/temp
+/backup
+/cache
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local-only data
+data/*.local.json
+
+# Cursor
+.cursorrules

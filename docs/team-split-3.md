@@ -61,9 +61,9 @@
 
 This is the highest-leverage block. Do not spend it discussing the name or the logo.
 
-- [ ] **A:** `git init`, `.gitignore`, `ATTRIBUTION.md`, FastAPI scaffold, `GET /api/health`, deploy to Fly.io. **First commit by 12:45.**
-- [ ] **A:** `backend/app/domain/models.py`, `enums.py`, `ids.py` from plan §5.
-- [ ] **A:** SerpAPI spike: one real query, confirm product URLs carry merchant domains. If not, decide "catalog only" now and tell B.
+- [v ] **A:** `git init`, `.gitignore`, `ATTRIBUTION.md`, FastAPI scaffold, `GET /api/health`, deploy to Fly.io. **First commit by 12:45.**
+- [v ] **A:** `backend/app/domain/models.py`, `enums.py`, `ids.py` from plan §5.
+- [ v] **A:** SerpAPI spike: one real query, confirm product URLs carry merchant domains. If not, decide "catalog only" now and tell B.
 - [ ] **B:** `data/catalog.json` — 8 trusted listings across 5 merchants + 1 fictional villain on `premium-audio-deals.shop`.
 - [ ] **B:** `data/allowlist.json` — 30–40 established retailer domains.
 - [ ] **B:** Villain fixtures: `villain_rdap.json` (12-day domain), `villain_page.html` (urgency copy, no return policy, crypto-only note), `villain_reddit.json` (3 scam reports).
@@ -80,9 +80,9 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 1:15–3:30 PM — sessions and streaming
 
-- [ ] Task 5: `SessionRegistry`, `POST /api/sessions`, `POST /{id}/answers`, `GET /{id}`.
-- [ ] Task 6: `EventBus` + `GET /api/sessions/{id}/events`; replay by `Last-Event-ID`.
-- [ ] Task 7: orchestrator skeleton, `search.started` → `listing.found` → `investigation.complete`.
+- [v ] Task 5: `SessionRegistry`, `POST /api/sessions`, `POST /{id}/answers`, `GET /{id}`.
+- [v ] Task 6: `EventBus` + `GET /api/sessions/{id}/events`; replay by `Last-Event-ID`.
+- [v ] Task 7: orchestrator skeleton, `search.started` → `listing.found` → `investigation.complete`.
 - [ ] Post the event schema in `docs/contracts.md` and tell C.
 
 **Done when:** `curl -N` on a session shows ordered events and closes cleanly.
