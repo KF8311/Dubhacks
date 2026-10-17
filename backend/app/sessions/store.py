@@ -11,6 +11,7 @@ class SessionRegistry:
         self._listings: dict[str, list[Listing]] = {}
         self._investigations: dict[str, list[Investigation]] = {}
         self._questions: dict[str, list[dict]] = {}
+        self._recommendations: dict[str, dict] = {}
 
     def create(self, client_id: str, query: str) -> Session:
         now = datetime.now(timezone.utc)
@@ -51,6 +52,15 @@ class SessionRegistry:
     def attach_investigation(self, session_id: str, inv: Investigation) -> None:
         self._investigations.setdefault(session_id, []).append(inv)
 
+    def investigation_for(self, session_id: str, listing_id: str) -> Investigation | None:
+        for inv in reversed(self._investigations.get(session_id, [])):
+            if inv.listing_id == listing_id:
+                return inv
+        return None
+
+    def set_recommendation(self, session_id: str, payload: dict) -> None:
+        self._recommendations[session_id] = payload
+
     def snapshot(self, session_id: str, last_seq: int = 0) -> dict | None:
         session = self.get(session_id)
         if session is None:
@@ -68,7 +78,8 @@ class SessionRegistry:
             "listings": [item.model_dump(mode="json") for item in listings],
             "checks": checks,
             "scores": scores,
-            "recommendation": (
+            "recommendation": self._recommendations.get(session_id)
+            or (
                 {"listing_id": session.recommended_listing_id}
                 if session.recommended_listing_id
                 else {}
@@ -85,6 +96,7 @@ class SessionRegistry:
             self._listings.pop(sid, None)
             self._investigations.pop(sid, None)
             self._questions.pop(sid, None)
+            self._recommendations.pop(sid, None)
         return len(expired)
 
     def clear(self) -> None:
@@ -92,6 +104,7 @@ class SessionRegistry:
         self._listings.clear()
         self._investigations.clear()
         self._questions.clear()
+        self._recommendations.clear()
 
 
 registry = SessionRegistry()
