@@ -1,57 +1,46 @@
+"""Product search with a curated-catalog fallback (D-004, D-011)."""
+
 from __future__ import annotations
 
-import asyncio
-
-from app.core.ids import listing_id
-from app.core.timeouts import MAX_LISTINGS, SEARCH_S
+from app.core.timeouts import MAX_LISTINGS
 from app.domain.models import Listing, SearchSpec
+from app.search.catalog import load_catalog
+from app.search.provider import SearchProvider
+from app.search.serpapi import SerpAPIProvider
 
 
-def _stub_listings() -> list[Listing]:
-    hero_url = "https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p"
-    villain_url = "https://premium-audio-deals.shop/sony-wh-1000xm5"
-    return [
-        Listing(
-            id=listing_id(hero_url),
-            title="Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
-            price_cents=32800,
-            merchant_name="Best Buy",
-            merchant_domain="bestbuy.com",
-            image_url="",
-            product_url=hero_url,
-            category="audio",
-            source="catalog",
-        ),
-        Listing(
-            id=listing_id(villain_url),
-            title="Sony WH-1000XM5 — Warehouse Deal",
-            price_cents=8900,
-            merchant_name="Premium Audio Deals",
-            merchant_domain="premium-audio-deals.shop",
-            image_url="",
-            product_url=villain_url,
-            category="audio",
-            source="catalog",
-        ),
-    ]
+def _within_budget(listings: list[Listing], spec: SearchSpec) -> list[Listing]:
+    if spec.budget_max_cents is None:
+        return listings
+    return [item for item in listings if item.price_cents <= spec.budget_max_cents]
 
 
-async def _provider_search(spec: SearchSpec, limit: int) -> list[Listing]:
-    del spec, limit
-    raise RuntimeError("serpapi not wired")
+async def search(
+    spec: SearchSpec,
+    limit: int = MAX_LISTINGS,
+    *,
+    provider: SearchProvider | None = None,
+    catalog: list[Listing] | None = None,
+) -> tuple[list[Listing], str]:
+    """Return ``(listings, source)`` where source is ``serpapi`` or ``catalog``.
 
+    Any provider failure — missing key, timeout, HTTP error, empty payload — falls
+    back to the catalog. The demo never shows an empty grid because a third party
+    is down.
+    """
+    if limit <= 0:
+        raise ValueError("limit must be positive")
 
-async def search(spec: SearchSpec, limit: int = MAX_LISTINGS) -> tuple[list[Listing], str]:
+    active = provider if provider is not None else SerpAPIProvider()
     try:
-        listings = await asyncio.wait_for(_provider_search(spec, limit), timeout=SEARCH_S)
-        source = "serpapi"
-        if not listings:
-            raise RuntimeError("empty serpapi")
-    except Exception:
-        listings = _stub_listings()
+        results = await active.search(spec, limit)
+    except Exception:  # noqa: BLE001 — any provider fault must reach the fallback
+        results = []
+
+    if results:
+        listings, source = list(results), "serpapi"
+    else:
+        listings = catalog if catalog is not None else load_catalog()
         source = "catalog"
-    if spec.budget_max_cents:
-        in_budget = [item for item in listings if item.price_cents <= spec.budget_max_cents]
-        if in_budget:
-            listings = in_budget
-    return listings[:limit], source
+
+    return _within_budget(listings, spec)[:limit], source

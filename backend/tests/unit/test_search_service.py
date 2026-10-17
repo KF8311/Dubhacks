@@ -1,0 +1,101 @@
+import pytest
+
+from app.domain.models import Listing, SearchSpec
+from app.search.catalog import load_catalog
+from app.search.service import search
+
+SPEC = SearchSpec(query="headphones")
+
+
+def _listing(listing_id: str, price_cents: int) -> Listing:
+    return Listing(
+        id=listing_id,
+        title=f"Item {listing_id}",
+        price_cents=price_cents,
+        merchant_name="Example",
+        merchant_domain="example.com",
+        image_url="https://img.example/x.jpg",
+        product_url=f"https://example.com/{listing_id}",
+    )
+
+
+class StubProvider:
+    name = "stub"
+
+    def __init__(self, listings: list[Listing] | None = None, error: Exception | None = None):
+        self._listings = listings or []
+        self._error = error
+        self.calls = 0
+
+    async def search(self, spec: SearchSpec, limit: int) -> list[Listing]:
+        self.calls += 1
+        if self._error is not None:
+            raise self._error
+        return self._listings[:limit]
+
+
+async def test_uses_provider_results_when_available():
+    provided = [_listing("lst_a", 1000), _listing("lst_b", 2000)]
+
+    listings, source = await search(
+        SPEC, limit=8, provider=StubProvider(provided), catalog=load_catalog()
+    )
+
+    assert source == "serpapi"
+    assert [item.id for item in listings] == ["lst_a", "lst_b"]
+
+
+async def test_falls_back_to_catalog_when_provider_raises():
+    provider = StubProvider(error=RuntimeError("SERPAPI_KEY unset"))
+
+    listings, source = await search(SPEC, limit=8, provider=provider, catalog=load_catalog())
+
+    assert provider.calls == 1
+    assert source == "catalog"
+    assert len(listings) == 8
+
+
+async def test_falls_back_to_catalog_when_provider_returns_nothing():
+    listings, source = await search(
+        SPEC, limit=8, provider=StubProvider([]), catalog=load_catalog()
+    )
+
+    assert source == "catalog"
+    assert len(listings) == 8
+
+
+async def test_catalog_fallback_stays_labelled_catalog():
+    listings, _ = await search(
+        SPEC, limit=3, provider=StubProvider(error=TimeoutError()), catalog=load_catalog()
+    )
+
+    assert {item.source for item in listings} == {"catalog"}
+
+
+async def test_budget_filters_out_pricier_listings():
+    catalog = [_listing("lst_cheap", 9000), _listing("lst_mid", 15000), _listing("lst_dear", 40000)]
+
+    listings, _ = await search(
+        SearchSpec(query="headphones", budget_max_cents=15000),
+        limit=8,
+        provider=StubProvider(error=RuntimeError("down")),
+        catalog=catalog,
+    )
+
+    assert [item.id for item in listings] == ["lst_cheap", "lst_mid"]
+
+
+async def test_respects_limit_on_provider_results():
+    provided = [_listing(f"lst_{index}", 1000 + index) for index in range(5)]
+
+    listings, _ = await search(
+        SPEC, limit=2, provider=StubProvider(provided), catalog=load_catalog()
+    )
+
+    assert len(listings) == 2
+
+
+@pytest.mark.parametrize("limit", [0, -1])
+async def test_rejects_non_positive_limit(limit: int):
+    with pytest.raises(ValueError):
+        await search(SPEC, limit=limit, provider=StubProvider(), catalog=load_catalog())

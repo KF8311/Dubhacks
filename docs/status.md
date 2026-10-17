@@ -1,3 +1,10 @@
+---
+title: Status
+type: status
+updated: 2026-10-17
+owner: rotating scribe
+---
+
 # Status
 
 This is the only file that claims to be current.

@@ -1,0 +1,32 @@
+---
+description: "Always-on guardrails for the Sniff + Visa hackathon build"
+alwaysApply: true
+---
+
+# Sniff + Visa — always-on guardrails
+
+Before starting work, read `AGENTS.md`, `docs/status.md`, and the task you are implementing in `docs/superpowers/plans/2026-10-17-sniff-visa.md`. Do not implement from memory of an earlier conversation; re-read the task's files, interfaces, and tests.
+
+## Never break these
+
+- **Sandbox payment.** Never claim a real Visa integration. Every checkout and receipt is labeled "Sandbox — simulated Visa Intelligent Commerce flow."
+- **No real PII or card numbers.** All shoppers, merchants, and cards are synthetic.
+- **No payment without trust.** Refuse checkout unless the verdict is `trusted`, the score is ≥ 70, and (unless allowlisted) at least 3 checks completed. Server-side only.
+- **Deterministic scoring.** `severity × 40` failed, `severity × 15` warning, thresholds 70/40, coverage cap 69. The LLM never computes a score.
+- **One SSE stream per session.** Monotonic `seq`, client dedupe, snapshot fallback. One Uvicorn worker, no global gzip.
+- **Money is integer cents.** Format at the UI edge only.
+- **No new infrastructure** without a decision entry: no auth, Redis, Celery, queues, vector DB, or second database.
+- **No copied code** from the Sniff repo. Architecture reference only.
+- **70/30 rule.** At least 70% of code written during the hackathon; commit every 30 minutes.
+
+## Working rules
+
+- One owner per task and per file. Do not edit another owner's file without a huddle.
+- Tests first. Every task ends with a passing test and a commit.
+- Update `docs/status.md` at every gate. It is the only file that claims to be current.
+- Record a decision in `docs/decisions.md` before acting on it.
+- Do not change scoring, thresholds, or the API contract without a decision entry and a `scoring_version` bump.
+
+## Skills
+
+Project skills are in `.claude/skills/` and load automatically in Cursor and Claude Code. Type `/` to invoke one. Use `/test-driven-development` before writing code, `/systematic-debugging` before proposing a fix, `/verification-before-completion` before claiming a gate passed, and `/handoff` at a shift change.

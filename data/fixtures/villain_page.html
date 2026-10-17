@@ -1,0 +1,76 @@
+<!--
+  Synthetic fixture for the Sniff trust demonstration.
+  premium-audio-deals.shop is a fictional merchant. This page is not a real store,
+  and nothing here should be interpreted as a live offer.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Premium Audio Deals — 70% OFF Sony WH-1000XM5</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #fff7ed; color: #1c1917; }
+    .banner { background: #dc2626; color: #fff; padding: 10px 16px; text-align: center; font-weight: 700; }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
+    .price { font-size: 44px; font-weight: 800; color: #b91c1c; }
+    .was { text-decoration: line-through; color: #78716c; font-size: 22px; margin-left: 12px; }
+    .stock { display: inline-block; background: #fef08a; padding: 6px 12px; font-weight: 700; }
+    .cta { display: inline-block; background: #16a34a; color: #fff; padding: 18px 36px; font-size: 22px; font-weight: 800; border-radius: 6px; text-decoration: none; }
+    .pay { background: #fafaf9; border: 1px solid #e7e5e4; padding: 16px; margin-top: 28px; }
+    .fine { font-size: 13px; color: #57534e; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="banner">🔥 FLASH SALE — TODAY ONLY — ENDS IN <span id="clock">00:14:59</span> 🔥</div>
+
+  <div class="wrap">
+    <h1>Sony WH-1000XM5 — 70% OFF</h1>
+
+    <p class="price">$149.99 <span class="was">$399.99</span></p>
+    <p class="stock">ONLY 3 LEFT IN STOCK — 41 people are viewing this right now</p>
+
+    <p><strong>Why pay retail?</strong> We source overstock and liquidation units direct
+    from the warehouse. Same product, same box, one seventh of the price. Thousands of
+    happy customers.</p>
+
+    <p><a class="cta" href="#buy">CLAIM YOURS BEFORE IT'S GONE</a></p>
+
+    <div class="pay">
+      <h2>Payment</h2>
+      <p>We accept <strong>Bitcoin</strong>, <strong>USDT (TRC-20)</strong>, and
+      <strong>Ethereum</strong>. Crypto orders get an extra <strong>10% off</strong>.</p>
+      <p>Card payment is temporarily unavailable while we upgrade our processor.</p>
+      <p>Send payment first, then message us with your transaction ID and shipping details
+      and we will dispatch within 24 hours.</p>
+    </div>
+
+    <h2>Reviews</h2>
+    <p>"Unbelievable price, arrived fast." — M.</p>
+    <p>"Thought it was a scam, but it's legit. Buy now." — J.</p>
+    <p>"Best deal on the internet." — A.</p>
+
+    <h2>Questions?</h2>
+    <p>Telegram: <strong>@premiumaudiodeals</strong></p>
+
+    <p class="fine">
+      All sales final. No refunds or exchanges. Prices subject to change without notice.
+      By purchasing you agree that all sales are irreversible.
+    </p>
+
+    <p class="fine">© Premium Audio Deals</p>
+  </div>
+
+  <script>
+    var remaining = 899;
+    var clock = document.getElementById("clock");
+    setInterval(function () {
+      if (remaining < 0) { remaining = 899; }
+      var m = Math.floor(remaining / 60);
+      var s = remaining % 60;
+      clock.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+      remaining -= 1;
+    }, 1000);
+  </script>
+</body>
+</html>
