@@ -15,13 +15,15 @@ One shared checklist. Personal scratch notes do not belong here.
 
 | Thing | State |
 |---|---|
-| `main` | `58e4427` — backend scaffold, trust foundation, data, docs. **15 backend tests pass.** |
-| `c/web` | `88dcee5` — `main` merged in, frontend added. **4 frontend tests pass, build clean.** PR #2 open, needs one merge. |
-| Live API | `GET /api/health` and `POST /api/demo/reset` are the only routes. Nothing to click yet. |
-| Gates | G0 partial (health live, contracts not frozen). **G1 missed at 15:30** — no listings reach the browser. |
-| Dead branches | `b/trust`, `richard-dev`, `agent_backend` fully merged. `2026-10-17-6c1c` is an ancestor of `c/web`. |
+| `main` | `0a63237` — backend scaffold, trust foundation, data, docs, frontend. **15 backend / 4 frontend tests pass.** |
+| `b/search-scoring` | **PR #3, open — merge this first.** Adds session routes, SSE stream, catalog-backed `search()`, and `score_investigation()`. **46 backend tests pass**; G1 proven with `curl -N`. |
+| Live API | After PR #3: `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. |
+| Gates | G0 partial (health live, contracts not frozen). **G1 evidence exists on PR #3** — 8 `listing.found` events, closes on `investigation.complete`. |
+| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c` fully merged. |
 
-**Recovery stance:** G1 is 45 minutes late, not lost. Every later gate shifts only if a block overruns. Do not skip the proof step to catch up — the proofs are the gate.
+**Before anyone starts:** merge **PR #3**. Branching from today's `main` gives you no session routes and no scoring engine. Every block below assumes PR #3 is merged.
+
+**Recovery stance:** G1 was 45 minutes late, not lost. The proof exists; it just needs to land on `main`. Do not skip a block's proof to catch up — the proofs are the gate.
 
 ---
 
@@ -36,7 +38,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → 15 passed; `npx vitest run` → 4 passed. If your baseline differs, stop and ask.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **46 passed**; `npx vitest run` → 4 passed. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -66,11 +68,13 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Mount the session routes: `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`. Add `GET /api/sessions/{id}/events` as SSE with the envelope from `contracts.md`. Emit `session.stage`, `search.started`, `listing.found`. Keep `last_seq` on the session. |
+| **A** | ✅ **Done on PR #3** — session routes, SSE, orchestrator, event bus. Remaining: have the orchestrator call `run_checks()` then `score_investigation()` per listing instead of the current `checks=[]`, and parse a budget out of free text (`"under $300"` currently yields `budget_max_cents: null`). |
 | **B** | ✅ **Task 4** — `search(spec, limit)` in `app/search/service.py`, catalog fallback on any provider fault, budget filter. ✅ **Task 14** — `score_investigation()` with golden tests. Next: hand the signatures to A for orchestrator wiring. |
 | **C** | Point `frontend/src/lib/api.ts` at `VITE_API_BASE_URL`. Replace the mock listings with `listing.found` events from the SSE stream. Keep the mock path behind `?mock=1` so a dead backend never kills the demo. |
 
-**Proof:** `curl -N http://127.0.0.1:8000/api/sessions/<id>/events` shows `seq` incrementing and 9 `listing.found` events; the same 9 cards render in the browser.
+**Proof:** `curl -N http://127.0.0.1:8000/api/sessions/<id>/events` shows `seq` incrementing and 8 `listing.found` events; the same cards render in the browser.
+
+**Server-side proof already captured (PR #3):** 8 `listing.found` events, `source: "catalog"`, stream closes on `investigation.complete`. What is still unproven is the **browser** half — that is C's step.
 
 **If late:** ship the snapshot route first (`GET /api/sessions/{id}` with listings) and stream second. The browser only needs one of them to pass this gate.
 
@@ -156,13 +160,15 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] All branches merged into `main`; `main` and `c/web` both green
 - [x] B: **Task 4** — `search()` with catalog fallback, budget filter, limit guard — 8 tests
 - [x] B: **Task 14** — `score_investigation()` with fatal rules, coverage cap, golden tests — villain `0 / danger`, hero `100 / trusted` — 16 tests
+- [x] A: session routes, SSE stream, orchestrator, event bus — 7 integration tests (PR #3)
+- [x] G1 server proof: 8 `listing.found` events, `source: "catalog"`, closes on `investigation.complete`
 
 ## 6. Gate board
 
 | Gate | Due | State | Owner |
 |---|---|---|---|
 | G0 Contracts frozen + health | Sat 13:15 | 🟡 health live, `Question` shape needs A's sign-off | A |
-| G1 Listings to browser | Sat 15:30 | 🔴 missed — Block 1 recovers it | A + B |
+| G1 Listings to browser | Sat 15:30 | 🟡 server side proven on PR #3; browser half is C's step | A + B + C |
 | G2 Investigation + score | Sat 18:00 | ⬜ | B |
 | G3 Recommendation | Sat 19:30 | ⬜ | B |
 | G4 Checkout → receipt | Sat 21:00 | ⬜ | A + C |

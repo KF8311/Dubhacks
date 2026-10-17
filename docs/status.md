@@ -11,16 +11,16 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | G0 partial — health live, contracts drafted but not frozen. **G1 missed at 15:30**; Block 1 of `docs/checklist.md` recovers it by 17:00. |
+| Gate | G0 partial — health live, contracts not frozen. **G1 server side proven on PR #3** (8 `listing.found` events); the browser half is C's next step. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types and SSE ordering. One open shape — `Question` — needs A's sign-off, then frozen. |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
-| Tests | Backend **39 passed**; frontend **3 files / 4 tests passed**, `npm run build` clean |
-| Routes | Only `GET /api/health` and `POST /api/demo/reset` exist. No session routes yet — that is the G1 blocker. |
+| Tests | Backend **46 passed on PR #3** (15 on `main`); frontend **3 files / 4 tests passed**, `npm run build` clean |
+| Routes | On PR #3: sessions create/answer/snapshot plus SSE events. Orchestrator still runs `checks=[]` — no checks or scores emitted yet. |
 | Owners | A: platform + orchestrator. B: trust + data. C: frontend. |
 | Blockers | No session/SSE routes; contracts not frozen; C renders from mock data |
-| Branches | `main` `58e4427`. `c/web` `88dcee5` = `main` + frontend, **PR #2 open**. `b/trust`, `richard-dev`, `agent_backend` fully merged; `2026-10-17-6c1c` is an ancestor of `c/web`. |
+| Branches | `main` `0a63237`. **`b/search-scoring` = PR #3, open, must merge first** — it carries A's session routes and B's search/scoring. Branch from today's `main` and you get neither. |
 
 Last updated: 2026-10-17 16:10 PT
 
@@ -29,7 +29,7 @@ Last updated: 2026-10-17 16:10 PT
 | Gate | Due | State | Proof |
 |---|---|---|---|
 | G0 Contracts frozen + health deployed | Sat 13:15 | 🟡 health live, contracts not frozen | URL above + `docs/contracts.md` |
-| G1 Listings stream to browser | Sat 15:30 | 🔴 missed — recovering in Block 1 | `curl -N` showing `listing.found` + cards in browser |
+| G1 Listings stream to browser | Sat 15:30 | 🟡 server side proven on PR #3; browser pending | 8 `listing.found` events captured; C's grid still on mock data |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | ⬜ | Browser: villain red with named reasons |
 | G3 Recommendation + best pick | Sat 19:30 | ⬜ | Browser: cheapest trusted listing picked |
 | G4 Checkout → passkey → receipt | Sat 21:00 | ⬜ | Browser, real backend, refusal path shown |
@@ -58,16 +58,17 @@ Last updated: 2026-10-17 16:10 PT
 
 ## Next three actions
 
-1. Merge PR #2 so `main` carries the frontend — one click, blocks nobody but keeps one source of truth.
-2. A signs off the `Question` shape in `contracts.md`; then G0 is genuinely closed.
-3. Start Block 1 at 16:15 — the session routes are the single thing gating every remaining gate.
+1. **Merge PR #3.** Everything below assumes it. Without it `main` has no session routes and no scoring engine.
+2. A wires `run_checks()` + `score_investigation()` into the orchestrator — the only thing between us and G2.
+3. C points `api.ts` at the live SSE stream and renders `listing.found`; that closes G1's browser half.
 
 ## Risks that are currently live
 
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
 | G1 missed, later gates compress | **yes** | Blocks re-cut to 45–90 min; proofs unchanged |
-| No session routes | **yes** | Block 1 is A's only task |
+| PR #3 unmerged | **yes** | `main` has no session routes, no `search()`, no scoring — nobody should branch from it until this lands |
+| Orchestrator emits no checks or scores | **yes** | `checks=[]` — G2 needs A to wire `run_checks` + `score_investigation` |
 | SerpAPI key unavailable | yes | Catalog-only per D-011 |
 | C building against mock data | **yes** | `?mock=1` fallback so a dead backend never kills the demo |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
