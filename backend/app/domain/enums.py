@@ -1,11 +1,3 @@
-"""Enumerations shared by the domain, the trust engine, and the UI.
-
-STOPGAP — read before editing.
-Task 1 (owner: A) creates this file. Person B added only the three enums that
-Tasks 8 and 14 depend on, so the trust engine could start before the platform
-scaffold landed. Merge A's version in when it arrives.
-"""
-
 from enum import Enum
 
 
@@ -28,3 +20,21 @@ class Verdict(str, Enum):
     TRUSTED = "trusted"
     CAUTION = "caution"
     DANGER = "danger"
+
+
+class SessionStage(str, Enum):
+    CLARIFYING = "clarifying"
+    SEARCHING = "searching"
+    INVESTIGATING = "investigating"
+    READY = "ready"
+    NO_TRUSTED_OPTION = "no_trusted_option"
+    FAILED = "failed"
+
+
+class CheckoutStage(str, Enum):
+    AWAITING_PASSKEY = "awaiting_passkey"
+    AUTHORIZED = "authorized"
+    CAPTURED = "captured"
+    DECLINED = "declined"
+    EXPIRED = "expired"
+    CANCELLED = "cancelled"

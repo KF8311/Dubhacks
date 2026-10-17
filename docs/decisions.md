@@ -101,3 +101,18 @@ Format:
 - **Why:** No cold start during judging. Cloud Run was the stronger technical fit and is also free within quota, but it requires a Google Cloud billing account. Render free sleeps after 15 minutes and wakes in about 60 seconds, which is unacceptable when a judge clicks the link.
 - **Alternatives considered:** Cloud Run (free within quota, card required, cold start of a few seconds); Render free (no card, ~60 s cold start); laptop + Cloudflare Tunnel (no card, but the demo dies if the laptop sleeps).
 - **Consequences:** About $2.19 per 30 days billed per second — roughly $0.15 for the event. The free trial is only 2 machine hours, so a card is required. Fly has no hard spend cap, so destroy the machines after judging. `fly launch` generates the Dockerfile. Uvicorn runs `--workers 1` with no global gzip so SSE streams.
+## D-011 — SerpAPI stays catalog-only until a key proves merchant domains
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Ship search on the curated catalog. Re-run `python scripts/serpapi_spike.py` when `SERPAPI_KEY` exists, and only switch to live search if the results carry merchant domains.
+- **Why:** The spike could not call SerpAPI because the key is unset. The plan already specifies a catalog fallback, so nothing is blocked.
+- **Alternatives considered:** Blocking on the key (rejected: the catalog covers the demo query).
+- **Consequences:** The demo is deterministic and offline-safe. Search quality is unchanged until a key appears.
+
+## D-012 — Fly.io is the API host; `sniff-visa-dubhacks`
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Host the API on Fly.io as app `sniff-visa-dubhacks` in org `dubhacks`. Render remains the backup.
+- **Why:** D-010 chose Fly.io for the always-on machine. An account now exists and the health endpoint is live.
+- **Alternatives considered:** Render free (superseded by D-010 — cold start), local uvicorn + Cloudflare Tunnel (kept as the demo backup).
+- **Consequences:** Health is live at `https://sniff-visa-dubhacks.fly.dev/api/health`. **Region is inconsistent** — this log says `sea`, `status.md` says `sjc`; confirm and correct one of them.

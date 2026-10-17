@@ -7,25 +7,25 @@ owner: rotating scribe
 
 # Status
 
-> The only file that claims to be current. Update it at every gate, every 90 minutes. Keep it under one screen.
-
-## Right now
+This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Phase | **Planning complete — implementation starts Sat 12:30 PM** |
-| Current gate | Gate 0: pre-hackathon |
-| Last updated | 2026-10-17 |
-| Scribe | A (rotate at each gate) |
-| Deployed URL | — |
-| Health check | — |
-| Demo mode | not built |
+| Gate | G0 met late at 15:32 PT — public health is live; contracts drafted, not frozen |
+| Health | https://sniff-visa-dubhacks.fly.dev/api/health |
+| Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks` (D-010, D-012). Render is backup. Region must be reconciled: `sea` in `decisions.md`, `sjc` here. |
+| Contracts | Drafted in `docs/contracts.md`; freeze at the next huddle |
+| SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
+| Owners | A: platform. B: catalog/trust. C: frontend. |
+| Blockers | B trust engine in progress; C frontend; contract huddle |
+
+Last updated: 2026-10-17 15:45 PT
 
 ## Gate board
 
 | Gate | Due | State | Proof |
 |---|---|---|---|
-| G0 Contracts frozen + health deployed | Sat 1:15 PM | ⬜ | URL + `docs/contracts.md` |
+| G0 Contracts frozen + health deployed | Sat 1:15 PM | 🟡 health live late, contracts not frozen | URL above + `docs/contracts.md` |
 | G1 Listings stream to browser | Sat 3:30 PM | ⬜ | `curl -N` or screen recording |
 | G2 Full investigation, 5 checks, score | Sat 6:00 PM | ⬜ | Browser |
 | G3 Recommendation + best pick | Sat 7:30 PM | ⬜ | Browser |
@@ -38,39 +38,33 @@ owner: rotating scribe
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | — | — | — | |
-| B | — | — | — | |
-| C | — | — | — | |
+| A | Scaffold + health + Fly deploy | 15:32 | done | `origin/agent_backend` at `9cdd132` |
+| B | Task 8 check protocol + runner | 15:20 | done | 3 unit tests passing on `b/trust` |
+| B | Task 14 scoring + golden tests | 15:45 | 17:15 | next |
+| C | Frontend scaffold | 1:15 | — | `origin/2026-10-17-6c1c` |
 
 ## Done since last update
 
-- [x] Product spec (`project-a-sniff-visa.md`) and engineering plan (30 tasks)
-- [x] Three-person split, gates, and cut list (`docs/team-split-3.md`)
-- [x] Context kit: `INDEX`, `status`, `decisions`, `open-questions`, handoff template
-- [x] Team skills and agents vendored under `.claude/` — 14 skills, 3 agents, licenses included
-- [x] Cross-tool bridge: `AGENTS.md` and `.cursor/rules/project.mdc` for Cursor teammates
-- [x] `.gitignore` with `.claude/settings.local.json` and secrets
-- [x] Repo versioned and pushed to GitHub — `richard-dev` at `094305e`, 67 files
-
-## Blocked
-
-| Owner | Blocker | Since | Needs |
-|---|---|---|---|
-| — | — | — | — |
+- [x] Repo versioned and pushed; skills and context kit committed
+- [x] A: backend scaffold, `GET /api/health` live on Fly.io, `docs/contracts.md` drafted
+- [x] B: catalog, allowlist, villain fixtures — 2 tests passing
+- [x] B: `TrustCheck` protocol, `get_checks()`, `run_checks()` — 3 tests passing
+- [x] B: `b/trust` merged with A's scaffold; stopgap models dropped in favor of A's
 
 ## Next three actions
 
-1. Confirm the Saturday go/no-go keys: SerpAPI, Gemini, Safe Browsing, MongoDB Atlas.
-2. **Deploy target decided: Fly.io** (D-010) — one always-on `shared-cpu-1x` 256 MB machine, ~$2.19/30 days, card required after the 2-hour trial. A: `fly launch`, ship `GET /api/health`, get a public health URL.
-3. Everyone opens `Dubhacks/` and confirms `/` lists the skills.
+1. Freeze `docs/contracts.md` at the next huddle — A publishes the SSE event names and ordering.
+2. B: Task 14 scoring with golden tests (villain ≤31 danger, hero ≥90 trusted).
+3. Confirm the Safe Browsing key, or ship the static denylist with `source="unavailable"`.
 
 ## Risks that are currently live
 
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
-| SerpAPI key unavailable | no | — |
-| Backend cold start | no | — |
-| Villain not going red | no | — |
+| SerpAPI key unavailable | **yes** | Catalog-only per D-011 |
+| Backend cold start | no | Fly.io always-on machine |
+| Villain not going red | no | Fixtures + golden tests in Task 14 |
+| Two branches diverging on `models.py` | **yes** | B merged A's scaffold; A's copy is authoritative |
 
 ## Cut list in effect
 

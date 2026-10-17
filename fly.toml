@@ -1,0 +1,22 @@
+# Org: dubhacks (shared). Create/deploy from repo root:
+#   fly apps create sniff-visa-dubhacks --org dubhacks
+#   fly secrets set --app sniff-visa-dubhacks DEMO_MODE=1 OFFLINE=0 RECEIPT_SIGNING_SECRET=change-me ALLOWED_ORIGINS=http://localhost:5173
+#   fly deploy --org dubhacks
+#   curl https://sniff-visa-dubhacks.fly.dev/api/health
+
+app = "sniff-visa-dubhacks"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  min_machines_running = 1
+  processes = ["app"]
+
+[[vm]]
+  memory = "256mb"
+  cpus = 1
