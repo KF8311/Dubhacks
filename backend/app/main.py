@@ -2,7 +2,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
 
+from app.api.routes_events import router as events_router
 from app.api.routes_health import router as health_router
+from app.api.routes_sessions import router as sessions_router
 from app.core.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.ids import new_id
@@ -32,6 +34,8 @@ def create_app() -> FastAPI:
         return response
 
     application.include_router(health_router)
+    application.include_router(sessions_router)
+    application.include_router(events_router)
     return application
 
 
