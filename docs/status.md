@@ -11,61 +11,66 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | G0 met late at 15:32 PT — public health is live; contracts drafted, not frozen |
+| Gate | G0 partial — health live, contracts drafted but not frozen. **G1 missed at 15:30**; Block 1 of `docs/checklist.md` recovers it by 17:00. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
-| Contracts | `docs/contracts.md` now carries domain types and SSE ordering. One open shape — `Question` — is marked for A's sign-off, then frozen. |
+| Contracts | `docs/contracts.md` carries domain types and SSE ordering. One open shape — `Question` — needs A's sign-off, then frozen. |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
-| Owners | A: platform. B: catalog/trust. C: frontend. |
-| Blockers | B trust engine in progress; C frontend; contract huddle |
+| Tests | Backend **15 passed**; frontend **3 files / 4 tests passed**, `npm run build` clean |
+| Routes | Only `GET /api/health` and `POST /api/demo/reset` exist. No session routes yet — that is the G1 blocker. |
+| Owners | A: platform + orchestrator. B: trust + data. C: frontend. |
+| Blockers | No session/SSE routes; contracts not frozen; C renders from mock data |
+| Branches | `main` `58e4427`. `c/web` `88dcee5` = `main` + frontend, **PR #2 open**. `b/trust`, `richard-dev`, `agent_backend` fully merged; `2026-10-17-6c1c` is an ancestor of `c/web`. |
 
-Last updated: 2026-10-17 15:45 PT
+Last updated: 2026-10-17 16:10 PT
 
 ## Gate board
 
 | Gate | Due | State | Proof |
 |---|---|---|---|
-| G0 Contracts frozen + health deployed | Sat 1:15 PM | 🟡 health live late, contracts not frozen | URL above + `docs/contracts.md` |
-| G1 Listings stream to browser | Sat 3:30 PM | ⬜ | `curl -N` or screen recording |
-| G2 Full investigation, 5 checks, score | Sat 6:00 PM | ⬜ | Browser |
-| G3 Recommendation + best pick | Sat 7:30 PM | ⬜ | Browser |
-| G4 Checkout → passkey → receipt | Sat 9:00 PM | ⬜ | Browser, real backend |
-| G5 Devpost draft submitted | Sat 10:30 PM | ⬜ | Devpost confirmation |
-| G6 Feature freeze | Sun 2:00 AM | ⬜ | Team agreement |
-| G7 Final submission | Sun 9:50 AM | ⬜ | Devpost confirmation |
+| G0 Contracts frozen + health deployed | Sat 13:15 | 🟡 health live, contracts not frozen | URL above + `docs/contracts.md` |
+| G1 Listings stream to browser | Sat 15:30 | 🔴 missed — recovering in Block 1 | `curl -N` showing `listing.found` + cards in browser |
+| G2 Full investigation, 5 checks, score | Sat 18:00 | ⬜ | Browser: villain red with named reasons |
+| G3 Recommendation + best pick | Sat 19:30 | ⬜ | Browser: cheapest trusted listing picked |
+| G4 Checkout → passkey → receipt | Sat 21:00 | ⬜ | Browser, real backend, refusal path shown |
+| G5 Devpost draft submitted | Sat 22:30 | ⬜ | Devpost confirmation |
+| G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
+| G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
 
 ## In progress
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Scaffold + health + Fly deploy | 15:32 | done | `origin/agent_backend` at `9cdd132` |
-| B | Task 8 check protocol + runner | 15:20 | done | 3 unit tests passing on `b/trust` |
-| B | Task 14 scoring + golden tests | 15:45 | 17:15 | next |
-| C | Frontend scaffold | 1:15 | — | `origin/2026-10-17-6c1c` |
+| A | Session routes + SSE (`listing.found`) | 16:15 | 17:00 | Block 1 |
+| B | Task 4 search service, then Task 14 scoring | 16:15 | 17:00 | Block 1 |
+| C | Wire `api.ts` to live SSE, keep `?mock=1` | 16:15 | 17:00 | Block 1 |
 
 ## Done since last update
 
-- [x] Repo versioned and pushed; skills and context kit committed
-- [x] A: backend scaffold, `GET /api/health` live on Fly.io, `docs/contracts.md` drafted
-- [x] B: catalog, allowlist, villain fixtures — 2 tests passing
-- [x] B: `TrustCheck` protocol, `get_checks()`, `run_checks()` — 3 tests passing
-- [x] B: `b/trust` merged with A's scaffold; stopgap models dropped in favor of A's
+- [x] PR #1 merged — backend scaffold, trust foundation, data, docs on `main`
+- [x] Frontend branch reconciled with `main` and pushed; PR #2 open
+- [x] Region resolved as `sjc` from `fly.toml` (D-013)
+- [x] `oldIdeas/` removed (D-014)
+- [x] `docs/contracts.md` gained domain types and the SSE ordering guarantee
+- [x] Both suites verified on merged code: 15 backend, 4 frontend, build clean
 
 ## Next three actions
 
-1. Freeze `docs/contracts.md` at the next huddle — A publishes the SSE event names and ordering.
-2. B: Task 14 scoring with golden tests (villain ≤31 danger, hero ≥90 trusted).
-3. Confirm the Safe Browsing key, or ship the static denylist with `source="unavailable"`.
+1. Merge PR #2 so `main` carries the frontend — one click, blocks nobody but keeps one source of truth.
+2. A signs off the `Question` shape in `contracts.md`; then G0 is genuinely closed.
+3. Start Block 1 at 16:15 — the session routes are the single thing gating every remaining gate.
 
 ## Risks that are currently live
 
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
-| SerpAPI key unavailable | **yes** | Catalog-only per D-011 |
-| Backend cold start | no | Fly.io always-on machine |
-| Villain not going red | no | Fixtures + golden tests in Task 14 |
-| Two branches diverging on `models.py` | **yes** | B merged A's scaffold; A's copy is authoritative |
+| G1 missed, later gates compress | **yes** | Blocks re-cut to 45–90 min; proofs unchanged |
+| No session routes | **yes** | Block 1 is A's only task |
+| SerpAPI key unavailable | yes | Catalog-only per D-011 |
+| C building against mock data | **yes** | `?mock=1` fallback so a dead backend never kills the demo |
+| Contracts still open | yes | `Question` shape is the only unresolved item |
+| Merged state never deployed | **yes** | Fly still serves the platform-branch build; redeploy in Block 5 |
 
 ## Cut list in effect
 
-None yet. See plan §15.3 and `docs/team-split-3.md`.
+Live page fetching → Reddit → SerpAPI → Mongo → page flags. See `docs/checklist.md` §8.
