@@ -16,11 +16,11 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types and SSE ordering. One open shape — `Question` — needs A's sign-off, then frozen. |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
-| Tests | Backend **46 passed on PR #3** (15 on `main`); frontend **3 files / 4 tests passed**, `npm run build` clean |
-| Routes | On PR #3: sessions create/answer/snapshot plus SSE events. Orchestrator still runs `checks=[]` — no checks or scores emitted yet. |
+| Tests | Backend **46 passed** on `main`; frontend **3 files / 4 tests passed**, `npm run build` clean |
+| Routes | Sessions create/answer/snapshot plus SSE events, all live on `main`. Orchestrator still runs `checks=[]` — no checks or scores emitted yet. |
 | Owners | A: platform + orchestrator. B: trust + data. C: frontend. |
 | Blockers | No session/SSE routes; contracts not frozen; C renders from mock data |
-| Branches | `main` `0a63237`. **`b/search-scoring` = PR #3, open, must merge first** — it carries A's session routes and B's search/scoring. Branch from today's `main` and you get neither. |
+| Branches | `main` `92de9cb` — PR #3 merged. Session routes, SSE, `search()`, and scoring are all on `main`. Existing branches should `git merge origin/main` before continuing. |
 
 Last updated: 2026-10-17 16:10 PT
 
