@@ -1,0 +1,228 @@
+{
+  "create_session": {
+    "session_id": "ses_mock",
+    "stage": "clarifying",
+    "expires_at": "2026-10-17T20:30:00Z",
+    "questions": [
+      {
+        "id": "q_budget",
+        "prompt": "What's your ceiling?",
+        "kind": "single_select",
+        "allow_free_text": true,
+        "options": [
+          { "id": "150", "label": "Under $150" },
+          { "id": "300", "label": "$150–$300" },
+          { "id": "600", "label": "$300–$600" }
+        ]
+      },
+      {
+        "id": "q_priority",
+        "prompt": "What matters more?",
+        "kind": "single_select",
+        "allow_free_text": false,
+        "options": [
+          { "id": "price", "label": "Lowest trusted price" },
+          { "id": "brand", "label": "Brand I already like" },
+          { "id": "shipping", "label": "Fast shipping" }
+        ]
+      },
+      {
+        "id": "q_use",
+        "prompt": "Where will you use them?",
+        "kind": "single_select",
+        "allow_free_text": false,
+        "options": [
+          { "id": "travel", "label": "Travel" },
+          { "id": "desk", "label": "Desk" },
+          { "id": "gym", "label": "Gym" }
+        ]
+      }
+    ]
+  },
+  "snapshot": {
+    "session_id": "ses_mock",
+    "stage": "ready",
+    "query": "noise cancelling headphones for travel",
+    "last_seq": 40,
+    "stats": {
+      "listings": 8,
+      "trusted": 3,
+      "caution": 4,
+      "danger": 1,
+      "duration_ms": 4200
+    },
+    "recommendation": {
+      "recommended_listing_id": "lst_bestbuy_xm5",
+      "median_trusted_cents": 27900,
+      "savings_cents": 3000,
+      "eligible_ids": ["lst_bestbuy_xm5", "lst_walmart_xm5", "lst_amazon_bose"],
+      "reason": "cheapest trusted",
+      "no_trusted_option": false
+    },
+    "listings": [
+      {
+        "id": "lst_bestbuy_xm5",
+        "title": "Sony WH-1000XM5",
+        "price_cents": 24900,
+        "currency": "USD",
+        "merchant_name": "Best Buy",
+        "merchant_domain": "bestbuy.com",
+        "image_url": "",
+        "product_url": "https://www.bestbuy.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_walmart_xm5",
+        "title": "Sony WH-1000XM5",
+        "price_cents": 27900,
+        "currency": "USD",
+        "merchant_name": "Walmart",
+        "merchant_domain": "walmart.com",
+        "image_url": "",
+        "product_url": "https://www.walmart.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_amazon_bose",
+        "title": "Bose QuietComfort Ultra",
+        "price_cents": 32900,
+        "currency": "USD",
+        "merchant_name": "Amazon",
+        "merchant_domain": "amazon.com",
+        "image_url": "",
+        "product_url": "https://www.amazon.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_bb_xm4",
+        "title": "Sony WH-1000XM4",
+        "price_cents": 22800,
+        "currency": "USD",
+        "merchant_name": "Best Buy",
+        "merchant_domain": "bestbuy.com",
+        "image_url": "",
+        "product_url": "https://www.bestbuy.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_nordstrom_at",
+        "title": "Audio-Technica ATH-M50x",
+        "price_cents": 19900,
+        "currency": "USD",
+        "merchant_name": "Nordstrom",
+        "merchant_domain": "nordstrom.com",
+        "image_url": "",
+        "product_url": "https://www.nordstrom.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_target_bose",
+        "title": "Bose QC Headphones",
+        "price_cents": 29900,
+        "currency": "USD",
+        "merchant_name": "Target",
+        "merchant_domain": "target.com",
+        "image_url": "",
+        "product_url": "https://www.target.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_amazon_budget",
+        "title": "Generic ANC Headphones",
+        "price_cents": 8900,
+        "currency": "USD",
+        "merchant_name": "Amazon",
+        "merchant_domain": "amazon.com",
+        "image_url": "",
+        "product_url": "https://www.amazon.com/",
+        "category": "audio",
+        "source": "catalog"
+      },
+      {
+        "id": "lst_villain",
+        "title": "XM5 Pro — Flash Deal",
+        "price_cents": 7900,
+        "currency": "USD",
+        "merchant_name": "Premium Audio Deals",
+        "merchant_domain": "premium-audio-deals.shop",
+        "image_url": "",
+        "product_url": "https://premium-audio-deals.shop/",
+        "category": "audio",
+        "source": "fixture"
+      }
+    ],
+    "checks": {
+      "lst_bestbuy_xm5": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Registered for 28 years.", "evidence": [{ "label": "Created", "value": "1998" }], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 210 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "passed", "severity": 0, "summary": "No scam reports.", "evidence": [], "source": "fixture", "duration_ms": 240 },
+        { "id": "page_flags", "name": "Page flags", "status": "passed", "severity": 0, "summary": "No pressure tactics.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ],
+      "lst_walmart_xm5": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Registered for 25 years.", "evidence": [], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "passed", "severity": 0, "summary": "No scam reports.", "evidence": [], "source": "fixture", "duration_ms": 220 }
+      ],
+      "lst_amazon_bose": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Registered for 30 years.", "evidence": [], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "passed", "severity": 0, "summary": "No scam reports.", "evidence": [], "source": "fixture", "duration_ms": 220 },
+        { "id": "page_flags", "name": "Page flags", "status": "passed", "severity": 0, "summary": "No pressure tactics.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ],
+      "lst_bb_xm4": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Registered for 28 years.", "evidence": [], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "warning", "severity": 0.4, "summary": "A few shipping complaints. Not a scam pattern.", "evidence": [], "source": "fixture", "duration_ms": 260 },
+        { "id": "page_flags", "name": "Page flags", "status": "passed", "severity": 0, "summary": "No pressure tactics.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ],
+      "lst_nordstrom_at": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Long-established retailer.", "evidence": [], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "warning", "severity": 0.5, "summary": "Mixed reviews about this listing.", "evidence": [], "source": "fixture", "duration_ms": 260 },
+        { "id": "page_flags", "name": "Page flags", "status": "warning", "severity": 0.4, "summary": "One urgency banner.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ],
+      "lst_target_bose": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Long-established retailer.", "evidence": [], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "warning", "severity": 0.45, "summary": "A few buyers could not match the seller name.", "evidence": [], "source": "fixture", "duration_ms": 260 },
+        { "id": "page_flags", "name": "Page flags", "status": "passed", "severity": 0, "summary": "No pressure tactics.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ],
+      "lst_amazon_budget": [
+        { "id": "domain_age", "name": "Domain age", "status": "passed", "severity": 0, "summary": "Amazon is an established domain.", "evidence": [], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "passed", "severity": 0, "summary": "Certificate is valid.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "No threats found.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "warning", "severity": 0.5, "summary": "Buyers report a no-name brand.", "evidence": [], "source": "fixture", "duration_ms": 260 },
+        { "id": "page_flags", "name": "Page flags", "status": "warning", "severity": 0.6, "summary": "Countdown timer and stock warning.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ],
+      "lst_villain": [
+        { "id": "domain_age", "name": "Domain age", "status": "failed", "severity": 0.95, "summary": "Domain registered 12 days ago.", "evidence": [{ "label": "Age", "value": "12 days" }], "source": "fixture", "duration_ms": 180 },
+        { "id": "ssl_cert", "name": "SSL certificate", "status": "warning", "severity": 0.7, "summary": "Certificate issued this week.", "evidence": [], "source": "fixture", "duration_ms": 90 },
+        { "id": "safe_browsing", "name": "Safe Browsing", "status": "passed", "severity": 0, "summary": "Not on the threat list yet.", "evidence": [], "source": "fixture", "duration_ms": 200 },
+        { "id": "reddit_sentiment", "name": "Reddit", "status": "failed", "severity": 0.9, "summary": "Three scam reports this week.", "evidence": [], "source": "fixture", "duration_ms": 260 },
+        { "id": "page_flags", "name": "Page flags", "status": "failed", "severity": 0.9, "summary": "Only crypto accepted. No return policy.", "evidence": [], "source": "fixture", "duration_ms": 160 }
+      ]
+    },
+    "scores": {
+      "lst_bestbuy_xm5": { "score": 92, "verdict": "trusted", "confidence": 1, "penalties": [], "fatal_flags": [], "top_reason": "All checks passed.", "scoring_version": "1.0" },
+      "lst_walmart_xm5": { "score": 85, "verdict": "trusted", "confidence": 0.8, "penalties": [], "fatal_flags": [], "top_reason": "All completed checks passed.", "scoring_version": "1.0" },
+      "lst_amazon_bose": { "score": 88, "verdict": "trusted", "confidence": 1, "penalties": [], "fatal_flags": [], "top_reason": "All checks passed.", "scoring_version": "1.0" },
+      "lst_bb_xm4": { "score": 64, "verdict": "caution", "confidence": 1, "penalties": [{ "check_id": "reddit_sentiment", "points": 6, "reason": "Shipping complaints" }], "fatal_flags": [], "top_reason": "A few shipping complaints. Not a scam pattern.", "scoring_version": "1.0" },
+      "lst_nordstrom_at": { "score": 58, "verdict": "caution", "confidence": 1, "penalties": [], "fatal_flags": [], "top_reason": "Mixed reviews about this listing.", "scoring_version": "1.0" },
+      "lst_target_bose": { "score": 61, "verdict": "caution", "confidence": 1, "penalties": [], "fatal_flags": [], "top_reason": "A few buyers could not match the seller name.", "scoring_version": "1.0" },
+      "lst_amazon_budget": { "score": 48, "verdict": "caution", "confidence": 1, "penalties": [], "fatal_flags": [], "top_reason": "Countdown timer and stock warning.", "scoring_version": "1.0" },
+      "lst_villain": { "score": 12, "verdict": "danger", "confidence": 1, "penalties": [{ "check_id": "domain_age", "points": 38, "reason": "Domain registered 12 days ago." }], "fatal_flags": ["domain_age"], "top_reason": "Domain registered 12 days ago.", "scoring_version": "1.0" }
+    }
+  }
+}
