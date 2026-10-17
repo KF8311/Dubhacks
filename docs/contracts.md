@@ -57,6 +57,35 @@ Envelope on every event: `type`, `seq`, `ts`, `session_id`.
 
 Client: dedupe by `seq`; upsert checks by `(listing_id, check.id)`; close on `investigation.complete`.
 
+**Live for C (Task 6/7):** `GET /api/sessions/{id}/events` is wired. Reconnect with `Last-Event-ID` or `?since_seq=`. Snapshot is `GET /api/sessions/{id}`. After answers, the skeleton emits:
+
+`session.stage` → `search.started` → `search.completed` → `listing.found` (per listing) → `session.stage` → `investigation.complete` then the server closes the stream.
+
+Checks, scores, and `recommendation.ready` are not emitted until Task 16. Use catalog stub listings until B's search is in.
+
+Example `listing.found` data:
+
+```json
+{
+  "type": "listing.found",
+  "seq": 4,
+  "ts": "2026-10-17T22:40:00.000Z",
+  "session_id": "ses_abc",
+  "listing": {
+    "id": "lst_...",
+    "title": "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
+    "price_cents": 32800,
+    "currency": "USD",
+    "merchant_name": "Best Buy",
+    "merchant_domain": "bestbuy.com",
+    "image_url": "",
+    "product_url": "https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p",
+    "source": "catalog"
+  },
+  "rank": 1
+}
+```
+
 ## `POST /api/checkout` → 201 or 409
 
 Client sends only `session_id`, `listing_id`, and a mandate cap. Server re-derives price, merchant, and score.

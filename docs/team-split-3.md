@@ -80,10 +80,10 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 1:15–3:30 PM — sessions and streaming
 
-- [v ] Task 5: `SessionRegistry`, `POST /api/sessions`, `POST /{id}/answers`, `GET /{id}`.
-- [v ] Task 6: `EventBus` + `GET /api/sessions/{id}/events`; replay by `Last-Event-ID`.
-- [v ] Task 7: orchestrator skeleton, `search.started` → `listing.found` → `investigation.complete`.
-- [ ] Post the event schema in `docs/contracts.md` and tell C.
+- [x] Task 5: `SessionRegistry`, `POST /api/sessions`, `POST /{id}/answers`, `GET /{id}`.
+- [x] Task 6: `EventBus` + `GET /api/sessions/{id}/events`; replay by `Last-Event-ID`.
+- [x] Task 7: orchestrator skeleton, `search.started` → `listing.found` → `investigation.complete`.
+- [x] Post the event schema in `docs/contracts.md` and tell C.
 
 **Done when:** `curl -N` on a session shows ordered events and closes cleanly.
 
