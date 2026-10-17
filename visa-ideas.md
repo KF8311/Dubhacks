@@ -667,3 +667,17 @@ These are saturated by adjacent projects or explicitly warned against:
 - [DubHacks '24 winners — Intel](https://community.intel.com/t5/Blogs/Tech-Innovation/Artificial-Intelligence-AI/DubHacks-24-Hackathon-Where-Developers-Innovatively-Utilized/post/1639339)
 - [Visa agentic commerce demo — CNBC TV18](https://www.cnbctv18.com/personal-finance/gff-ai-agents-could-soon-shop-pay-for-you-visa-agentic-commerce-demo-19988305.htm)
 - [BBVA + Visa agent-initiated payment — The Paypers](https://thepaypers.com/payments/news/bbva-completes-its-first-ai-agent-initiated-payment-together-with-visa)
+
+## 10. Feedbacks
+- I want this ideas to be remmebered  we can always add it later.
+1. RefundGuard — the refund agent that can prove it's safe.
+
+- Stack: Cook Smarter + VEYZL + SideShift + Cloudforce | NEXT, Gemini, MongoDB, DEV
+- What: An AI support agent for e-commerce refunds that follows policy, resists prompt injection and social engineering, and escalates edge cases to a human. Then run a real VEYZL audit on the repo, show it flagged missing human oversight / PII handling, fix it, and demo the before/after.
+- 60-sec demo: A judge tries to scam the agent into a $500 refund; it refuses — then you show the audit finding that changed the build.
+- Build: Agent + policy docs + adversarial test suite + VEYZL GitHub check.
+- Why it scores: VEYZL's own example is exactly this app, and their judging criterion is "evidence the findings changed the build." Cook Smarter = automation. SideShift = B2B SaaS. Strong, credible founder story.
+- Risk: Less visually exciting; needs a polished UI and a clear "why care" narrative. VEYZL setup can eat time.
+
+2. Sniff (TreeHacks 2026) — LLM shopping agent across Amazon/Best Buy/Walmart/Nordstrom that runs five parallel fraud checks per listing: WHOIS/domain age, Safe Browsing + ScamAdviser, Reddit sentiment, typosquatting, and page red flags. It assigns a 0–100 trust score, recommends the cheapest among the safest, and streams the investigation live. Flagged listings get removed with a "PURGE CURSED" animation.
+Why it matters: The best example of making the trust layer the show. The AI is visibly investigating, which is inherently watchable on video.
