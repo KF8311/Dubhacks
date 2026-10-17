@@ -34,7 +34,7 @@ async def search(
     active = provider if provider is not None else SerpAPIProvider()
     try:
         results = await active.search(spec, limit)
-    except Exception:
+    except Exception:  # noqa: BLE001 — any provider fault must reach the fallback
         results = []
 
     if results:
