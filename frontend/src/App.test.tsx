@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import App from "./App.tsx"
 
 test("renders the app shell", () => {
@@ -20,9 +20,15 @@ test("walks discovery into the mock results", async () => {
   fireEvent.click(screen.getByRole("button", { name: /^next$/i }))
   fireEvent.click(screen.getByRole("button", { name: /^travel$/i }))
   fireEvent.click(screen.getByRole("button", { name: /see results/i }))
-  expect(await screen.findByText("$249.00", {}, { timeout: 3000 })).toBeInTheDocument()
+  expect(await screen.findByText(/You save \$30\.00/, {}, { timeout: 8000 })).toBeInTheDocument()
+  expect(screen.getByText("$249.00")).toBeInTheDocument()
   expect(screen.getAllByText("Sony WH-1000XM5").length).toBeGreaterThan(1)
   expect(screen.getByText(/92\s*·\s*Trusted/)).toBeInTheDocument()
   expect(screen.getByText(/12\s*·\s*Danger/)).toBeInTheDocument()
-  expect(screen.getByText("Best pick")).toBeInTheDocument()
+  expect(screen.getAllByText("Best pick").length).toBeGreaterThan(0)
+  expect(screen.getByRole("button", { name: /^pay$/i })).toBeDisabled()
+  fireEvent.click(screen.getByRole("button", { name: /purge danger/i }))
+  await waitFor(() => {
+    expect(screen.queryByText(/XM5 Pro/)).not.toBeInTheDocument()
+  })
 })
