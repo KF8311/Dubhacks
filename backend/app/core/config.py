@@ -1,0 +1,49 @@
+from functools import lru_cache
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    demo_mode: bool = True
+    demo_pacing: bool = False
+    offline: bool = False
+    allowed_origins: str = "http://localhost:5173"
+    mongodb_uri: str | None = None
+    mongodb_db: str = "sniff"
+    gemini_api_key: str | None = None
+    gemini_model: str = "gemini-2.5-flash"
+    serpapi_key: str | None = None
+    google_safe_browsing_key: str | None = None
+    receipt_signing_secret: str = "dev-only-change-me"
+    version: str = "0.9.0"
+    max_listings: int = 8
+    investigation_budget_s: float = 14.0
+    check_concurrency: int = 8
+
+    @field_validator(
+        "mongodb_uri",
+        "gemini_api_key",
+        "serpapi_key",
+        "google_safe_browsing_key",
+        mode="before",
+    )
+    @classmethod
+    def empty_str_to_none(cls, value: object) -> object:
+        if value == "":
+            return None
+        return value
+
+    def cors_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
