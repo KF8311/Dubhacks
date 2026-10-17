@@ -4,9 +4,21 @@ from fastapi import APIRouter
 
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.sessions.events import bus
+from app.sessions.store import registry
 
 router = APIRouter()
 _started_at = time.monotonic()
+
+
+@router.get("/")
+def root() -> dict:
+    return {
+        "service": "sniff-visa",
+        "health": "/api/health",
+        "sessions": "POST /api/sessions",
+        "docs": "/docs",
+    }
 
 
 @router.get("/api/health")
@@ -32,5 +44,6 @@ def demo_reset() -> dict:
             "Demo reset is only available when DEMO_MODE is on.",
             status_code=403,
         )
-    # Session registry arrives in Task 5; this keeps the contract live.
+    registry.clear()
+    bus.reset()
     return {"ok": True, "cleared": ["sessions", "investigations", "checkouts", "receipts"]}
