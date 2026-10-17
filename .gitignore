@@ -7,6 +7,13 @@
 /temp
 /backup
 /cache
-/temp
-/backup
-/cache
+.env
+.env.*
+!.env.example
+**/__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
