@@ -16,7 +16,7 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types and SSE ordering. One open shape — `Question` — needs A's sign-off, then frozen. |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
-| Tests | Backend **15 passed**; frontend **3 files / 4 tests passed**, `npm run build` clean |
+| Tests | Backend **39 passed**; frontend **3 files / 4 tests passed**, `npm run build` clean |
 | Routes | Only `GET /api/health` and `POST /api/demo/reset` exist. No session routes yet — that is the G1 blocker. |
 | Owners | A: platform + orchestrator. B: trust + data. C: frontend. |
 | Blockers | No session/SSE routes; contracts not frozen; C renders from mock data |
@@ -53,6 +53,8 @@ Last updated: 2026-10-17 16:10 PT
 - [x] `oldIdeas/` removed (D-014)
 - [x] `docs/contracts.md` gained domain types and the SSE ordering guarantee
 - [x] Both suites verified on merged code: 15 backend, 4 frontend, build clean
+- [x] B: Task 4 search service with catalog fallback — 8 tests
+- [x] B: Task 14 scoring engine + golden tests — 16 tests; villain `0 danger`, hero `100 trusted`
 
 ## Next three actions
 

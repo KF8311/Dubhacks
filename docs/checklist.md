@@ -67,7 +67,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Person | Do |
 |---|---|
 | **A** | Mount the session routes: `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`. Add `GET /api/sessions/{id}/events` as SSE with the envelope from `contracts.md`. Emit `session.stage`, `search.started`, `listing.found`. Keep `last_seq` on the session. |
-| **B** | **Task 4** — `search(spec, limit=8) -> (listings, source)` in `app/search/service.py`. Catalog fallback on any SerpAPI failure or empty result. Then **Task 14** — `score_investigation()` with the golden tests. |
+| **B** | ✅ **Task 4** — `search(spec, limit)` in `app/search/service.py`, catalog fallback on any provider fault, budget filter. ✅ **Task 14** — `score_investigation()` with golden tests. Next: hand the signatures to A for orchestrator wiring. |
 | **C** | Point `frontend/src/lib/api.ts` at `VITE_API_BASE_URL`. Replace the mock listings with `listing.found` events from the SSE stream. Keep the mock path behind `?mock=1` so a dead backend never kills the demo. |
 
 **Proof:** `curl -N http://127.0.0.1:8000/api/sessions/<id>/events` shows `seq` incrementing and 9 `listing.found` events; the same 9 cards render in the browser.
@@ -154,6 +154,8 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] A: backend scaffold, config/ids/logging/timeouts, health route, Fly deploy
 - [x] C: frontend scaffold, discovery flow, results grid, trust badges, mock session — 4 tests
 - [x] All branches merged into `main`; `main` and `c/web` both green
+- [x] B: **Task 4** — `search()` with catalog fallback, budget filter, limit guard — 8 tests
+- [x] B: **Task 14** — `score_investigation()` with fatal rules, coverage cap, golden tests — villain `0 / danger`, hero `100 / trusted` — 16 tests
 
 ## 6. Gate board
 
