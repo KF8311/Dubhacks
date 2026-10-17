@@ -16,6 +16,25 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.domain.enums import CheckId, TrustStatus
+
+
+class Evidence(BaseModel):
+    label: str
+    value: str
+    url: str | None = None
+
+
+class TrustCheckResult(BaseModel):
+    id: CheckId
+    name: str
+    status: TrustStatus
+    severity: float = Field(ge=0, le=1)
+    summary: str
+    evidence: list[Evidence] = []
+    source: Literal["live", "cache", "allowlist", "fixture", "timeout", "unavailable"]
+    duration_ms: int = 0
+
 
 class Listing(BaseModel):
     id: str

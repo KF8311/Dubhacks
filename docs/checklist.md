@@ -69,9 +69,9 @@ One shared checklist. Personal scratch notes do not belong here.
 - [x] **Task 3:** villain fixtures — 12-day RDAP record, scam page with urgency/crypto-only/no refunds, 3 Reddit reports with titles and permalinks only.
 - [x] **Task 3:** `load_catalog()`, `load_allowlist()`, `test_catalog.py` — **2 passed**.
 - [x] **Deploy decision:** Fly.io recorded as D-010.
-- [ ] **Unblock:** replace the stopgap `backend/app/domain/models.py` with A's Task 1 version. It currently holds only `Listing` and `SearchSpec`.
+- [x] **Task 8:** `TrustCheck` protocol, `get_checks()`, `run_checks()` — timeouts yield `SKIPPED` with `source="timeout"`, never a pass. **3 unit tests passing.**
+- [ ] **Unblock:** replace the stopgap `backend/app/domain/models.py` and `backend/app/domain/enums.py` with A's Task 1 versions. They currently hold `Listing`, `SearchSpec`, `Evidence`, `TrustCheckResult`, `CheckId`, `TrustStatus`, `Verdict`.
 - [ ] **Task 4:** `search(spec, limit=8) -> (listings, source)` — SerpAPI with a 5s timeout, catalog fallback, reject empty or `google.com` domains.
-- [ ] **Task 8:** `TrustCheck` protocol, `get_checks()`, `run_checks()` — timeouts yield `SKIPPED` with `source="timeout"`, never a pass.
 - [ ] **Task 9:** domain age — RDAP primary, WHOIS fallback. <30 days → `FAILED` 0.95, <90 days → `WARNING` 0.6.
 - [ ] **Task 10:** SSL — invalid or mismatched `FAILED` 0.8, free issuer `WARNING` 0.4.
 - [ ] **Task 11:** Safe Browsing — any hit `FAILED` 1.0; no key → static denylist with `source="unavailable"`.
@@ -122,7 +122,7 @@ One shared checklist. Personal scratch notes do not belong here.
 
 | Blocker | Owner | Impact |
 |---|---|---|
-| No backend scaffold, no `models.py`, no pytest config | A | Blocks B's Tasks 4, 8–15 and C's integration |
+| No backend scaffold, no pytest config | A | B shipped stopgap `models.py`/`enums.py` on `b/trust`, so Tasks 4 and 9–15 can proceed; app wiring and C's integration still blocked |
 | No public health URL | A | G0 missed |
 | SerpAPI key unconfirmed | A | Task 4 falls back to catalog |
 | Safe Browsing key unconfirmed | B | Check ships as `source="unavailable"` |
