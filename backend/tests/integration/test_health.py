@@ -37,6 +37,8 @@ def test_health_reports_where_the_catalog_is():
     assert body["data"]["catalog_exists"] is True
     assert body["data"]["dir"].endswith("data")
     assert any(item["exists"] for item in body["data"]["candidates"])
+    assert isinstance(body["search"]["offline"], bool)
+    assert isinstance(body["search"]["serpapi_key"], bool)
 
 
 def test_demo_reset_ok_in_demo_mode():

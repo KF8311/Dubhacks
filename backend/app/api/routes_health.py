@@ -39,6 +39,12 @@ def health() -> dict:
         "demo_mode": settings.demo_mode,
         "uptime_s": int(time.monotonic() - _started_at),
         "build": os.environ.get("VERCEL_GIT_COMMIT_SHA", "")[:7],
+        # Which search path will run. Both answers show the catalog, so this is
+        # the only way to tell "deliberately offline" from "the key is missing".
+        "search": {
+            "offline": settings.offline,
+            "serpapi_key": bool(settings.serpapi_key),
+        },
         # The answers route 500s when the function ships without its data bundle.
         # Report the resolved directory and every candidate so a deploy can be
         # diagnosed from outside, without dashboard logs.
