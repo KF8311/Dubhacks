@@ -141,19 +141,21 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Review the merged `Repository` protocol that A built on `agent_backend` — confirm no Mongo type leaks into `app/` and that `MONGODB_URI` unset stays the default. **Own the VEYZL fix PR (D-020).** Then freeze: no new features after 02:00. |
+| **A** | Confirm the merged `Repository` protocol A built on `agent_backend` does not leak Mongo types into `app/` and that `MONGODB_URI` unset stays the default (B owns the formal review, D-016). **Own the VEYZL fix PR (D-020).** Then freeze: no new features after 02:00. |
 | **B** | **Task 27 review (D-016)** — A's `InMemoryRepository` + `MongoRepository` are now on `main`; B owns the review, the Atlas cluster question, and the MLH MongoDB claim. **Only** if every Block 5 item is green: add TTL index verification, redaction checks, and a `MONGODB_URI`-unset regression test. Otherwise skip — the in-memory adapter is the cut-order survivor. ✅ Replay half already done — 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`, exit 1 on drift. |
 | **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path, reduced motion. |
 
 **Block 6 required before freeze:**
 
-- [ ] Every claim in `README.md` and `docs/devpost.md` matches the merged code — Gemini is in the questions/narration/explain path (D-017–D-019), not in scoring; the devpost's generative-AI answer is **Yes**, not N/A.
-- [ ] `pytest -q` green with **no** `GEMINI_API_KEY` and `OFFLINE=1` — the template fallback is the demo path.
-- [ ] `scripts/replay_offline.py` exits 0 and prints the frozen numbers.
-- [ ] `npm run build` clean; `?mock=1` renders the whole flow.
-- [ ] No `.env` or key is tracked (`git ls-files | grep -i env`).
-- [ ] Devpost fields in `docs/devpost-form.md` all filled; VEYZL selected as a Sponsored Side Track.
-- [ ] `docs/status.md` updated with the final numbers.
+- [ ] **A** — `pytest -q` green with **no** `GEMINI_API_KEY` and `OFFLINE=1`; the template fallback is the demo path.
+- [ ] **B** — `scripts/replay_offline.py` exits 0 and prints the frozen numbers.
+- [ ] **C** — `npm run build` clean; `?mock=1` renders the whole flow.
+- [ ] **B** — no `.env` or key is tracked (`git ls-files | grep -i env`).
+- [ ] **B** — every claim in `README.md` and `docs/devpost.md` matches the merged code; the generative-AI answer is **Yes**.
+- [ ] **B** — Devpost fields in `docs/devpost-form.md` all filled; VEYZL selected as a Sponsored Side Track.
+- [ ] **A** — a VEYZL check run is visible on a PR and linked from `docs/veylz-audit.md`.
+- [ ] **B** — `docs/status.md` carries the final numbers.
+- [ ] **All** — no new infrastructure without a decision entry.
 
 **Proof:** offline replay produces the same numbers as live; plane-mode demo works.
 **2:00 AM: freeze.** After this, docs and bugfixes only.
@@ -342,7 +344,7 @@ The Block 6 table in §4 is the authority. This is the same work in start order:
 
 ```bash
 cd backend && .venv/Scripts/python.exe -m pytest -q                     # 177 passed
-cd frontend && npx vitest run && npm run build                          # 26 passed, clean
+cd frontend && npx vitest run && npm run build                          # 31 passed, clean
 backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```
 
