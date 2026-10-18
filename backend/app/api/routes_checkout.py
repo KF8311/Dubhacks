@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Request
@@ -16,11 +17,11 @@ from app.payments.receipts import create_receipt, persist_receipt
 from app.search.catalog import load_catalog
 from app.services.audit import AuditEvent
 from app.services.repository import get_repository
+from app.services.llm import answer_probe
 from app.services.llm_guard import (
     looks_like_llm_probe,
     openai_chat_payload,
     probe_prompt_from_payload,
-    reply_for_probe,
 )
 from app.sessions.store import registry
 
@@ -109,11 +110,30 @@ async def _confirm_payload(checkout: Checkout) -> dict:
     }
 
 
+async def _request_payload(request: Request) -> object:
+    body = (await request.body()).decode("utf-8", errors="replace")
+    if not body.strip():
+        return {"body": ""}
+    try:
+        data = json.loads(body)
+    except json.JSONDecodeError:
+        return {"body": body}
+    if isinstance(data, str):
+        return {"body": data}
+    return data
+
+
 @router.post("/api/checkout", status_code=201)
 async def create_checkout(request: Request):
-    raw = await request.json()
+    raw = await _request_payload(request)
     if looks_like_llm_probe(raw):
-        guarded = reply_for_probe(probe_prompt_from_payload(raw))
+        if isinstance(raw, dict):
+            haystack = probe_prompt_from_payload(raw)
+        elif isinstance(raw, list):
+            haystack = probe_prompt_from_payload({"messages": raw})
+        else:
+            haystack = str(raw)
+        guarded = await answer_probe(haystack)
         return JSONResponse(
             openai_chat_payload(guarded.text, refused=guarded.refused, sandbox_label=SANDBOX)
         )

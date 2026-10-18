@@ -72,7 +72,7 @@ class SessionOrchestrator:
             "search.started",
             {"query": session.search_spec.query, "providers": ["catalog"]},
         )
-        settings = self.config or get_settings()
+        settings = self.config if self.config is not None else get_settings()
         if getattr(settings, "offline", False):
             # Replay and refusal tests must stay on the curated catalog even
             # when a search key is present in the environment.

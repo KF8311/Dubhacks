@@ -31,6 +31,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
     if (!trimmed) return
     setQuery(trimmed)
     setError(null)
+    setPhase("submitting")
     try {
       const created = await createSession({ query: trimmed, client_id: "demo" })
       setSessionId(created.session_id)
@@ -41,6 +42,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
       setFreeText("")
       setPhase("questions")
     } catch {
+      setPhase("query")
       setError("The search could not reach the server. Leave this page open and try again.")
     }
   }
