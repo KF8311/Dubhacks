@@ -7,6 +7,7 @@ type Props = {
   scores: Record<string, ScoreResult>
   recommendation?: Recommendation | null
   budgetMaxCents?: number | null
+  budgetMinCents?: number | null
 }
 
 export function ResultsGrid({
@@ -15,6 +16,7 @@ export function ResultsGrid({
   scores,
   recommendation = null,
   budgetMaxCents = null,
+  budgetMinCents = null,
 }: Props) {
   const bestId = recommendation?.recommended_listing_id
   const ordered = [...listings].sort((a, b) => {
@@ -33,6 +35,7 @@ export function ResultsGrid({
           score={scores[listing.id]}
           isBest={listing.id === bestId}
           budgetMaxCents={budgetMaxCents}
+          budgetMinCents={budgetMinCents}
         />
       ))}
     </div>

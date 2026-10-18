@@ -20,18 +20,32 @@ type Props = {
   score?: ScoreResult
   isBest: boolean
   budgetMaxCents?: number | null
+  budgetMinCents?: number | null
 }
 
-export function ProductCard({ listing, checks, score, isBest, budgetMaxCents = null }: Props) {
+export function ProductCard({
+  listing,
+  checks,
+  score,
+  isBest,
+  budgetMaxCents = null,
+  budgetMinCents = null,
+}: Props) {
   const [imageFailed, setImageFailed] = useState(listing.image_url.length === 0)
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
 
   return (
-    <Card className={isBest ? "min-w-0 ring-2 ring-stone-900" : "min-w-0"}>
+    <Card
+      className={
+        isBest
+          ? "surface-card min-w-0 ring-2 ring-[#18D6C0]"
+          : "min-w-0 bg-white shadow-sm ring-1 ring-border"
+      }
+    >
       <CardHeader className="space-y-3">
         {imageFailed ? (
           <div
-            className="flex h-36 items-center justify-center rounded-md bg-gradient-to-br from-stone-200 to-stone-400 text-3xl font-semibold text-stone-800"
+            className="flex h-40 items-center justify-center rounded-xl bg-gradient-to-br from-[#101A2B] to-[#00A5B5] text-3xl font-semibold text-white"
             aria-hidden="true"
           >
             {initial}
@@ -40,21 +54,24 @@ export function ProductCard({ listing, checks, score, isBest, budgetMaxCents = n
           <img
             src={listing.image_url}
             alt=""
-            className="h-36 w-full rounded-md object-cover"
+            className="h-40 w-full rounded-xl bg-[#f4f7fa] object-cover"
             onError={() => setImageFailed(true)}
           />
         )}
         {isBest ? (
-          <p className="text-xs font-semibold uppercase tracking-wide text-stone-600">Best pick</p>
+          <p className="text-xs font-semibold tracking-[0.16em] text-[#00A5B5] uppercase">Best pick</p>
         ) : null}
         <CardTitle className="line-clamp-2 text-lg">{listing.title}</CardTitle>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted-foreground">
           <span>{listing.merchant_name}</span>
-          <span className="text-stone-600"> · {listing.merchant_domain}</span>
+          <span> · {listing.merchant_domain}</span>
         </p>
         <p className="text-xl font-semibold">{formatCents(listing.price_cents, listing.currency)}</p>
         {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
-          <p className="text-xs font-medium text-stone-700">Above your budget</p>
+          <p className="text-xs font-medium text-[#b45309]">Above your budget</p>
+        ) : null}
+        {budgetMinCents != null && listing.price_cents < budgetMinCents ? (
+          <p className="text-xs font-medium text-[#b45309]">Below your budget</p>
         ) : null}
         <TrustBadge
           score={score?.score}

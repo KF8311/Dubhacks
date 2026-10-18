@@ -202,3 +202,54 @@ def test_source_hostname_is_used_when_product_link_is_google():
     }
     listings = listings_from_payload(payload, spec=SearchSpec(query="purple t shirt"), limit=8)
     assert [item.merchant_domain for item in listings] == ["oldnavy.gap.com", "asos.com"]
+
+
+def test_search_sends_price_bounds_to_serpapi(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.search.serpapi import SerpAPIProvider
+
+    captured: dict = {}
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {
+                "shopping_results": [
+                    {
+                        "title": "ThinkPad",
+                        "product_link": "https://www.bestbuy.com/site/thinkpad/1.p",
+                        "source": "Best Buy",
+                        "extracted_price": 1099.00,
+                    }
+                ]
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, timeout
+            captured.update(params or {})
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(
+            SearchSpec(query="computers", budget_min_cents=100_000, budget_max_cents=120_000)
+        )
+    )
+    assert captured["min_price"] == 1000
+    assert captured["max_price"] == 1200
+    assert captured["q"] == "computers $1000-1200"

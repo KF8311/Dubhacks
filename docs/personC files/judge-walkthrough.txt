@@ -9,7 +9,7 @@ payments. B owns the trust checks, the score, and the recommendation.
 THE 30-SECOND PITCH
 -------------------
 
-Sniff is a shopping agent that will not pay a store it cannot verify.
+Sykes is a shopping agent that will not pay a store it cannot verify.
 
 You type what you want. The app asks two or three short questions, searches
 real listings, and runs five trust checks on each merchant. Those checks

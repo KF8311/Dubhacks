@@ -122,7 +122,7 @@ Owner of the story and every number a judge can quote.
 
 ### Form (`docs/devpost-form.md`)
 
-- [ ] Project name: Sniff + Visa.
+- [ ] Project name: Sykes + Visa.
 - [ ] Elevator pitch from the form map (150 characters).
 - [ ] About the project pasted from `docs/devpost.md` in the listed order, sandbox disclosure at the end.
 - [ ] Built-with tags match the stack that actually shipped.

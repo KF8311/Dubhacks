@@ -4,7 +4,7 @@ type: index
 updated: 2026-10-17
 ---
 
-# Sniff + Visa — Project Index
+# Sykes + Visa — Project Index
 
 One project, one repository, one source of truth. If a fact is not written here or linked from here, it is not agreed.
 

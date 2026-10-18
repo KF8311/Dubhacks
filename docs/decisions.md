@@ -204,3 +204,11 @@ Format:
 - **Why:** VEYZL audit `7c75aa41-393b-4c38-bdf4-c45263851ea1` failed GDPR Art. 5 / EU AI Act Art. 15 / SAIF because every probe 422'd on checkout. Checkout is not a model. The missing control was input refusal + PII redaction on the actual LLM path (`POST /api/sessions` query).
 - **Alternatives considered:** Loosen CheckoutIn so VEYZL can pay with a prompt as `session_id` (breaks the payability contract); point VEYZL only at Gemini and leave checkout 422 (audit stays red).
 - **Consequences:** Retarget VEYZL at `POST /api/sessions` (`query`) or keep checkout as the probe URL; both now refuse instead of echoing PII. Renumbered from D-020 on merge — that number already belonged to the VEYZL ownership decision.
+
+## D-024 — Typed budget ranges set a floor and a ceiling
+- **Date:** 2026-10-18
+- **Status:** accepted
+- **Decision:** Free-text budget answers are parsed. A single number is a ceiling (`under 1200` → max $1200). Two numbers are a range (`1000 to 1200` → min $1000, max $1200). Live search sends `min_price`/`max_price` to SerpAPI. `_within_budget()` drops listings outside the band. D-022 unfilter still applies only to a ceiling-only filter that matches nothing (grocery-scale cap vs the headphone catalog).
+- **Why:** Typing "1000 to 1200" was stored as `Answer.text` and ignored (`option_id` only). The remaining filter was max-only, so $200 computers still counted as in budget.
+- **Alternatives considered:** Treat the first number as a max (still shows $200); keep D-022 unfilter on ranges (same $200 junk after a miss).
+- **Consequences:** `SearchSpec.budget_min_cents` is additive. A typed range that matches nothing can yield an empty grid rather than cheap off-range listings. Preset `Under $150` / `$300–$600` chips are unchanged.

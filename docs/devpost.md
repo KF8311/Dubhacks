@@ -5,13 +5,13 @@ updated: 2026-10-17
 owner: B
 ---
 
-# Devpost — Sniff + Visa
+# Devpost — Sykes + Visa
 
 > **Status:** draft. Placeholders in `[BRACKETS]` are filled after the live URL, screenshots, and video land. Nothing in this document may claim a Visa production integration, real card data, or a model-authored score.
 
 ## Title
 
-**Sniff + Visa — the trust layer for agentic commerce**
+**Sykes + Visa — the trust layer for agentic commerce**
 
 ## Tagline
 

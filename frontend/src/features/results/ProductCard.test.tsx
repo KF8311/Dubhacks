@@ -20,6 +20,20 @@ test("a listing above the stated budget is labelled", () => {
   expect(screen.getByText("Above your budget")).toBeInTheDocument()
 })
 
+test("a listing below a typed range is labelled", () => {
+  render(
+    <ProductCard
+      listing={listing}
+      checks={[]}
+      score={undefined}
+      isBest={false}
+      budgetMinCents={100000}
+      budgetMaxCents={120000}
+    />,
+  )
+  expect(screen.getByText("Below your budget")).toBeInTheDocument()
+})
+
 test("a missing check stays a skeleton row", () => {
   render(<ProductCard listing={listing} checks={[]} isBest={false} />)
   expect(screen.getAllByRole("generic").length).toBeGreaterThan(0)

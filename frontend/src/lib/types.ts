@@ -103,6 +103,7 @@ export interface Answer {
 export interface SearchSpec {
   query: string
   budget_max_cents?: number | null
+  budget_min_cents?: number | null
   category?: string | null
   merchants_preferred: string[]
 }

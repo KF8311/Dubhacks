@@ -8,8 +8,15 @@ beforeEach(() => {
 
 test("renders the app shell", () => {
   render(<App />)
-  expect(screen.getByText(/sniff/i)).toBeInTheDocument()
+  expect(screen.getByRole("img", { name: /sykes/i })).toBeInTheDocument()
   expect(screen.getByText(/sandbox — simulated visa intelligent commerce flow/i)).toBeInTheDocument()
+})
+
+test("landing shows the branded search hero", () => {
+  render(<App />)
+  expect(screen.getByText(/secure your kart every second/i)).toBeInTheDocument()
+  expect(screen.getByText(/what do you want to buy/i)).toBeInTheDocument()
+  expect(screen.getByText(/five trust checks/i)).toBeInTheDocument()
 })
 
 test("walks discovery into the mock results", async () => {

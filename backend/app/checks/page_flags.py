@@ -27,7 +27,7 @@ FIXTURES = {"premium-audio-deals.shop": "villain_page.html"}
 MAX_BYTES = 1_000_000
 FETCH_TIMEOUT_S = 6.0
 MAX_REDIRECTS = 4
-USER_AGENT = "SniffTrustCheck/1.0 (trust prototype; contact: demo@example.test)"
+USER_AGENT = "SykesTrustCheck/1.0 (trust prototype; contact: demo@example.test)"
 
 FLAG_WARNING = 0.4
 FLAG_FAILED = 0.7

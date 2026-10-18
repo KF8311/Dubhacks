@@ -13,22 +13,22 @@ export function BestPick({ recommendation, listings, budgetMaxCents = null }: Pr
   const overBudget = budgetMaxCents != null && listing.price_cents > budgetMaxCents
 
   return (
-    <section className="rounded-xl border-2 border-stone-900 bg-stone-50 p-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-stone-600">Best pick</p>
-      <h3 className="mt-1 break-words text-2xl font-semibold">{listing.title}</h3>
-      <p className="mt-1 text-stone-700">
+    <section className="surface-card rounded-2xl border border-[#18D6C0]/40 bg-white p-6 ring-1 ring-[#18D6C0]/30">
+      <p className="text-xs font-semibold tracking-[0.18em] text-[#00A5B5] uppercase">Best pick</p>
+      <h3 className="mt-1 break-words text-2xl font-semibold tracking-tight">{listing.title}</h3>
+      <p className="mt-1 text-muted-foreground">
         {listing.merchant_name} · {formatCents(listing.price_cents, listing.currency)}
       </p>
-      <p className="mt-3 text-lg">
+      <p className="mt-3 text-lg font-medium">
         You save {formatCents(recommendation.savings_cents)} compared with the typical trusted price.
       </p>
       {overBudget ? (
-        <p className="mt-2 text-sm text-stone-700">
+        <p className="mt-2 text-sm text-muted-foreground">
           Your ceiling did not match a trusted listing, so this is the closest trusted match above that
           budget.
         </p>
       ) : null}
-      {recommendation.narrative ? <p className="mt-2 text-stone-700">{recommendation.narrative}</p> : null}
+      {recommendation.narrative ? <p className="mt-2 text-muted-foreground">{recommendation.narrative}</p> : null}
     </section>
   )
 }

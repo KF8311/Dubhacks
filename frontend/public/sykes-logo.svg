@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">SYKES — Secure your kart every second</title>
+  <desc id="desc">A shield containing a fast, curved kart track, beside the SYKES wordmark and tagline.</desc>
+  <defs>
+    <linearGradient id="shield" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#18D6C0"/>
+      <stop offset="1" stop-color="#00A5B5"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(52 38)">
+    <path d="M166 6 296 54v113c0 91-52 151-130 195C88 318 36 258 36 167V54L166 6Z" fill="#101A2B"/>
+    <path d="M166 25 278 66v101c0 76-41 128-112 170-71-42-112-94-112-170V66l112-41Z" fill="none" stroke="url(#shield)" stroke-width="10"/>
+    <path d="M93 226c24-4 40-18 48-42 8-25 5-57 16-78 9-18 28-28 55-29" fill="none" stroke="#F4F7FA" stroke-width="20" stroke-linecap="round"/>
+    <path d="M92 226c25 3 45 14 65 15 29 2 48-12 56-36" fill="none" stroke="#18D6C0" stroke-width="12" stroke-linecap="round" stroke-dasharray="2 1"/>
+    <path d="m199 66 30 10-22 23" fill="none" stroke="#18D6C0" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="94" cy="226" r="13" fill="#FFB84D" stroke="#101A2B" stroke-width="6"/>
+    <circle cx="213" cy="181" r="13" fill="#FFB84D" stroke="#101A2B" stroke-width="6"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="390" y="220" fill="#101A2B" font-size="150" font-weight="800" letter-spacing="8">SYKES</text>
+    <path d="M397 250h610" stroke="#18BDAE" stroke-width="7" stroke-linecap="round"/>
+    <text x="397" y="308" fill="#344154" font-size="35" font-weight="600" letter-spacing="2">SECURE YOUR KART EVERY SECOND</text>
+  </g>
+</svg>

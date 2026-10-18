@@ -22,13 +22,13 @@ function ScoreRing({ score, allowlisted = false }: { score: number; allowlisted?
       role="img"
       aria-label={allowlisted ? "Verified" : `Score ${score}`}
     >
-      <circle cx="50" cy="50" r={radius} fill="none" stroke="#e7e5e4" strokeWidth="8" />
+      <circle cx="50" cy="50" r={radius} fill="none" stroke="#e8eef4" strokeWidth="8" />
       <circle
         cx="50"
         cy="50"
         r={radius}
         fill="none"
-        stroke="#14532d"
+        stroke="#00A5B5"
         strokeWidth="8"
         strokeDasharray={`${filled} ${circumference - filled}`}
         strokeLinecap="round"
@@ -65,8 +65,8 @@ export function ReceiptView({ receipt }: ViewProps) {
   }
 
   return (
-    <article className="space-y-4 rounded-xl border bg-white p-5">
-      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{SANDBOX_LABEL}</p>
+    <article className="surface-card space-y-4 rounded-2xl border p-6">
+      <p className="text-xs font-semibold tracking-[0.14em] text-[#00A5B5] uppercase">{SANDBOX_LABEL}</p>
       <div className="flex min-w-0 flex-wrap items-center gap-4">
         <ScoreRing
           score={receipt.investigation_snapshot.score.score}
@@ -76,10 +76,10 @@ export function ReceiptView({ receipt }: ViewProps) {
           }
         />
         <div className="min-w-0 flex-1">
-          <h2 className="break-words text-xl font-semibold">{receipt.listing.title}</h2>
-          <p className="text-stone-600">{receipt.listing.merchant_name}</p>
+          <h2 className="break-words text-xl font-semibold tracking-tight">{receipt.listing.title}</h2>
+          <p className="text-muted-foreground">{receipt.listing.merchant_name}</p>
           <p className="text-lg font-semibold">{formatCents(receipt.amount_cents, receipt.currency)}</p>
-          <p className="text-sm text-stone-500">Token ····{receipt.token_last4}</p>
+          <p className="text-sm text-muted-foreground">Token ····{receipt.token_last4}</p>
         </div>
       </div>
       <div>
@@ -93,7 +93,7 @@ export function ReceiptView({ receipt }: ViewProps) {
       <div>
         <h3 className="font-semibold">Unverified</h3>
         {receipt.unverified.length === 0 ? (
-          <p className="text-sm text-stone-500">None</p>
+          <p className="text-sm text-muted-foreground">None</p>
         ) : (
           <ul className="list-disc pl-5 text-sm">
             {receipt.unverified.map((name) => (
@@ -102,14 +102,14 @@ export function ReceiptView({ receipt }: ViewProps) {
           </ul>
         )}
       </div>
-      <p className="text-sm text-stone-500">Issued {issued}</p>
+      <p className="text-sm text-muted-foreground">Issued {issued}</p>
       <div>
         <h3 className="font-semibold">What this receipt proves</h3>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-muted-foreground">
           This sandbox receipt records the trust checks and a simulated Visa payment. It is not a charge on a real card.
         </p>
       </div>
-      <p className="text-sm break-all text-stone-500">{shareUrl}</p>
+      <p className="text-sm break-all text-muted-foreground">{shareUrl}</p>
       <Button type="button" variant="outline" onClick={() => void copyLink()}>
         {copied ? "Link copied" : "Copy link"}
       </Button>

@@ -11,7 +11,7 @@ Paste these. Do not strengthen them. Every checkout and receipt line must keep t
 
 ## Title / tagline
 
-- **Title:** Sniff + Visa — the trust layer for agentic commerce
+- **Title:** Sykes + Visa — the trust layer for agentic commerce
 - **Tagline:** The AI shopping agent that investigates every listing, then only pays merchants it can verify.
 
 ## What is true in this repo

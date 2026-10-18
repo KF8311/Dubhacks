@@ -23,7 +23,7 @@ export function ProcessingState({ onDone }: Props) {
       <h3 className="text-lg font-semibold">Processing</h3>
       <ol className="space-y-1">
         {STEPS.map((label, index) => (
-          <li key={label} className={index <= step ? "font-semibold text-stone-900" : "text-stone-600"}>
+            <li key={label} className={index <= step ? "font-semibold text-foreground" : "text-muted-foreground"}>
             {label}
           </li>
         ))}

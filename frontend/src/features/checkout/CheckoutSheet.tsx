@@ -87,19 +87,19 @@ export function CheckoutSheet({
   }
 
   return (
-    <aside className="rounded-xl border bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{SANDBOX_LABEL}</p>
-      <h3 className="mt-2 text-lg font-semibold">Checkout</h3>
+    <aside className="surface-card rounded-2xl border p-6">
+      <p className="text-xs font-semibold tracking-[0.14em] text-[#00A5B5] uppercase">{SANDBOX_LABEL}</p>
+      <h3 className="mt-2 text-lg font-semibold tracking-tight">Checkout</h3>
       {phase === "review" ? (
         <div className="mt-3 space-y-3">
-          <p className="text-stone-700">
+          <p className="text-foreground">
             {listing.merchant_name} · {formatCents(listing.price_cents, listing.currency)}
           </p>
-          <p className="flex items-center gap-2 text-sm text-stone-600">
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <TrustBadge score={score} verdict={verdict} allowlisted={allowlisted} />
             <span>confidence {confidence}</span>
           </p>
-          <Button type="button" disabled={!payable || busy} onClick={() => void onPay()}>
+          <Button type="button" className="h-11 px-5" disabled={!payable || busy} onClick={() => void onPay()}>
             Pay
           </Button>
         </div>

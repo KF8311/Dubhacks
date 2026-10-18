@@ -84,6 +84,7 @@ class Answer(BaseModel):
 class SearchSpec(BaseModel):
     query: str
     budget_max_cents: int | None = None
+    budget_min_cents: int | None = None
     category: str | None = None
     merchants_preferred: list[str] = Field(default_factory=list)
 

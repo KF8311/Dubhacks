@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { AppShell } from "@/components/AppShell.tsx"
 import { EmptyState } from "@/components/EmptyState.tsx"
 import { ErrorBanner } from "@/components/ErrorBanner.tsx"
-import { CheckoutSheet, SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
+import { CheckoutSheet } from "@/features/checkout/CheckoutSheet.tsx"
 import { ReceiptPage, ReceiptView } from "@/features/receipt/ReceiptPage.tsx"
 import type { Receipt } from "@/lib/types.ts"
 import { DiscoveryFlow } from "@/features/discovery/DiscoveryFlow.tsx"
@@ -24,20 +24,9 @@ export default function App() {
   const shareId = shareIdFromPath()
   if (shareId) {
     return (
-      <div className="min-h-screen bg-white text-left text-stone-900">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 sm:px-6">
-          <div className="min-w-0">
-            <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
-            <p className="text-xs text-stone-600">Investigates first. Pays only what it can verify.</p>
-          </div>
-          <Badge variant="outline" className="h-auto max-w-full shrink whitespace-normal py-1 text-left">
-            {SANDBOX_LABEL}
-          </Badge>
-        </header>
-        <main className="mx-auto min-w-0 max-w-6xl px-4 py-8 sm:px-6">
-          <ReceiptPage shareId={shareId} />
-        </main>
-      </div>
+      <AppShell>
+        <ReceiptPage shareId={shareId} />
+      </AppShell>
     )
   }
   return <Shop />
@@ -54,6 +43,7 @@ function Shop() {
   const error = useSessionStore((state) => state.error)
   const purgedIds = useSessionStore((state) => state.purgedIds)
   const budgetMaxCents = useSessionStore((state) => state.budgetMaxCents)
+  const budgetMinCents = useSessionStore((state) => state.budgetMinCents)
   const dismissError = useSessionStore((state) => state.dismissError)
   const reset = useSessionStore((state) => state.reset)
   const [purging, setPurging] = useState(false)
@@ -70,73 +60,70 @@ function Shop() {
   const hasDanger = visible.some((listing) => scores[listing.id]?.verdict === "danger")
 
   return (
-    <div className="min-h-screen bg-white text-left text-stone-900">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 sm:px-6">
-        <div className="min-w-0">
-          <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
-          <p className="text-xs text-stone-600">Investigates first. Pays only what it can verify.</p>
-        </div>
-        <Badge variant="outline" className="h-auto max-w-full shrink whitespace-normal py-1 text-left">
-          {SANDBOX_LABEL}
-        </Badge>
-      </header>
-      <main className="mx-auto min-w-0 max-w-6xl space-y-6 px-4 py-8 sm:px-6">
-        {RESULT_STAGES.has(stage) ? (
-          <>
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="min-w-0 text-2xl font-semibold">Results for “{query}”</h2>
-              <div className="flex flex-wrap gap-2">
-                {hasDanger ? (
-                  <Button type="button" variant="destructive" onClick={() => setPurging(true)}>
-                    Purge danger
-                  </Button>
-                ) : null}
-                <Button type="button" variant="outline" onClick={reset}>
-                  Start over
-                </Button>
-              </div>
+    <AppShell>
+      {RESULT_STAGES.has(stage) ? (
+        <>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#00A5B5]">Investigation</p>
+              <h2 className="mt-1 min-w-0 text-2xl font-semibold tracking-tight sm:text-3xl">
+                Results for “{query}”
+              </h2>
             </div>
-            {error ? <ErrorBanner message={error} onDismiss={dismissError} /> : null}
-            {recommendation?.no_trusted_option ? (
-              <EmptyState message={recommendation.reason} onStartOver={reset} />
-            ) : (
-              <>
-                {recommendation && best ? (
-                  <BestPick
-                    recommendation={recommendation}
-                    listings={visible}
-                    budgetMaxCents={budgetMaxCents}
-                  />
-                ) : null}
-                {listings.length === 0 ? <p>Checking listings…</p> : null}
+            <div className="flex flex-wrap gap-2">
+              {hasDanger ? (
+                <Button type="button" variant="destructive" onClick={() => setPurging(true)}>
+                  Purge danger
+                </Button>
+              ) : null}
+              <Button type="button" variant="outline" onClick={reset}>
+                Start over
+              </Button>
+            </div>
+          </div>
+          {error ? <ErrorBanner message={error} onDismiss={dismissError} /> : null}
+          {recommendation?.no_trusted_option ? (
+            <EmptyState message={recommendation.reason} onStartOver={reset} />
+          ) : (
+            <>
+              {recommendation && best ? (
+                <BestPick
+                  recommendation={recommendation}
+                  listings={visible}
+                  budgetMaxCents={budgetMaxCents}
+                />
+              ) : null}
+              {listings.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Checking listings…</p>
+              ) : null}
                 <ResultsGrid
                   listings={visible}
                   checks={checks}
                   scores={scores}
                   recommendation={recommendation}
                   budgetMaxCents={budgetMaxCents}
+                  budgetMinCents={budgetMinCents}
                 />
-                {receipt ? (
-                  <ReceiptView receipt={receipt} />
-                ) : best && scores[best.id] ? (
-                  <CheckoutSheet
-                    listing={best}
-                    verdict={scores[best.id].verdict}
-                    score={scores[best.id].score}
-                    confidence={scores[best.id].confidence}
-                    allowlisted={scores[best.id].allowlisted === true}
-                    sessionId={sessionId ?? undefined}
-                    onComplete={setReceipt}
-                  />
-                ) : null}
-              </>
-            )}
-            <PurgeOverlay active={purging} onComplete={finishPurge} />
-          </>
-        ) : (
-          <DiscoveryFlow onStarted={() => undefined} />
-        )}
-      </main>
-    </div>
+              {receipt ? (
+                <ReceiptView receipt={receipt} />
+              ) : best && scores[best.id] ? (
+                <CheckoutSheet
+                  listing={best}
+                  verdict={scores[best.id].verdict}
+                  score={scores[best.id].score}
+                  confidence={scores[best.id].confidence}
+                  allowlisted={scores[best.id].allowlisted === true}
+                  sessionId={sessionId ?? undefined}
+                  onComplete={setReceipt}
+                />
+              ) : null}
+            </>
+          )}
+          <PurgeOverlay active={purging} onComplete={finishPurge} />
+        </>
+      ) : (
+        <DiscoveryFlow onStarted={() => undefined} />
+      )}
+    </AppShell>
   )
 }

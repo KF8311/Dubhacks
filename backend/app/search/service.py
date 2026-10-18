@@ -10,12 +10,25 @@ from app.search.serpapi import SerpAPIProvider
 
 
 def _within_budget(listings: list[Listing], spec: SearchSpec) -> list[Listing]:
-    if spec.budget_max_cents is None:
+    lo, hi = spec.budget_min_cents, spec.budget_max_cents
+    if lo is None and hi is None:
         return listings
-    affordable = [item for item in listings if item.price_cents <= spec.budget_max_cents]
-    # Gemini budget options can be grocery-scale; the demo catalog is headphones.
-    # An empty grid is worse than ignoring a cap that matches nothing.
-    return affordable if affordable else listings
+
+    def in_band(item: Listing) -> bool:
+        if lo is not None and item.price_cents < lo:
+            return False
+        if hi is not None and item.price_cents > hi:
+            return False
+        return True
+
+    matched = [item for item in listings if in_band(item)]
+    if matched:
+        return matched
+    # D-022: a ceiling-only grocery-scale cap vs the headphone catalog.
+    # A typed range must not fall back to $200 junk (D-024).
+    if lo is None:
+        return listings
+    return matched
 
 
 async def search(
@@ -42,8 +55,13 @@ async def search(
 
     if results:
         listings, source = list(results), "serpapi"
-    else:
-        listings = catalog if catalog is not None else load_catalog()
-        source = "catalog"
+        matched = _within_budget(listings, spec)
+        if matched or spec.budget_min_cents is not None:
+            return matched[:limit], source
+        return listings[:limit], source
 
-    return _within_budget(listings, spec)[:limit], source
+    if spec.budget_min_cents is not None:
+        return [], "serpapi"
+
+    listings = catalog if catalog is not None else load_catalog()
+    return _within_budget(listings, spec)[:limit], "catalog"

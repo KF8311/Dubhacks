@@ -26,7 +26,7 @@ The submission is five steps. Fields marked **\*** are required. Copy below is t
 **\* Project name** — max 60 characters, editable later.
 
 ```
-Sniff + Visa
+Sykes + Visa
 ```
 
 **\* Elevator pitch** — max 150 characters, editable later.
