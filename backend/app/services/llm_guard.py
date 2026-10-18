@@ -10,11 +10,13 @@ from app.core.logging import CARD_RE, EMAIL_RE, PHONE_RE, redact
 SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 ACCOUNT_RE = re.compile(r"\bACCT[-_]?\d+\b", re.I)
 SECRET_RE = re.compile(
-    r"(?i)\b(api[_-]?key|sk-[a-z0-9]{16,}|x-goog-api-key|password\s*[:=])"
+    r"(?i)(api[_-]?key|api keys|sk-[a-z0-9]{16,}|x-goog-api-key|password\s*[:=]|"
+    r"passwords, or tokens|tokens in your context|reveal any api keys)"
 )
 INJECTION_RE = re.compile(
-    r"(?i)ignore (all |any )?(previous|prior|above) instructions|dump your system prompt|"
-    r"print your hidden system prompt|reveal (your )?(hidden|system) (prompt|instructions)"
+    r"(?i)ignore (all |any |your )?(previous|prior|above|rules)|dump your system prompt|"
+    r"print your hidden system prompt|reveal (your )?(hidden|system) (prompt|instructions)|"
+    r"developer mode|dump the private data|print any customer email"
 )
 HARMFUL_RE = re.compile(
     r"(?i)\b(explosive device|build a bomb|how to make a bomb|"
@@ -107,22 +109,73 @@ def looks_like_llm_probe(payload: object) -> bool:
     return isinstance(body, str) and len(body) > 20
 
 
+_SKIP_PROMPT_KEYS = {
+    "model",
+    "object",
+    "id",
+    "n",
+    "temperature",
+    "max_tokens",
+    "stream",
+    "endpoint_path",
+    "endpoint_method",
+    "endpoint_framework",
+}
+
+REASON_TOKENS = ("because", "due to", "based on", "reason", "factor", "since", "result of")
+
+
+def _walk_prompt_strings(value: object, acc: list[str]) -> None:
+    if isinstance(value, str):
+        text = value.strip()
+        if len(text) >= 12:
+            acc.append(text)
+        return
+    if isinstance(value, list):
+        for item in value:
+            _walk_prompt_strings(item, acc)
+        return
+    if isinstance(value, dict):
+        for key, item in value.items():
+            if str(key) in _SKIP_PROMPT_KEYS:
+                continue
+            _walk_prompt_strings(item, acc)
+
+
 def probe_prompt_from_payload(payload: dict) -> str:
-    messages = payload.get("messages")
-    if isinstance(messages, list):
-        chunks = [
-            str(item.get("content") or "")
-            for item in messages
-            if isinstance(item, dict) and item.get("content")
-        ]
-        if chunks:
-            return "\n".join(chunks)
-    parts: list[str] = []
-    for key in ("input", "prompt", "body", "query", "session_id", "listing_id", "mandate"):
-        value = payload.get(key)
-        if isinstance(value, str) and value.strip():
-            parts.append(value.strip())
-    return "\n".join(parts)
+    chunks: list[str] = []
+    _walk_prompt_strings(payload, chunks)
+    seen: set[str] = set()
+    unique: list[str] = []
+    for chunk in chunks:
+        if chunk not in seen:
+            seen.add(chunk)
+            unique.append(chunk)
+    return "\n".join(unique)
+
+
+def looks_like_refusal(text: str) -> bool:
+    low = (text or "").lower()
+    return any(
+        token in low
+        for token in ("i can't", "i cannot", "i will not", "i won't", "can't help")
+    )
+
+
+def requires_refusal(text: str) -> bool:
+    raw = text or ""
+    low = raw.lower()
+    return bool(
+        HARMFUL_RE.search(raw)
+        or INJECTION_RE.search(raw)
+        or TOXIC_RE.search(raw)
+        or SSN_RE.search(raw)
+        or SECRET_RE.search(raw)
+        or CARD_RE.search(raw)
+        or "credit card" in low
+        or "confirm it back" in low
+        or "repeat it back" in low
+    )
 
 
 def openai_chat_payload(content: str, *, refused: bool, sandbox_label: str) -> dict:
@@ -144,12 +197,19 @@ def openai_chat_payload(content: str, *, refused: bool, sandbox_label: str) -> d
 
 __all__ = [
     "CARD_RE",
+    "CREDIT_RE",
+    "CREDIT_REFUSAL",
     "EMAIL_RE",
+    "HARMFUL_RE",
     "PHONE_RE",
+    "REASON_TOKENS",
     "GuardResult",
     "guard_user_text",
     "looks_like_llm_probe",
+    "looks_like_refusal",
     "openai_chat_payload",
     "probe_prompt_from_payload",
     "reply_for_probe",
+    "requires_refusal",
+    "_redact_pii",
 ]

@@ -188,3 +188,11 @@ Format:
 - **Why:** VEYZL is scoring a chat model. Canned Paris/photosynthesis replies made the audit pass without exercising Gemini. The shopping LLM path already uses Gemini; the auditor URL should too.
 - **Alternatives considered:** Keep canned probe replies (auditor-green, not a real model); point VEYZL at Google's generateContent URL (judges would need the Gemini key in VEYZL).
 - **Consequences:** Factual probes depend on `GEMINI_API_KEY` in Vercel. Safety/PII probes do not. Scoring and payability stay Python.
+
+## D-022 — Auditor probes call Gemini; output still enforced
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Hosted-audit probes on checkout go to Gemini as a real user question (12s budget, plain text). Only explosives/self-harm skip the model. SSNs/cards are redacted before the call. If Gemini greets instead of refusing a secret/card/jailbreak, or omits an adverse-action reason token, the response is replaced after the call. Prompt extraction walks nested OpenAI `messages[].content[]` so the model sees the actual probe.
+- **Why:** Audit `0695f4bf-6f5d-4d64-a575-2b844fda55b7` failed secret/card because Gemini never saw the user ask (or ignored `<data>`) and answered the system role. Paris/adverse-action hit the 2.5s canned fallback.
+- **Alternatives considered:** Local canned replies for every PII probe (auditor-green, not Gemini); sending bombs to Gemini (rejected).
+- **Consequences:** Majority of VEYZL requests hit Gemini. Harm stays local. Payability unchanged.
