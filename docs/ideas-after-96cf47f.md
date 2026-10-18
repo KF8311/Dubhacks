@@ -19,7 +19,7 @@ The chosen point keeps: live SerpAPI search (`source: "serpapi"`), the curated-c
 | Ref | Tip | What it is |
 |---|---|---|
 | `backup/main-post-96cf47f` (local) | `1562772` | `main` immediately before the reset — the full post-`96cf47f` state |
-| `origin/main` | `1562772` | Same tip, untouched on GitHub |
+| `origin/main` before PR #34 | `1562772` | The old tip. [PR #34](https://github.com/KF8311/Dubhacks/pull/34) restored `main` to the kept build; the commits stay reachable from the backup refs below |
 | `backup/23pm-good-deploy-pre-reset` (local) | `a81bcc4` | The four commits that were on `restore/23pm-good-deploy` |
 | `restore/23pm-good-deploy` (local) | `96cf47f` | The point that was kept |
 | `origin/restore/23pm-good-deploy` | `a81bcc4` | Remote still has the four later commits |
@@ -170,7 +170,7 @@ git checkout c55ce29 -- backend/app/search/service.py
 git switch -c scratch/revisit backup/main-post-96cf47f
 ```
 
-`backup/main-post-96cf47f` is local; `origin/main` still points at the same tip, so the work is recoverable from either machine.
+`backup/main-post-96cf47f` is local; `origin/restore/23pm-good-deploy` still contains the later commits, so the work is recoverable from either machine.
 
 ## Decisions to make later
 

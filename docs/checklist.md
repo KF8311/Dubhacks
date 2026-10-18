@@ -19,13 +19,13 @@ One shared checklist. Personal scratch notes do not belong here.
 |---|---|
 | **Code** | **`96cf47f`** — the build that actually searches what you type: live SerpAPI search, curated-catalog fallback, five checks, deterministic scoring, SSE, recommendation, checkout → passkey → receipt, Gemini copy with template fallback. |
 | **Decision** | The 20 commits after `96cf47f` were removed from `main`. They are parked, not deleted: [`docs/ideas-after-96cf47f.md`](ideas-after-96cf47f.md) lists every one and where it still lives. |
-| **Git** | Local `main` = `96cf47f` + the archive commit + this docs commit. `origin/main` still points at the old tip (`1562772`). **This branch open as a PR is what restores `main`** — merging it reverts the 20 commits and keeps them reachable on `backup/main-post-96cf47f` and the `origin/restore/*` branches. |
+| **Git** | **`main` is restored** — [PR #34](https://github.com/KF8311/Dubhacks/pull/34) merged as `2d53ca1`; the tree is `96cf47f` plus the archive and docs commits. The 20 removed commits stay reachable on `backup/main-post-96cf47f` and the `origin/restore/*` branches. |
 | **Tests** | Backend **204 passed**. Frontend **39 passed**, `npm run build` clean. [`scripts/replay_offline.py`](../scripts/replay_offline.py) exits 0 with the frozen numbers. Docs that say 187/34 are stale (B's task). |
 | **Run it** | `.\scripts\dev.cmd` — backend + frontend in one command. Modes and troubleshooting: [`docs/RUN.md`](RUN.md). |
 | **Deploy** | **Fly is the path for this commit** (`fly.toml`, `backend/Dockerfile` copies `data/`). A Vercel Git deploy of this commit is broken — it ships no data. Do not submit `sykes.select`; it runs the removed code. |
 | **Health note** | With `MONGODB_URI` unset, `/api/health` answers `degraded` by design. Read it as "optional store off", not "broken". |
 
-**Before anyone starts:** pull the restored `main` after the PR merges, then create your branch from it. If your clone still has the old `main`, `git fetch && git checkout main && git reset --hard origin/main` — this is the one time a reset is expected.
+**Before anyone starts:** **`main` is restored** (PR #34 is merged) — `git fetch && git checkout main && git pull`. If your clone still has the old tip, `git reset --hard origin/main` — this is the one time a reset is expected.
 
 ---
 
