@@ -64,6 +64,39 @@ test("trusted checkout reaches the receipt", async () => {
   await waitFor(() => expect(onComplete).toHaveBeenCalled(), { timeout: 3000 })
 })
 
+test("a server refusal shows its PayabilityCode", async () => {
+  window.history.replaceState({}, "", "/")
+  globalThis.fetch = (async () =>
+    ({
+      ok: false,
+      status: 409,
+      statusText: "",
+      json: async () => ({
+        error: {
+          code: "MERCHANT_NOT_TRUSTED",
+          message: "This merchant did not pass the trust checks.",
+          details: { verdict: "danger" },
+        },
+      }),
+    }) as Response) as typeof fetch
+
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="trusted"
+      score={92}
+      confidence={1}
+      sessionId="ses_1"
+      onComplete={() => undefined}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: /^pay$/i }))
+
+  const alert = await screen.findByRole("alert")
+  expect(alert).toHaveTextContent(/MERCHANT_NOT_TRUSTED/)
+  expect(alert).toHaveTextContent(/did not pass the trust checks/i)
+})
+
 test("a failed passkey stays on the error", async () => {
   const onComplete = vi.fn()
   render(

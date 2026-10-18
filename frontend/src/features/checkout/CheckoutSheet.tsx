@@ -3,11 +3,16 @@ import { Button } from "@/components/ui/button"
 import { MandateCard } from "@/features/checkout/MandateCard.tsx"
 import { PasskeyDialog } from "@/features/checkout/PasskeyDialog.tsx"
 import { ProcessingState } from "@/features/checkout/ProcessingState.tsx"
-import { confirmCheckout, createCheckout } from "@/lib/api.ts"
+import { ApiError, confirmCheckout, createCheckout } from "@/lib/api.ts"
 import { formatCents } from "@/lib/format.ts"
 import type { Checkout, Listing, Receipt, Verdict } from "@/lib/types.ts"
 
 export const SANDBOX_LABEL = "Sandbox — simulated Visa Intelligent Commerce flow"
+
+function describe(caught: unknown, fallback: string): { code?: string; message: string } {
+  if (caught instanceof ApiError) return { code: caught.code, message: caught.message }
+  return { message: caught instanceof Error ? caught.message : fallback }
+}
 
 type Props = {
   listing: Listing
@@ -30,7 +35,8 @@ export function CheckoutSheet({
   const [phase, setPhase] = useState<"review" | "mandate" | "passkey" | "processing">("review")
   const [checkout, setCheckout] = useState<Checkout | null>(null)
   const [receipt, setReceipt] = useState<Receipt | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  // The server's PayabilityCode is part of the refusal; keep it beside the message.
+  const [failure, setFailure] = useState<{ code?: string; message: string } | null>(null)
   const [busy, setBusy] = useState(false)
 
   const finish = useCallback(() => {
@@ -38,7 +44,7 @@ export function CheckoutSheet({
   }, [onComplete, receipt])
 
   async function onPay() {
-    setError(null)
+    setFailure(null)
     setBusy(true)
     try {
       const created = await createCheckout({
@@ -49,7 +55,7 @@ export function CheckoutSheet({
       setCheckout(created)
       setPhase("mandate")
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Checkout failed.")
+      setFailure(describe(caught, "Checkout failed."))
     } finally {
       setBusy(false)
     }
@@ -57,14 +63,14 @@ export function CheckoutSheet({
 
   async function onConfirm(clientData: string) {
     if (!checkout) return
-    setError(null)
+    setFailure(null)
     setBusy(true)
     try {
       const next = await confirmCheckout(checkout.id, { client_data: clientData })
       setReceipt(next)
       setPhase("processing")
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Payment failed.")
+      setFailure(describe(caught, "Payment failed."))
     } finally {
       setBusy(false)
     }
@@ -102,9 +108,10 @@ export function CheckoutSheet({
           <ProcessingState onDone={finish} />
         </div>
       ) : null}
-      {error ? (
+      {failure ? (
         <p className="mt-3 text-sm text-red-800" role="alert">
-          {error}
+          {failure.code ? <span className="mr-2 font-mono text-xs">{failure.code}</span> : null}
+          {failure.message}
         </p>
       ) : null}
     </aside>

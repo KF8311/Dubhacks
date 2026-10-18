@@ -63,6 +63,24 @@ def test_checkout_blocked_for_caution(monkeypatch):
     assert r.json()["error"]["code"] == "MERCHANT_NOT_TRUSTED"
 
 
+def test_a_refusal_carries_a_human_message(monkeypatch):
+    """The checkout sheet renders `message`, so it cannot be the bare code."""
+
+    client = TestClient(create_app())
+    sid, listing = _setup(client, monkeypatch, verdict="caution", completed=5)
+    r = client.post(
+        "/api/checkout",
+        json={
+            "session_id": sid,
+            "listing_id": listing["id"],
+            "mandate": {"max_amount_cents": 50000, "currency": "USD", "expires_in_seconds": 600},
+        },
+    )
+    error = r.json()["error"]
+    assert error["message"] != error["code"]
+    assert "trust" in error["message"].lower()
+
+
 def test_confirm_twice_returns_same_receipt(monkeypatch):
     client = TestClient(create_app())
     sid, listing = _setup(client, monkeypatch)
