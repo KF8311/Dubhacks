@@ -92,12 +92,14 @@ async def explain_check_route(session_id: str, body: ExplainIn) -> dict:
     check = next((item for item in investigation.checks if item.id.value == body.check_id), None)
     if check is None:
         raise AppError("CHECK_NOT_FOUND", "Check not found on that listing.", status_code=404)
-    from app.services.llm import explain_check
+    from app.services.llm import explain_check_with_source
 
+    explanation, source = await explain_check_with_source(check)
     return {
         "listing_id": body.listing_id,
         "check_id": body.check_id,
-        "explanation": await explain_check(check),
+        "explanation": explanation,
+        "source": source,
     }
 
 

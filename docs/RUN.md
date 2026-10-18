@@ -29,6 +29,8 @@ What the script checks before starting:
 - `frontend\node_modules` exists
 - whether something already answers on `:8000` (if so, it reuses it instead of starting a second backend)
 
+**Fresh clone:** run `cd frontend; npm install` before the first `dev.cmd`. The restyle added `@fontsource-variable/bricolage-grotesque` in `src/index.css`, and a `node_modules` older than that builds in dev but fails `npm run build` with `Can't resolve '@fontsource-variable/bricolage-grotesque'`. Both the `package.json` entry and the lockfile entry already exist; only the install is missing.
+
 Stopping:
 
 - The frontend runs in the window you launched the script from: **Ctrl+C** stops it.

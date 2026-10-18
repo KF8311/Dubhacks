@@ -130,20 +130,26 @@ export async function submitAnswers(
   })
 }
 
+export type ExplainSource = "gemini" | "template"
+
 export async function explainCheck(input: {
   sessionId: string
   listingId: string
   checkId: string
-}): Promise<string> {
+}): Promise<{ text: string; source: ExplainSource }> {
   if (isMockMode()) {
     await delay(200)
-    return "Sandbox explanation — Gemini is skipped in mock mode."
+    return { text: "Sandbox explanation — Gemini is skipped in mock mode.", source: "template" }
   }
-  const body = await request<{ explanation: string }>(`/api/sessions/${input.sessionId}/explain`, {
-    method: "POST",
-    body: JSON.stringify({ listing_id: input.listingId, check_id: input.checkId }),
-  })
-  return body.explanation
+  const body = await request<{ explanation: string; source?: string }>(
+    `/api/sessions/${input.sessionId}/explain`,
+    {
+      method: "POST",
+      body: JSON.stringify({ listing_id: input.listingId, check_id: input.checkId }),
+    },
+  )
+  // An older backend omits `source`; never claim the model wrote what it did not.
+  return { text: body.explanation, source: body.source === "gemini" ? "gemini" : "template" }
 }
 
 export async function getSnapshot(sessionId: string): Promise<SessionSnapshot> {
