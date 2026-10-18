@@ -10,6 +10,13 @@ import {
 const FAILED_TO_REACH =
   "Could not reach the phone bridge. Start it with `bun start` in dub-spectrum."
 
+const PRIVACY_NOTE = "Sent only to your local bridge; the number is not saved by the app."
+
+/**
+ * Deal alerts sit in the site header so the phone option is visible from the
+ * first screen. The number goes to the local bridge only; the bridge keeps the
+ * consent request and never the number.
+ */
 export function DealAlerts() {
   const [phone, setPhone] = useState("")
   const [submitted, setSubmitted] = useState("")
@@ -77,78 +84,92 @@ export function DealAlerts() {
 
   const last4 = submitted.replace(/\D/g, "").slice(-4)
   const active = requestId !== null
+  const retryable = status === "declined" || status === "expired"
 
   return (
-    <section className="ticket mt-4 rounded-3xl p-3.5" aria-labelledby="deal-alerts-title">
-      <h2 id="deal-alerts-title" className="font-heading text-sm font-semibold">
+    <div
+      className="flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-1.5"
+      aria-labelledby="deal-alerts-title"
+    >
+      <span id="deal-alerts-title" className="text-xs font-semibold text-muted-foreground">
         Deal alerts
-      </h2>
+      </span>
 
       {status === "confirmed" ? (
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          On for ••••{last4}. The <span className="font-medium text-foreground">Send</span>{" "}
-          buttons on every card now text this number.
-        </p>
-      ) : (
         <>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            Get the best trusted pick by text. We ask for a Y/N reply before sending anything
-            else.
-          </p>
-
-          {active ? (
-            <p className="mt-2 text-xs font-medium" role="status">
-              {status === "pending"
-                ? "Check your phone — reply Y to turn alerts on, or N to skip."
-                : status === "declined"
-                  ? "No alerts will be sent to that number."
-                  : "That request expired. Send it again."}
-            </p>
-          ) : (
-            <form className="mt-2 flex gap-2" onSubmit={(event) => void onStart(event)}>
-              <Input
-                id="deal-phone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                aria-label="Your phone number"
-                placeholder="+1 415 555 0123"
-                value={phone}
-                disabled={busy}
-                className="h-8 flex-1 rounded-full bg-[var(--paper)] px-3 text-xs"
-                onChange={(event) => setPhone(event.target.value)}
-              />
-              <Button
-                type="submit"
-                disabled={busy || phone.trim().length === 0}
-                className="h-8 rounded-full px-3 text-xs font-semibold"
-              >
-                {busy ? "Sending…" : "Text me"}
-              </Button>
-            </form>
-          )}
-
-          <p className="mt-2 text-[0.7rem] leading-relaxed text-muted-foreground">
-            Sent only to your local bridge; the number is not saved by the app.
-          </p>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--trust-trusted-bg)] px-2.5 py-1 text-xs font-semibold text-[color:var(--trust-trusted)] ring-1 ring-[color-mix(in_srgb,var(--trust-trusted)_35%,transparent)]">
+            <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+            On for ••••{last4}
+          </span>
+          <span className="hidden text-xs text-muted-foreground sm:inline">
+            Send buttons text this number.
+          </span>
+          <button
+            type="button"
+            className="text-xs font-medium text-accent underline underline-offset-4"
+            onClick={reset}
+          >
+            Change
+          </button>
         </>
+      ) : active ? (
+        <>
+          <span className="text-xs font-medium" role="status">
+            {status === "pending"
+              ? "Reply Y to turn alerts on, or N to skip."
+              : status === "declined"
+                ? "No alerts will be sent to that number."
+                : "That request expired. Send it again."}
+          </span>
+          <button
+            type="button"
+            className="text-xs font-medium text-accent underline underline-offset-4"
+            onClick={reset}
+          >
+            {retryable ? "Try another number" : "Cancel"}
+          </button>
+        </>
+      ) : (
+        <form
+          className="flex items-center gap-2"
+          title={PRIVACY_NOTE}
+          onSubmit={(event) => void onStart(event)}
+        >
+          <Input
+            id="deal-phone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            aria-label="Your phone number"
+            aria-describedby="deal-phone-note"
+            placeholder="+1 415 555 0123"
+            value={phone}
+            disabled={busy}
+            className="h-9 w-40 rounded-full bg-[var(--paper)] px-3 text-xs sm:w-44"
+            onChange={(event) => setPhone(event.target.value)}
+          />
+          <Button
+            type="submit"
+            disabled={busy || phone.trim().length === 0}
+            className="h-9 rounded-full px-3.5 text-xs font-semibold"
+          >
+            {busy ? "Sending…" : "Text me"}
+          </Button>
+        </form>
       )}
 
-      {active ? (
-        <button
-          type="button"
-          className="mt-2 text-xs font-medium text-accent underline underline-offset-4"
-          onClick={reset}
-        >
-          Use a different number
-        </button>
-      ) : null}
+      <span id="deal-phone-note" className="sr-only">
+        {PRIVACY_NOTE}
+      </span>
 
       {error ? (
-        <p className="mt-2 text-xs text-[color:var(--trust-danger)]" role="alert">
+        <p
+          role="alert"
+          className="basis-full text-right text-xs leading-relaxed text-[color:var(--trust-danger)]"
+        >
           {error}
         </p>
       ) : null}
-    </section>
+    </div>
   )
 }

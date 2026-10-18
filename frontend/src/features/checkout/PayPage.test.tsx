@@ -9,7 +9,7 @@ test("reads the checkout and shows what the phone is about to pay", async () => 
   render(<PayPage checkoutId="chk_mock" />)
   expect(await screen.findByRole("heading", { name: /pay on this phone/i })).toBeInTheDocument()
   expect(await screen.findByText(/Sandbox — simulated Visa Intelligent Commerce flow/)).toBeInTheDocument()
-  expect(screen.getByText(/Best Buy ·/)).toBeInTheDocument()
+  expect(await screen.findByText(/Best Buy ·/)).toBeInTheDocument()
 })
 
 test("approving the passkey opens the shared receipt", async () => {

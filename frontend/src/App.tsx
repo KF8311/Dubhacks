@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { AppShell } from "@/components/AppShell.tsx"
+import { ScreenSlide } from "@/components/ScreenSlide.tsx"
 import { EmptyState } from "@/components/EmptyState.tsx"
 import { ErrorBanner } from "@/components/ErrorBanner.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -107,7 +108,7 @@ function Shop() {
   return (
     <AppShell>
       {RESULT_STAGES.has(stage) ? (
-        <>
+        <ScreenSlide step={sessionId ?? "results"} className="space-y-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
               <h2 className="min-w-0 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -184,7 +185,7 @@ function Shop() {
             </>
           )}
           <PurgeOverlay active={purging} onComplete={finishPurge} />
-        </>
+        </ScreenSlide>
       ) : (
         <DiscoveryFlow onStarted={() => undefined} />
       )}

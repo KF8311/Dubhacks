@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { BrandMark } from "@/components/BrandMark.tsx"
+import { DealAlerts } from "@/features/results/DealAlerts.tsx"
 import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
 import { currentPath, go, withSearch } from "@/lib/path.ts"
 
@@ -35,10 +36,12 @@ function NavLink({ to, label }: { to: string; label: string }) {
 }
 
 export function AppShell({ children }: Props) {
+  // The phone-facing pages keep a single job: approving or showing a receipt.
+  const showDealAlerts = !/^\/(pay|r)\//.test(currentPath())
   return (
     <div className="app-canvas min-h-screen text-left text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
           <a
             href={withSearch("/")}
             className="inline-flex min-w-0 items-center rounded-full bg-[var(--paper)] px-3 py-1.5 shadow-[0_10px_24px_-20px_rgb(23_37_30/60%)] ring-1 ring-[color-mix(in_srgb,var(--ink)_10%,transparent)]"
@@ -49,11 +52,19 @@ export function AppShell({ children }: Props) {
           >
             <BrandMark />
           </a>
-          <nav className="flex items-center gap-4 text-sm" aria-label="Sykes">
-            <NavLink to="/" label="Shop" />
-            <NavLink to="/how" label="How it works" />
-            <NavLink to="/about" label="About" />
-          </nav>
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-2">
+            <nav className="flex items-center gap-4 text-sm" aria-label="Sykes">
+              <NavLink to="/" label="Shop" />
+              <NavLink to="/how" label="How it works" />
+              <NavLink to="/about" label="About" />
+            </nav>
+            {showDealAlerts ? (
+              <div className="flex items-center gap-3">
+                <span className="hidden h-6 w-px bg-border sm:block" aria-hidden="true" />
+                <DealAlerts />
+              </div>
+            ) : null}
+          </div>
         </div>
         <p className="mx-auto max-w-6xl px-4 pb-2 text-xs text-muted-foreground sm:px-6">
           {SANDBOX_LABEL}

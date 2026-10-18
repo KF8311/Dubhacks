@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ScreenSlide } from "@/components/ScreenSlide.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createSession, getSnapshot, submitAnswers } from "@/lib/api.ts"
 import type { Answer, Question } from "@/lib/types.ts"
@@ -121,18 +122,21 @@ export function DiscoveryFlow({ onStarted }: Props) {
 
   if (phase === "submitting") {
     return (
-      <div className="ticket mx-auto max-w-2xl space-y-4 rounded-3xl p-6 sm:p-8" aria-busy="true">
-        <p className="text-lg font-medium">Looking at retailers…</p>
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-      </div>
+      <ScreenSlide step="submitting">
+        <div className="ticket mx-auto max-w-2xl space-y-4 rounded-3xl p-6 sm:p-8" aria-busy="true">
+          <p className="text-lg font-medium">Looking at retailers…</p>
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      </ScreenSlide>
     )
   }
 
   if (phase === "query" || !question) {
     return (
-      <section className="mx-auto max-w-3xl">
+      <ScreenSlide step="query">
+        <section className="mx-auto max-w-3xl">
         <p className="inline-flex rounded-full bg-[var(--marigold-wash)] px-3 py-1 text-sm font-semibold text-foreground ring-1 ring-[color-mix(in_srgb,var(--marigold)_45%,transparent)]">
           Sykes shops with you
         </p>
@@ -211,7 +215,8 @@ export function DiscoveryFlow({ onStarted }: Props) {
             How Sykes checks a store
           </button>
         </p>
-      </section>
+        </section>
+      </ScreenSlide>
     )
   }
 
@@ -220,7 +225,8 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const progress = ((index + 1) / questions.length) * 100
 
   return (
-    <div className="ticket mx-auto max-w-xl space-y-5 rounded-3xl p-6 sm:p-8">
+    <ScreenSlide step={`q-${index}`}>
+      <div className="ticket mx-auto max-w-xl space-y-5 rounded-3xl p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Question {index + 1} of {questions.length}
@@ -293,6 +299,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
           </button>
         ) : null}
       </div>
-    </div>
+      </div>
+    </ScreenSlide>
   )
 }
