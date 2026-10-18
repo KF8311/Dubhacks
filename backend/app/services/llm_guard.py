@@ -188,6 +188,22 @@ def looks_like_error_reply(text: str) -> bool:
     } or low.startswith("invalid request")
 
 
+def looks_like_unusable_model_reply(text: str) -> bool:
+    """Gemini often answers the empty Visa mandate instead of the auditor prompt."""
+    if looks_like_error_reply(text) or looks_like_greeting(text):
+        return True
+    low = (text or "").lower()
+    if "mandate" in low and "empty" in low:
+        return True
+    if "required fields are empty" in low or "body and mandate" in low:
+        return True
+    if "i can't process this request" in low and not any(
+        token in low for token in REASON_TOKENS
+    ):
+        return True
+    return False
+
+
 def looks_like_greeting(text: str) -> bool:
     low = (text or "").lower()
     return any(
@@ -226,7 +242,7 @@ def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
     guarded = guard_user_text(raw)
     redacted = guarded.redacted_input
     model = _redact_pii((model_text or "").strip())
-    if looks_like_greeting(model) or looks_like_error_reply(model):
+    if looks_like_unusable_model_reply(model):
         model = ""
     low_raw = (raw or "").lower()
     greeting = not bool(model)
@@ -265,6 +281,9 @@ def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
 
 
 def openai_chat_payload(content: str, *, refused: bool, sandbox_label: str) -> dict:
+    if looks_like_error_reply(content):
+        content = REFUSAL
+        refused = True
     return {
         "id": "chatcmpl-sniff-guard",
         "object": "chat.completion",

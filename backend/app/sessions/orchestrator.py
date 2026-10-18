@@ -72,10 +72,16 @@ class SessionOrchestrator:
             {"query": session.search_spec.query, "providers": ["catalog"]},
         )
         try:
-            listings, source = await asyncio.wait_for(
-                self.search(session.search_spec, MAX_LISTINGS),
-                timeout=12.0 if os.environ.get("VERCEL") else SEARCH_S,
-            )
+            settings = self.config if self.config is not None else get_settings()
+            if getattr(settings, "offline", False):
+                from app.search.catalog import load_catalog
+
+                listings, source = load_catalog()[:MAX_LISTINGS], "catalog"
+            else:
+                listings, source = await asyncio.wait_for(
+                    self.search(session.search_spec, MAX_LISTINGS),
+                    timeout=12.0 if os.environ.get("VERCEL") else SEARCH_S,
+                )
         except Exception:
             from app.search.catalog import load_catalog
 
