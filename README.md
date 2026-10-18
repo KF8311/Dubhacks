@@ -74,6 +74,8 @@ cp .env.example .env
 
 `--workers 1` is mandatory: SSE streams and the in-memory store assume one process.
 
+**Deploy:** Fly.io from the repo root (`fly.toml`), or Vercel via [`vercel.json`](vercel.json) — the backend build runs `python scripts/bundle_data.py` so the fixtures ship inside the function. The frontend reads `VITE_API_BASE_URL`; when it is unset it calls same-origin `/api`, which is what the Vercel service rewrite expects. Local dev defaults to `http://localhost:8000`.
+
 **Frontend:**
 
 ```bash
@@ -137,8 +139,8 @@ Only **$300–$600** contains all nine listings — the catalog runs to $549.99 
 ## Tests
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q          # 187 passed
-cd frontend && npx vitest run && npm run build               # 34 passed, build clean
+cd backend && .venv/Scripts/python.exe -m pytest -q          # 204 passed
+cd frontend && npx vitest run && npm run build               # 39 passed, build clean
 ```
 
 **Offline rehearsal** — the whole session in-process, no server, no network:
@@ -175,4 +177,4 @@ docs/           status, contracts, decisions, plans
 
 ## Docs
 
-Start at [`docs/INDEX.md`](docs/INDEX.md). The live state is [`docs/status.md`](docs/status.md); decisions are append-only in [`docs/decisions.md`](docs/decisions.md).
+Start at [`docs/INDEX.md`](docs/INDEX.md). The live state is [`docs/status.md`](docs/status.md); decisions are append-only in [`docs/decisions.md`](docs/decisions.md); the VEYZL finding and fix are in [`docs/veylz-audit.md`](docs/veylz-audit.md).

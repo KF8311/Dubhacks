@@ -11,20 +11,20 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | **Block 4 is closed and G5 is close-out.** Every text artifact for the Devpost is written; what remains is A's public deploy plus the VEYZL check run and C's browser screenshots. |
-| Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy in Block 5) |
-| Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
+| Gate | **Block 4 is closed and G5 is close-out.** The code is done. What remains is a public deploy, C's browser screenshots, the video, and a clean VEYZL re-run. |
+| Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy is still owed) |
+| Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013), from the repo root. **Vercel services** is now a second path — [`vercel.json`](../vercel.json), backend `bundle_data.py`, frontend same-origin `/api` — merged 22:49 PT and not yet exercised. Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only in the deploy; the live path (D-021, superseding D-011) infers the merchant domain from Google Shopping's `source` and immersive `stores`, and is untested against a real key. |
-| Tests | Backend **187 passed** (13 files). Frontend **34 passed** (13 files), `npm run build` clean. |
+| Tests | Backend **204 passed** (35 files). Frontend **39 passed** (15 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
-| Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
-| Branches | **`main` carries everything and is pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20), [PR #21](https://github.com/KF8311/Dubhacks/pull/21), [PR #22](https://github.com/KF8311/Dubhacks/pull/22) rebase-merged; every working branch deleted after its diff against `main` came back empty). Run `git log --oneline origin/main` for the current tip — recording the hash here just goes stale on the next docs commit. Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
+| Blockers | **A still owes a public deploy** (Fly or Vercel) and a clean VEYZL re-run; C owes the browser click-through and screenshots; B fills `docs/devpost-form.md` as those artifacts land. None of them blocks the others. |
+| Branches | **`main` carries everything and is pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20)–[PR #25](https://github.com/KF8311/Dubhacks/pull/25) rebase-merged or open; every working branch deleted after its diff against `main` came back empty). Run `git log --oneline origin/main` for the current tip — recording the hash here just goes stale on the next docs commit. Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 20:35 PT
+Last updated: 2026-10-17 22:49 PT
 
 ## Gate board
 
@@ -34,8 +34,8 @@ Last updated: 2026-10-17 20:35 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 187 backend / 34 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
-| G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done; URL, VEYZL check, screenshots, video pending | `docs/devpost-form.md` + Devpost confirmation |
+| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 204 backend / 39 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
+| G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done; URL, screenshots, video, and a clean VEYZL report pending. The VEYZL finding is already reproduced and fixed | `docs/devpost-form.md` + Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
 
@@ -59,7 +59,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Fly redeploy; smoke the public URL; **VEYZL audit + fix PR (D-020)** | 18:25 | 22:30 | ✅ Merged at 19:40 — `source`→domain search (D-021), budget parsing, session-guarded checkout. ⬜ Public URL is the last G4/G5 blocker; VEYZL needs the app installed on `KF8311/Dubhacks` |
+| A | Public deploy; smoke the public URL; **VEYZL audit + fix (D-020, D-023)** | 18:25 | 22:30 | ✅ Search/budget work merged at 19:40. ✅ **VEYZL audit ran** (two hosted reports) and finding 1 — no guard on the generative path — is fixed with five tests, merged 22:49 PT. ✅ **Vercel services path** added. ⬜ A public deploy (Fly or Vercel) and a **clean VEYZL re-run** are the last A items |
 | C | Browser screenshots — results grid, danger detail, receipt — plus one recording | 18:25 | 22:30 | ✅ Block 6 UI merged (`cf24bdb`, `3ceffbc`): 390px reflow (overflow 0), `api_key` redaction, immersive merchant resolution, offline catalog pinning. ⬜ Screenshots and video are the last G5 items |
 | B | Devpost, final numbers, audit review | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, technical-claims handoff, audit scope + `/api/demo/reset` reproduction, repository review first pass (`8c89260`); ⬜ fill the form as A and C land artifacts |
 
@@ -95,13 +95,15 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] A merged (`8687203`) — Google `source`→domain (D-021, supersedes D-011), `under_150` budget parsing, upper-case `SERPAPI_KEY`, catalog fallback on an empty budget filter (D-022), session-guarded checkout. Three conflicts resolved by hand; A's `D-019` renumbered to `D-021`
 - [x] C merged (`cf24bdb`, `3ceffbc`, fast-forwarded; rebase-merged as PR #20 rewrote the SHAs and dropped her merge commit) — phone-width reflow at 390px with zero horizontal overflow, `api_key`/`x-goog-api-key` redaction in `redact()`, unknown merchants resolved through Google Shopping's immersive `stores` with a 4-lookup/2 s cap, and `OFFLINE=1` pinned to the curated catalog so replay numbers cannot drift
 - [x] B restored the receipt score assertion C's wrap fix dropped; the test now covers `Score 92` and `break-words` (`f0014c0`)
-- [x] Verified after the merge: **187 backend / 34 frontend**, build clean, replay exit 0, and the live HTTP run for **$300–$600** matches the replay exactly
+- [x] Verified after the merge: **187 backend / 34 frontend at the time** (now 204 / 39), build clean, replay exit 0, and the live HTTP run for **$300–$600** matches the replay exactly
+- [x] A merged (`agent_backend`, 22:49 PT) — **VEYZL guard [D-023]**: `llm_guard.py` refuses jailbreaks, self-harm, explosives, SSNs, and secrets before Gemini, redacts PII, and answers VEYZL-shaped probe payloads with an OpenAI-style refusal; **Vercel services** config with `bundle_data.py` and `paths.py`; a failed live search falls back to the catalog rather than an empty grid. Five conflicts resolved: decision renumbered (D-020 was taken), audit doc merged rather than replaced, README kept, both SerpAPI tests and both orchestrator paths kept, and `apiBase()` restores the `localhost:8000` dev default
+- [x] Post-merge: **204 backend**, **39 frontend**, build clean, replay exit 0
 
 ## Next three actions
 
-1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
-2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
-3. A installs the VEYZL GitHub App on the repo and runs the audit on a PR (D-020); only then re-add `VEYZL Audit` as a required status check.
+1. **C or B, no dependency on A:** open `npm run dev` against `uvicorn` on :8000, click the live flow — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and screenshot it. Local dev now falls back to `localhost:8000` with no `.env`.
+2. **A:** deploy from the repo root, **either** `fly deploy` **or** the Vercel services path, then run `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
+3. **A:** re-run VEYZL against the fixed build and capture a report that is not all-error. Only a clean report earns the side track, and only then should `VEYZL Audit` go back on the ruleset.
 
 ## Demo trap to avoid
 
@@ -112,7 +114,9 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
-| Fly serves the pre-merge build | **yes** | Redeploy from `main` in Block 5 |
+| Fly serves the pre-merge build | **yes** | Redeploy from `main`; the Vercel path is merged but has never been exercised |
+| VEYZL audit produced no usable report | **yes** | Two runs, both all-error or wrong response shape. The guard and the response shape are fixed (D-023); a clean re-run is still owed. Do not claim the side track until one exists |
+| A failed live search silently shows the demo catalog | **changed 22:49** | The orchestrator now falls back to `load_catalog()` on a search error and emits `SEARCH_FAILED`. Good for the demo, but do not describe a fallback render as live search |
 | ~~`main` protected by a required check nothing reports~~ | **was yes — resolved 20:22** | The `VEYZL Audit` requirement was dropped from the repo ruleset, PR #20 was rebase-merged, and the branch deleted. **Do not re-add the check until the VEYZL GitHub App is installed** — a local run posts nothing, and re-adding it early blocks every merge again. |
 | SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
 | Contracts still open | yes | `Question` shape is the only unresolved item |

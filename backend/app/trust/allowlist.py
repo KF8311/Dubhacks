@@ -6,8 +6,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-DATA_DIR = REPO_ROOT / "data"
+from app.core.paths import data_dir
 
 
 def _normalize(domain: str) -> str:
@@ -34,7 +33,7 @@ class Allowlist:
 
 def load_allowlist(path: Path | None = None) -> Allowlist:
     """Read ``data/allowlist.json`` into a normalized :class:`Allowlist`."""
-    source = path or DATA_DIR / "allowlist.json"
+    source = path or data_dir() / "allowlist.json"
     raw = json.loads(source.read_text(encoding="utf-8"))
     entries = raw["domains"] if isinstance(raw, dict) else raw
     return Allowlist(frozenset(_normalize(d) for d in entries if d))

@@ -9,18 +9,17 @@ from __future__ import annotations
 import json
 import time
 from functools import lru_cache
-from pathlib import Path
 from urllib.parse import urlsplit
 
 import httpx
 
 from app.checks.base import CheckContext, CheckTarget
 from app.core.config import get_settings
+from app.core.paths import data_dir
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, TrustCheckResult
 
-DATA_DIR = Path(__file__).resolve().parents[3] / "data"
-DENYLIST_PATH = DATA_DIR / "denylist.json"
+DENYLIST_PATH = data_dir() / "denylist.json"
 API_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
 API_TIMEOUT_S = 3.0
 THREAT_TYPES = (
