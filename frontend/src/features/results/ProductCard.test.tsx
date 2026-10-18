@@ -34,8 +34,27 @@ test("a listing below a typed range is labelled", () => {
   expect(screen.getByText("Below your budget")).toBeInTheDocument()
 })
 
-test("a missing check stays a skeleton row", () => {
+test("leads with a compact ticket, not a hero photo", () => {
+  render(
+    <ProductCard
+      listing={{ ...listing, image_url: "https://example.com/xm5.jpg" }}
+      checks={[]}
+      isBest={false}
+    />,
+  )
+  const photo = document.querySelector("img")
+  expect(photo).toHaveClass("size-16")
+  const title = screen.getByText("Sony WH-1000XM5")
+  expect(photo && title.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+})
+
+test("a collapsed ticket hides the check list", () => {
   render(<ProductCard listing={listing} checks={[]} isBest={false} />)
+  expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(0)
+})
+
+test("a missing check stays a skeleton row", () => {
+  render(<ProductCard listing={listing} checks={[]} isBest={false} expanded />)
   expect(screen.getAllByRole("generic").length).toBeGreaterThan(0)
   expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(5)
   expect(screen.queryByText("Domain age")).not.toBeInTheDocument()

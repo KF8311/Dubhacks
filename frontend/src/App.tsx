@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { AppShell } from "@/components/AppShell.tsx"
 import { EmptyState } from "@/components/EmptyState.tsx"
@@ -12,6 +12,9 @@ import { PurgeOverlay } from "@/features/results/PurgeOverlay.tsx"
 import { ResultsGrid } from "@/features/results/ResultsGrid.tsx"
 import { useSessionStream } from "@/features/results/useSessionStream.ts"
 import { useSessionStore } from "@/store/sessionStore.ts"
+import { currentPath } from "@/lib/path.ts"
+import { About } from "@/pages/About.tsx"
+import { HowItWorks } from "@/pages/HowItWorks.tsx"
 
 const RESULT_STAGES = new Set(["searching", "investigating", "ready", "no_trusted_option", "failed"])
 
@@ -20,12 +23,37 @@ function shareIdFromPath(): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+function usePath(): string {
+  const [path, setPath] = useState(currentPath)
+  useEffect(() => {
+    const onPop = () => setPath(currentPath())
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+  return path
+}
+
 export default function App() {
+  const path = usePath()
   const shareId = shareIdFromPath()
   if (shareId) {
     return (
       <AppShell>
         <ReceiptPage shareId={shareId} />
+      </AppShell>
+    )
+  }
+  if (path === "/how") {
+    return (
+      <AppShell>
+        <HowItWorks />
+      </AppShell>
+    )
+  }
+  if (path === "/about") {
+    return (
+      <AppShell>
+        <About />
       </AppShell>
     )
   }
@@ -65,9 +93,8 @@ function Shop() {
         <>
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#00A5B5]">Investigation</p>
-              <h2 className="mt-1 min-w-0 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Results for “{query}”
+              <h2 className="min-w-0 font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+                What we found for “{query}”
               </h2>
             </div>
             <div className="flex flex-wrap gap-2">

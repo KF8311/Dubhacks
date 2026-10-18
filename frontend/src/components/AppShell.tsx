@@ -1,27 +1,80 @@
-import type { ReactNode } from "react"
-import { Badge } from "@/components/ui/badge"
+import { type ReactNode, useEffect, useState } from "react"
 import { BrandMark } from "@/components/BrandMark.tsx"
 import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
+import { currentPath, go, withSearch } from "@/lib/path.ts"
 
 type Props = {
   children: ReactNode
 }
 
+function NavLink({ to, label }: { to: string; label: string }) {
+  const [path, setPath] = useState(currentPath)
+  useEffect(() => {
+    const onPop = () => setPath(currentPath())
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+  const current = path === to
+  return (
+    <a
+      href={withSearch(to)}
+      aria-current={current ? "page" : undefined}
+      className={
+        current
+          ? "font-semibold text-foreground"
+          : "text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      }
+      onClick={(event) => {
+        event.preventDefault()
+        go(to)
+      }}
+    >
+      {label}
+    </a>
+  )
+}
+
 export function AppShell({ children }: Props) {
   return (
     <div className="app-canvas min-h-screen text-left text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border/80 bg-[color-mix(in_srgb,var(--background)_82%,white)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6">
-          <BrandMark />
-          <Badge
-            variant="outline"
-            className="h-auto max-w-[min(100%,20rem)] shrink whitespace-normal border-[#00A5B5]/40 bg-white/80 py-1.5 text-left text-[#101A2B] sm:max-w-full"
+      <header className="sticky top-0 z-20 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <a
+            href={withSearch("/")}
+            className="min-w-0"
+            onClick={(event) => {
+              event.preventDefault()
+              go("/")
+            }}
           >
-            {SANDBOX_LABEL}
-          </Badge>
+            <BrandMark />
+          </a>
+          <nav className="flex items-center gap-4 text-sm" aria-label="Sykes">
+            <NavLink to="/" label="Shop" />
+            <NavLink to="/how" label="How it works" />
+            <NavLink to="/about" label="About" />
+          </nav>
         </div>
+        <p className="mx-auto max-w-6xl px-4 pb-2 text-xs text-muted-foreground sm:px-6">
+          {SANDBOX_LABEL}
+        </p>
       </header>
-      <main className="mx-auto min-w-0 max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      <main className="mx-auto min-w-0 max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+      <footer className="border-t border-border bg-[var(--paper)]">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-sm text-muted-foreground sm:px-6">
+          <p>Sykes — a shopkeeper for the internet.</p>
+          <a
+            href={withSearch("/how")}
+            className="font-medium text-accent underline"
+            onClick={(event) => {
+              event.preventDefault()
+              go("/how")
+            }}
+          >
+            The five checks
+          </a>
+        </div>
+      </footer>
     </div>
   )
 }

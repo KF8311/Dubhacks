@@ -58,6 +58,9 @@ To hold a skill for a whole session instead of one message, open it with `Option
 | `/using-git-worktrees` | You need isolation from the current workspace | Separate worktree per feature | Optional |
 | `/finishing-a-development-branch` | Work is complete and tests pass | Merge, clean up, or hand off | A |
 | `/handoff` | End of shift, or before a long compaction | Writes `docs/handoffs/YYYY-MM-DD-HHMM-name.md` | All |
+| `/frontend-design` | New UI or a visual makeover | Distinctive palette/type/layout; refuse templated AI defaults | C |
+| `/sykes-ui` | Restyle, polish, or "doesn't look like AI slop" | Same, plus Sykes constraints (sandbox sentence, no Sniff copy) | C |
+| `/web-design-guidelines` | "Review my UI", a11y, UX audit | Fetch Vercel Web Interface Guidelines and report `file:line` | C |
 
 `/handoff` is the explicit, durable one. Automatic compaction is not a substitute — see below.
 
@@ -68,6 +71,7 @@ To hold a skill for a whole session instead of one message, open it with `Option
 | `code-architect` | Design a component before building it; produces files, interfaces, and a build sequence |
 | `code-explorer` | Trace how an existing feature works across files before changing it |
 | `code-reviewer` | Review a diff for bugs, security, and convention violations |
+| `ui-designer` | Propose a distinctive Sykes visual direction before a restyle |
 
 Agents are read-only where it matters. Give one a narrow question and a file path.
 
@@ -88,7 +92,7 @@ Durable context belongs in files (`CLAUDE.md`, `docs/status.md`, the plan), neve
 |---|---|
 | **A — Platform/Agent** | `test-driven-development`, `systematic-debugging`, `verification-before-completion`, `subagent-driven-development`, `requesting-code-review` |
 | **B — Trust/Data** | `test-driven-development`, `systematic-debugging`, `code-explorer` agent, `verification-before-completion` |
-| **C — Frontend/UX** | `verification-before-completion`, `code-reviewer` agent, `brainstorming`, `systematic-debugging` |
+| **C — Frontend/UX** | `frontend-design`, `sykes-ui`, `web-design-guidelines`, `ui-designer` agent, `verification-before-completion`, `brainstorming` |
 | **Everyone** | `handoff` at shift changes, `executing-plans` while working the task list |
 
 ## Adding a skill
