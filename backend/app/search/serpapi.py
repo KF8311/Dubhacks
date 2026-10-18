@@ -244,8 +244,12 @@ class SerpAPIProvider:
     name = "serpapi"
 
     def __init__(self, api_key: str | None = None, timeout_s: float = SEARCH_S - 1.0) -> None:
-        self.api_key = api_key if api_key is not None else get_settings().serpapi_key
+        settings = get_settings()
+        self.api_key = api_key if api_key is not None else settings.serpapi_key
         self.timeout_s = timeout_s
+        self.location = (settings.serpapi_location or "").strip()
+        self.gl = settings.serpapi_gl
+        self.hl = settings.serpapi_hl
 
     async def search(self, spec: SearchSpec, limit: int = MAX_LISTINGS) -> list[Listing]:
         if not self.api_key:
@@ -260,6 +264,12 @@ class SerpAPIProvider:
             params["min_price"] = spec.budget_min_cents // 100
         if spec.budget_max_cents is not None:
             params["max_price"] = spec.budget_max_cents // 100
+        # Localize by market rather than by appending a city to `q`, which
+        # would change what Google matches instead of where it looks.
+        if self.location:
+            params["location"] = self.location
+        params["gl"] = self.gl
+        params["hl"] = self.hl
         async with httpx.AsyncClient(timeout=self.timeout_s) as client:
             response = await client.get(SERPAPI_URL, params=params)
             response.raise_for_status()

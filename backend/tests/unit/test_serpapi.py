@@ -304,6 +304,59 @@ def test_search_sends_price_bounds_to_serpapi(monkeypatch):
     assert captured["q"] == "computers $1000-1200"
 
 
+def test_search_is_localized_to_seattle(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.core.config import Settings
+
+    captured: dict = {}
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {
+                "shopping_results": [
+                    {
+                        "title": "Sony WH-1000XM5",
+                        "product_link": "https://www.bestbuy.com/site/sony/123.p",
+                        "source": "Best Buy",
+                        "extracted_price": 299.0,
+                    }
+                ]
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, timeout
+            captured.update(params or {})
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    monkeypatch.setattr(
+        "app.search.serpapi.get_settings",
+        lambda: Settings(serpapi_location="Seattle, Washington, United States"),
+    )
+    asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(SearchSpec(query="headphones"))
+    )
+    assert captured["location"] == "Seattle, Washington, United States"
+    assert captured["gl"] == "us"
+    assert captured["hl"] == "en"
+
+
 @pytest.mark.asyncio
 async def test_serpapi_client_uses_the_provider_timeout(monkeypatch):
     captured: dict = {}
