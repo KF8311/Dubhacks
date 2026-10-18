@@ -60,12 +60,25 @@ If VEYZL reports something outside this list, the tool's finding wins — this t
 
 ## Results
 
-_Empty until the audit runs._
+_No VEYZL report yet. The PR is open (#19) and the check has not appeared._
+
+### Pre-audit reproduction (not a VEYZL finding yet)
+
+While waiting for the check, I reproduced candidate #2 by hand against the merged code. This is evidence that the gap is real; it is **not** the audit finding until VEYZL reports it and the two agree.
+
+```
+POST /api/sessions                    → 201   ses_6sU6a6_36YA56dyT
+GET  /api/sessions/{id}               → 200
+POST /api/demo/reset   (no headers)   → 200   {"ok": true, "cleared": [...]}
+GET  /api/sessions/{id}               → 404   ← the session is gone
+```
+
+`app/api/routes_health.py:41-55` gates the route only on `settings.demo_mode`, and `app/core/config.py:14` defaults `demo_mode` to `True`. So on the default deploy, any caller can clear every session, checkout, and receipt with one unauthenticated POST. During judging, that is a one-request denial of the demo.
 
 ### Finding 1
 
-- **What:**
-- **Where:**
+- **What:** (pending VEYZL)
+- **Where:** (pending VEYZL)
 - **Reproduction:**
 - **Impact:**
 - **Fix:**
