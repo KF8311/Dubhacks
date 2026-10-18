@@ -22,7 +22,9 @@ async def init_persistence() -> None:
     try:
         from motor.motor_asyncio import AsyncIOMotorClient
 
-        client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=800)
+        # Atlas needs a TLS handshake plus replica-set discovery; 800 ms was
+        # tight enough to fall back to memory on a cold connection.
+        client = AsyncIOMotorClient(uri, serverSelectionTimeoutMS=5000)
         await client.admin.command("ping")
         db = client[settings.mongodb_db]
         await ensure_indexes(db)

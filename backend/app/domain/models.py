@@ -146,7 +146,7 @@ class Checkout(BaseModel):
     amount_cents: int
     currency: str = "USD"
     stage: CheckoutStage = CheckoutStage.AWAITING_PASSKEY
-    idempotency_key: str
+    idempotency_key: str | None = None
     created_at: datetime
     expires_at: datetime
 

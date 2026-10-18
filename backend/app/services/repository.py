@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from enum import Enum
 from collections.abc import Awaitable
 from typing import Protocol
@@ -49,13 +50,24 @@ def _doc(model: BaseModel) -> dict:
     return convert(data)
 
 
+def _utc(value):
+    """BSON hands datetimes back without tzinfo; the domain compares them to an aware now."""
+    if isinstance(value, datetime):
+        return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+    if isinstance(value, dict):
+        return {key: _utc(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_utc(item) for item in value]
+    return value
+
+
 def _hydrate(model_cls, doc: dict | None):
     if doc is None:
         return None
     data = dict(doc)
     if "_id" in data:
         data["id"] = data.pop("_id")
-    return model_cls.model_validate(data)
+    return model_cls.model_validate(_utc(data))
 
 
 class Repository(Protocol):

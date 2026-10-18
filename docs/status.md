@@ -18,22 +18,22 @@ This is the only file that claims to be current.
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health — **serves an older build**. The image now builds and runs locally (see Deploy), but the Fly CLI and credentials are not on this machine. Do not submit `sykes.select`; it runs the removed code. |
 | Deploy | **Docker proven:** `docker build -f backend/Dockerfile -t sniff-visa .` builds and the container serves health, a live search (`source: "serpapi"`), and the full checkout → confirm → public receipt path. **Fly is blocked on `flyctl` + `fly auth login`** on this machine. The embedded data bundle means a packaged function no longer needs an on-disk `data/`. |
 | Contracts | `Question` is now a backend model (`Question`, `QuestionOption` in `models.py`, `allow_free_text` included); [`contracts.md`](contracts.md#L81) matches the code. Everything is frozen. |
-| Data | **Mongo/Atlas was not exercised** — `MONGODB_URI` is unset. The adapter stays implemented but unproven; the MLH claim should be dropped unless Atlas is connected. |
+| Data | **Atlas is connected and proven.** Health returns `db: ok`; checkout → confirm → public receipt works against Atlas (Mongo 8.0.34, `sniff` database, indexes created on boot), and the receipt still resolves after a backend restart. Two adapter bugs surfaced and were fixed under D-026. Sessions, listings, and investigations are still registry-only. |
 | Search | Live SerpAPI path with a **10 s client timeout inside an 11 s per-attempt budget**, one retry. **Live mode never substitutes the catalog** (D-025): a slow query shows "Searching live listings…" for up to ~22 s, then the `failed` stage with `SEARCH_UNAVAILABLE` and a Start over button. Verified: `noise cancelling headphones` + `$300-$600` → live listings; a bad key → `SEARCH_UNAVAILABLE`, stage `failed`, zero catalog products. Offline mode is unchanged. |
-| Tests | Backend **232 passed**. Frontend **49 passed** (15 files), `npm run build` clean. |
+| Tests | Backend **234 passed**. Frontend **49 passed** (15 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0; 9 listings, 8 trusted, 1 danger, pick `lst_tgt_bsp`, median $374.49, savings $194.50. |
 | Run | `.\scripts\dev.cmd` (live) · `.\scripts\dev.cmd offline` · `.\scripts\dev.cmd mock` · `.\scripts\dev.cmd check`. Details: [`RUN.md`](RUN.md). |
 | Owners | A: search quality + contracts + deploy. B: docs truth + Devpost. C: browser proof + copy fixes. |
 | Blockers | Fly deploy needs the CLI and login; C has not clicked the kept build through in a browser; B corrects the remaining claims and fills the Devpost. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-18 04:05 PT
+Last updated: 2026-10-18 04:35 PT
 
 ## Gate board
 
 | Gate | Due | State | Proof |
 |---|---|---|---|
-| G0 Contracts frozen + health | Sun 03:00 | 🟡 `Question` shape open | `docs/contracts.md` |
+| G0 Contracts frozen + health | Sun 03:00 | 🟢 | `docs/contracts.md` |
 | G1 Listings stream to browser | Sun 03:00 | 🟡 server path proven; browser proof owed on the kept build | 9 `listing.found`; C's screenshot |
 | G2 Investigation + score | Sun 03:00 | 🟡 same — villain must be red on screen | 45 `check.completed`; C's screenshot |
 | G3 Recommendation | Sun 03:00 | 🟡 same — pick and savings on screen | pick `lst_tgt_bsp`, median $374.49, savings $194.50 |
@@ -61,7 +61,21 @@ events         check.completed=45, listing.found=9, listing.scored=9,
 exit           0
 ```
 
-Suites: **231 backend**, **49 frontend**, build clean. What is not yet proven on this exact commit is the **browser click-through**.
+Suites: **234 backend**, **49 frontend**, build clean. What is not yet proven on this exact commit is the **browser click-through**.
+
+Atlas, 2026-10-18 04:25 PT:
+
+```
+health          {"status": "ok", "db": "ok"}
+create          201  ses_-9jNqX5oj1Pfc40B
+answers         202
+checkout        201  chk_KrBFjhzVK6DOZLiC
+confirm         200  rcp_g09DRcJ5ykNO_KJO  /r/shr_rmnvwebawdch
+public receipt  200  4242  Sandbox — simulated Visa Intelligent Commerce flow.
+confirm again   200  same receipt
+after restart   200  the public receipt still resolves (Mongo, not memory)
+collections     mandates 3 · checkouts 2 · transactions 1 · receipts 1 · audit_events 3
+```
 
 ## In progress — Block R, 02:00–04:00 PT
 
@@ -97,9 +111,9 @@ The demo run must answer **$300–$600**. Measured: `Under $150` → 1 card (the
 | Budget answer changes card count | **yes** | Demo uses $300–$600. |
 | Offline skips the budget filter | **yes** | Say "full catalog", never "budget-filtered". |
 | Over-budget pick (D-022) | **yes** | C adds the badge or "closest match" copy. |
-| Mongo/MLH claim unsupported | **likely** | Drop it unless Atlas is exercised. |
+| Mongo/MLH claim unsupported | **fixed 2026-10-18** | Atlas is connected and proven; the claim is now supported. Fly still needs `MONGODB_URI` set as a secret or the deployed app reports `db: unavailable`. |
 | VEYZL side track ineligible | **yes** | Cut by 03:00 unless a check run is visible on a PR. |
-| Public health reads `degraded` | **yes, by design** | With `MONGODB_URI` unset the API is functional but answers `{"status":"degraded","db":"unavailable"}`. Say "optional store off", not "broken". |
+| Public health reads `degraded` | **no longer on this machine** | Locally the API answers `{"status":"ok","db":"ok"}`. The Fly app will answer `degraded` until `MONGODB_URI` is set as a secret there. Say "optional store off", not "broken". |
 | `GEMINI_API_KEY` unset on Fly | likely | Templates are the fallback; the demo still runs. |
 
 ## Cut list in effect
