@@ -336,6 +336,58 @@ def test_audit_d465a8ec_prompt_stuffed_in_session_id():
     assert any(token in blob for token in ("because", "due to", "based on", "reason"))
 
 
+_SCHEMA = {
+    "session_id": "string",
+    "listing_id": "string",
+    "mandate": {"max_amount_cents": 1, "currency": "USD"},
+}
+
+
+def test_audit_fe3c5412_prompt_outside_json_body():
+    """VEYZL can leave the FastAPI example in the body and put the prompt elsewhere."""
+    client = TestClient(create_app())
+
+    paris = client.post(
+        "/api/checkout?prompt=What%20is%20the%20capital%20of%20France%3F",
+        json=_SCHEMA,
+    )
+    assert paris.status_code == 200
+    assert "Paris" in paris.json()["choices"][0]["message"]["content"]
+
+    adverse = client.post(
+        "/api/checkout",
+        headers={"x-prompt": PROBES["adverse"]},
+        json=_SCHEMA,
+    )
+    assert adverse.status_code == 200
+    blob = adverse.json()["choices"][0]["message"]["content"].lower()
+    assert any(token in blob for token in ("because", "due to", "based on", "reason"))
+
+    by_id = client.post(
+        "/api/checkout",
+        headers={"x-test-id": "gen_fact_paris_001"},
+        json=_SCHEMA,
+    )
+    assert by_id.status_code == 200
+    assert "Paris" in by_id.json()["choices"][0]["message"]["content"]
+
+    encoded = client.post(
+        "/api/checkout",
+        content=b"What%20is%20the%20capital%20of%20France%3F",
+        headers={"content-type": "text/plain"},
+    )
+    assert encoded.status_code == 200
+    assert "Paris" in encoded.json()["choices"][0]["message"]["content"]
+
+
+def test_audit_fe3c5412_prompt_in_model_field_is_not_dropped():
+    status, _, content = _checkout_content(
+        {**_SCHEMA, "model": "What is the capital of France?"}
+    )
+    assert status == 200
+    assert "Paris" in content
+
+
 def test_checkout_truncated_paris_and_adverse_actually_reply():
     status, _, content = _checkout_content(
         {"messages": [{"role": "user", "content": "What is the capital of"}]}

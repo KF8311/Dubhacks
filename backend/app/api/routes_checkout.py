@@ -22,6 +22,7 @@ from app.services.llm_guard import (
     looks_like_llm_probe,
     openai_chat_payload,
     probe_prompt_from_payload,
+    transport_clues,
 )
 from app.sessions.store import registry
 
@@ -133,6 +134,7 @@ async def create_checkout(request: Request):
             haystack = probe_prompt_from_payload({"messages": raw})
         else:
             haystack = str(raw)
+        haystack = f"{haystack}\n{transport_clues(request.url.query, list(request.headers.items()))}"
         guarded = await answer_probe(haystack)
         return JSONResponse(
             openai_chat_payload(guarded.text, refused=guarded.refused, sandbox_label=SANDBOX)

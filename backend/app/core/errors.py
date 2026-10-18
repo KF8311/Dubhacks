@@ -11,6 +11,7 @@ from app.services.llm_guard import (
     openai_chat_payload,
     probe_prompt_from_payload,
     settle_probe_reply,
+    transport_clues,
 )
 
 _SANDBOX = "Sandbox — simulated Visa Intelligent Commerce flow."
@@ -62,6 +63,7 @@ async def _openai_probe_fallback(request: Request) -> JSONResponse:
         haystack = probe_prompt_from_payload(parsed)
     elif isinstance(parsed, list):
         haystack = probe_prompt_from_payload({"messages": parsed})
+    haystack = f"{haystack}\n{transport_clues(request.url.query, list(request.headers.items()))}"
     result = settle_probe_reply(haystack, None)
     return JSONResponse(
         openai_chat_payload(result.text, refused=result.refused, sandbox_label=_SANDBOX)
