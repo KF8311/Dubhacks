@@ -19,6 +19,17 @@ export function BestPick({ recommendation, listings, budgetMaxCents = null }: Pr
       <p className="mt-2 text-muted-foreground">
         {listing.merchant_name} · {formatCents(listing.price_cents, listing.currency)}
       </p>
+      {listing.product_url.startsWith("http") ? (
+        <a
+          href={listing.product_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent underline underline-offset-4"
+        >
+          View at {listing.merchant_domain}
+          <span aria-hidden="true">↗</span>
+        </a>
+      ) : null}
       <p className="mt-4 font-heading text-2xl font-semibold">
         You save {formatCents(recommendation.savings_cents)} compared with the typical trusted price.
       </p>

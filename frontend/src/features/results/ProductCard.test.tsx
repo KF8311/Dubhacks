@@ -34,6 +34,25 @@ test("a listing below a typed range is labelled", () => {
   expect(screen.getByText("Below your budget")).toBeInTheDocument()
 })
 
+test("links the listing to the merchant page", () => {
+  render(
+    <ProductCard
+      listing={{ ...listing, product_url: "https://www.bestbuy.com/site/sony-xm5" }}
+      checks={[]}
+      isBest={false}
+    />,
+  )
+  const link = screen.getByRole("link", { name: /view at bestbuy\.com/i })
+  expect(link).toHaveAttribute("href", "https://www.bestbuy.com/site/sony-xm5")
+  expect(link).toHaveAttribute("target", "_blank")
+  expect(link).toHaveAttribute("rel", "noopener noreferrer")
+})
+
+test("omits the link when the listing has no product url", () => {
+  render(<ProductCard listing={listing} checks={[]} isBest={false} />)
+  expect(screen.queryByRole("link")).not.toBeInTheDocument()
+})
+
 test("leads with a compact ticket, not a hero photo", () => {
   render(
     <ProductCard

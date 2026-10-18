@@ -103,7 +103,7 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 - [ ] `bun create spectrum-project@latest dub --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --providers imessage --yes`
 - [ ] `SPECTRUM_PROJECT_SECRET` lives only in the scaffold's gitignored `.env` — never in this repo or chat
 - [ ] `bun start`, text the line, confirm the `echo:` reply — **this is the go/no-go**
-- [ ] Replace the echo: text → `POST /api/sessions` → answers → results → reply with the top trusted pick and its one-line reason
+- [ ] Replace the echo: text → `POST /api/sessions` → answers → results → reply with the top trusted pick, its one-line reason, **and `listing.product_url`** so the pick is one tap away. Shorten long URLs only if the provider does not linkify; never send a tracking or redirect wrapper.
 - [ ] Capture one real round trip for the video
 
 **Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-028, and stop.

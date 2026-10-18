@@ -80,6 +80,17 @@ export function ReceiptView({ receipt }: ViewProps) {
           <p className="text-muted-foreground">{receipt.listing.merchant_name}</p>
           <p className="text-lg font-semibold">{formatCents(receipt.amount_cents, receipt.currency)}</p>
           <p className="text-sm text-muted-foreground">Token ····{receipt.token_last4}</p>
+          {receipt.listing.product_url.startsWith("http") ? (
+            <a
+              href={receipt.listing.product_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent underline underline-offset-4"
+            >
+              View at {receipt.listing.merchant_domain}
+              <span aria-hidden="true">↗</span>
+            </a>
+          ) : null}
         </div>
       </div>
       <div>

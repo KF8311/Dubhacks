@@ -40,6 +40,7 @@ export function ProductCard({
 }: Props) {
   const [imageFailed, setImageFailed] = useState(listing.image_url.length === 0)
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
+  const productUrl = listing.product_url.startsWith("http") ? listing.product_url : null
 
   const thumb = imageFailed ? (
     <div
@@ -105,6 +106,17 @@ export function ProductCard({
       ) : (
         <div className="flex items-start gap-3 px-4">{body}</div>
       )}
+      {productUrl ? (
+        <a
+          href={productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-2 inline-flex items-center gap-1 px-4 text-sm font-medium text-accent underline underline-offset-4"
+        >
+          View at {listing.merchant_domain}
+          <span aria-hidden="true">↗</span>
+        </a>
+      ) : null}
       {expanded ? (
         <CardContent className="mt-3">
           {ALL_CHECKS.map((meta) => {

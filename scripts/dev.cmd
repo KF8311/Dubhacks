@@ -70,6 +70,13 @@ if /I "%MODE%"=="offline" (
   echo [dev] window, or stop that server, then run scripts\dev.cmd offline again.
   exit /b 1
 )
+call :probe_backend_offline
+if not errorlevel 1 (
+  echo [dev] An OFFLINE backend is already answering on http://localhost:8000.
+  echo [dev] Live mode would reuse it and silently serve the catalog demo.
+  echo [dev] Close the "sniff-visa backend" window, then run scripts\dev.cmd again.
+  exit /b 1
+)
 echo [dev] A backend is already answering on http://localhost:8000 - reusing it.
 goto frontend
 
@@ -115,6 +122,8 @@ if errorlevel 1 (
   echo [--]         no backend on :8000
 ) else (
   echo [ok]         backend answering on :8000
+  call :probe_backend_offline
+  if not errorlevel 1 echo [--]         backend is in OFFLINE catalog mode - live search will not run
 )
 call :probe_frontend
 if errorlevel 1 (
@@ -128,6 +137,11 @@ exit /b 0
 
 :probe_backend
 curl -s -o nul --max-time 2 "%HEALTH%" >nul 2>&1
+exit /b %errorlevel%
+
+:probe_backend_offline
+rem Exit 0 when the answering backend serves the offline catalog.
+%PY% -c "import json,sys,urllib.request;sys.exit(0 if json.load(urllib.request.urlopen('%HEALTH%', timeout=2)).get('offline') else 1)" >nul 2>&1
 exit /b %errorlevel%
 
 :probe_frontend

@@ -33,6 +33,37 @@ test("shows the best pick and savings", () => {
   expect(screen.getByText(/Target is the cheapest trusted XM5/)).toBeInTheDocument()
 })
 
+test("the best pick links to the merchant page", () => {
+  render(
+    <BestPick
+      recommendation={{
+        recommended_listing_id: "lst_1",
+        median_trusted_cents: 26000,
+        savings_cents: 1100,
+        eligible_ids: ["lst_1"],
+        reason: "cheapest trusted",
+        no_trusted_option: false,
+      }}
+      listings={[
+        {
+          id: "lst_1",
+          title: "Sony XM5",
+          price_cents: 24900,
+          currency: "USD",
+          merchant_name: "Best Buy",
+          merchant_domain: "bestbuy.com",
+          image_url: "",
+          product_url: "https://www.bestbuy.com/site/sony-xm5",
+          source: "serpapi",
+        },
+      ]}
+    />,
+  )
+  const link = screen.getByRole("link", { name: /view at bestbuy\.com/i })
+  expect(link).toHaveAttribute("href", "https://www.bestbuy.com/site/sony-xm5")
+  expect(link).toHaveAttribute("target", "_blank")
+})
+
 test("an over-budget pick is labelled as the closest match", () => {
   render(
     <BestPick
