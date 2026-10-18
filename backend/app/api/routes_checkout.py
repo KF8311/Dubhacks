@@ -109,11 +109,23 @@ async def _confirm_payload(checkout: Checkout) -> dict:
     }
 
 
+async def _request_payload(request: Request) -> object:
+    try:
+        data = await request.json()
+    except Exception:
+        body = (await request.body()).decode("utf-8", errors="replace")
+        return {"body": body}
+    if isinstance(data, str):
+        return {"body": data}
+    return data
+
+
 @router.post("/api/checkout", status_code=201)
 async def create_checkout(request: Request):
-    raw = await request.json()
+    raw = await _request_payload(request)
     if looks_like_llm_probe(raw):
-        guarded = await answer_probe(probe_prompt_from_payload(raw))
+        haystack = probe_prompt_from_payload(raw) if isinstance(raw, dict) else str(raw)
+        guarded = await answer_probe(haystack)
         return JSONResponse(
             openai_chat_payload(guarded.text, refused=guarded.refused, sandbox_label=SANDBOX)
         )

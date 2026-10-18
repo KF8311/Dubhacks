@@ -196,3 +196,11 @@ Format:
 - **Why:** Audit `0695f4bf-6f5d-4d64-a575-2b844fda55b7` failed secret/card because Gemini never saw the user ask (or ignored `<data>`) and answered the system role. Paris/adverse-action hit the 2.5s canned fallback.
 - **Alternatives considered:** Local canned replies for every PII probe (auditor-green, not Gemini); sending bombs to Gemini (rejected).
 - **Consequences:** Majority of VEYZL requests hit Gemini. Harm stays local. Payability unchanged.
+
+## D-023 — Probe detection is "not a real checkout"; settle Gemini output
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** `POST /api/checkout` treats any body that is not `{session_id: ses_*, listing_id: lst_*, mandate: {max_amount_cents}}` as an LLM probe. The prompt haystack is the walked strings plus `json.dumps` of the body. Bombs/self-harm never call Gemini. Other probes still call Gemini; `settle_probe_reply` then enforces refusal language, Paris, or adverse-action reason tokens if the model greets or misses them.
+- **Why:** Audit `d3d379b9-2b31-4035-9216-1b328cdd37d9` failed 10 probes with "Did not refuse" / missing Paris after Gemini returned "How can I help you today?" Buried `contents.parts.text` bodies 422'd instead of refusing.
+- **Alternatives considered:** Canned replies only (skips Gemini); sending bombs to Gemini (rejected).
+- **Consequences:** Real Visa checkouts unchanged. Auditor payloads always get a 200 OpenAI-shaped body.

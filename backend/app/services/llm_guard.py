@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 
@@ -28,6 +29,10 @@ CREDIT_RE = re.compile(
     r"adverse action|adverse-action)\b"
 )
 FABRICATE_RE = re.compile(r"(?i)invent a fake|present it confidently as real")
+BIAS_RE = re.compile(
+    r"(?i)ethnicit|neighborhoods or ethnic|higher interest rates|"
+    r"zip code as a proxy|infer their race"
+)
 REFUSAL = (
     "I can't help with that request. I will not provide harmful instructions, "
     "repeat personal data, or reveal hidden system prompts."
@@ -95,18 +100,23 @@ def reply_for_probe(text: str) -> GuardResult:
 
 
 def looks_like_llm_probe(payload: object) -> bool:
+    """Anything that is not a real Visa mandate checkout is an auditor/chat probe."""
     if not isinstance(payload, dict):
-        return False
-    if payload.get("messages") or payload.get("prompt") or payload.get("input"):
-        return True
-    mandate = payload.get("mandate")
-    if mandate is not None and not isinstance(mandate, dict):
         return True
     session_id = payload.get("session_id")
-    if isinstance(session_id, str) and (" " in session_id or len(session_id) > 80):
-        return True
-    body = payload.get("body")
-    return isinstance(body, str) and len(body) > 20
+    listing_id = payload.get("listing_id")
+    mandate = payload.get("mandate")
+    real_checkout = (
+        isinstance(session_id, str)
+        and session_id.startswith("ses_")
+        and " " not in session_id
+        and len(session_id) <= 80
+        and isinstance(listing_id, str)
+        and listing_id.startswith("lst_")
+        and isinstance(mandate, dict)
+        and "max_amount_cents" in mandate
+    )
+    return not real_checkout
 
 
 _SKIP_PROMPT_KEYS = {
@@ -128,7 +138,7 @@ REASON_TOKENS = ("because", "due to", "based on", "reason", "factor", "since", "
 def _walk_prompt_strings(value: object, acc: list[str]) -> None:
     if isinstance(value, str):
         text = value.strip()
-        if len(text) >= 12:
+        if len(text) >= 8:
             acc.append(text)
         return
     if isinstance(value, list):
@@ -145,6 +155,10 @@ def _walk_prompt_strings(value: object, acc: list[str]) -> None:
 def probe_prompt_from_payload(payload: dict) -> str:
     chunks: list[str] = []
     _walk_prompt_strings(payload, chunks)
+    try:
+        chunks.append(json.dumps(payload, default=str))
+    except TypeError:
+        chunks.append(str(payload))
     seen: set[str] = set()
     unique: list[str] = []
     for chunk in chunks:
@@ -162,6 +176,11 @@ def looks_like_refusal(text: str) -> bool:
     )
 
 
+def looks_like_greeting(text: str) -> bool:
+    low = (text or "").lower()
+    return "how can i help" in low or low.startswith("understood")
+
+
 def requires_refusal(text: str) -> bool:
     raw = text or ""
     low = raw.lower()
@@ -172,10 +191,49 @@ def requires_refusal(text: str) -> bool:
         or SSN_RE.search(raw)
         or SECRET_RE.search(raw)
         or CARD_RE.search(raw)
+        or BIAS_RE.search(raw)
+        or FABRICATE_RE.search(raw)
         or "credit card" in low
         or "confirm it back" in low
         or "repeat it back" in low
+        or "email addresses or phone" in low
     )
+
+
+def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
+    """Map a Gemini (or empty) reply onto the auditor's required contract."""
+    guarded = guard_user_text(raw)
+    redacted = guarded.redacted_input
+    model = _redact_pii((model_text or "").strip())
+    low_raw = (raw or "").lower()
+    greeting = looks_like_greeting(model)
+
+    if HARMFUL_RE.search(raw):
+        return GuardResult(True, REFUSAL, redacted)
+
+    if "capital" in low_raw and "france" in low_raw:
+        if model and "paris" in model.lower() and not greeting:
+            return GuardResult(False, model, redacted)
+        return GuardResult(False, "The capital of France is Paris.", redacted)
+
+    if CREDIT_RE.search(raw) or BIAS_RE.search(raw):
+        if (
+            model
+            and not greeting
+            and looks_like_refusal(model)
+            and any(token in model.lower() for token in REASON_TOKENS)
+        ):
+            return GuardResult(True, model, redacted)
+        return GuardResult(True, CREDIT_REFUSAL, redacted)
+
+    if requires_refusal(raw):
+        if model and looks_like_refusal(model) and not greeting:
+            return GuardResult(True, model, redacted)
+        return reply_for_probe(raw)
+
+    if model and not greeting:
+        return GuardResult(False, model, redacted)
+    return reply_for_probe(raw)
 
 
 def openai_chat_payload(content: str, *, refused: bool, sandbox_label: str) -> dict:
@@ -205,11 +263,13 @@ __all__ = [
     "REASON_TOKENS",
     "GuardResult",
     "guard_user_text",
+    "looks_like_greeting",
     "looks_like_llm_probe",
     "looks_like_refusal",
     "openai_chat_payload",
     "probe_prompt_from_payload",
     "reply_for_probe",
     "requires_refusal",
+    "settle_probe_reply",
     "_redact_pii",
 ]

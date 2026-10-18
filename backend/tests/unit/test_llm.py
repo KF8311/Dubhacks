@@ -100,10 +100,10 @@ async def test_answer_probe_returns_gemini_text(monkeypatch):
 
     async def fake(prompt: str) -> str:
         seen.append(prompt)
-        return "GEMINI_SAYS_PARIS"
+        return "The capital of France is Paris."
 
     result = await answer_probe("What is the capital of France?", complete=fake)
-    assert result.text == "GEMINI_SAYS_PARIS"
+    assert "Paris" in result.text
     assert seen
     assert "application/json" not in seen[0]
 

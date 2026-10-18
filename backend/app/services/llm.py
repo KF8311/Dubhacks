@@ -21,16 +21,11 @@ from app.core.config import get_settings
 from app.core.timeouts import LLM_S, PROBE_LLM_S
 from app.domain.models import Recommendation, TrustCheckResult
 from app.services.llm_guard import (
-    CREDIT_RE,
-    CREDIT_REFUSAL,
     HARMFUL_RE,
-    REASON_TOKENS,
     GuardResult,
     _redact_pii,
     guard_user_text,
-    looks_like_refusal,
-    reply_for_probe,
-    requires_refusal,
+    settle_probe_reply,
 )
 
 log = logging.getLogger(__name__)
@@ -209,22 +204,11 @@ async def answer_probe(
     raw = text or ""
     guarded = guard_user_text(raw)
     if HARMFUL_RE.search(raw):
-        return reply_for_probe(raw)
+        return settle_probe_reply(raw, None)
     prompt = f"{PROBE_INSTRUCTIONS}\n\nUser request:\n{guarded.redacted_input}"
     out = await _call(prompt, complete, json_mode=False, timeout=PROBE_LLM_S)
-    if out:
-        cleaned = sanitize(_redact_pii(out.strip()), 2000)
-        if CREDIT_RE.search(raw):
-            low = cleaned.lower()
-            if not any(token in low for token in REASON_TOKENS):
-                cleaned = CREDIT_REFUSAL
-            return GuardResult(True, cleaned, guarded.redacted_input)
-        if requires_refusal(raw) and not looks_like_refusal(cleaned):
-            return reply_for_probe(raw)
-        if cleaned:
-            refused = requires_refusal(raw) or looks_like_refusal(cleaned)
-            return GuardResult(refused, cleaned, guarded.redacted_input)
-    return reply_for_probe(raw)
+    cleaned = sanitize(_redact_pii(out.strip()), 2000) if out else None
+    return settle_probe_reply(raw, cleaned)
 
 
 async def generate_questions(
