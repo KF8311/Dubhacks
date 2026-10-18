@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/EmptyState.tsx"
 import { ErrorBanner } from "@/components/ErrorBanner.tsx"
-import { CheckoutSheet } from "@/features/checkout/CheckoutSheet.tsx"
+import { CheckoutSheet, SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
+import { ReceiptPage, ReceiptView } from "@/features/receipt/ReceiptPage.tsx"
+import type { Receipt } from "@/lib/types.ts"
 import { DiscoveryFlow } from "@/features/discovery/DiscoveryFlow.tsx"
 import { BestPick } from "@/features/results/BestPick.tsx"
 import { PurgeOverlay } from "@/features/results/PurgeOverlay.tsx"
@@ -13,7 +15,30 @@ import { useSessionStore } from "@/store/sessionStore.ts"
 
 const RESULT_STAGES = new Set(["searching", "investigating", "ready", "no_trusted_option", "failed"])
 
+function shareIdFromPath(): string | null {
+  const match = window.location.pathname.match(/^\/r\/([^/]+)\/?$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 export default function App() {
+  const shareId = shareIdFromPath()
+  if (shareId) {
+    return (
+      <div className="min-h-screen bg-white text-left text-stone-900">
+        <header className="flex items-center justify-between border-b px-6 py-4">
+          <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
+          <Badge variant="outline">{SANDBOX_LABEL}</Badge>
+        </header>
+        <main className="mx-auto max-w-6xl px-6 py-8">
+          <ReceiptPage shareId={shareId} />
+        </main>
+      </div>
+    )
+  }
+  return <Shop />
+}
+
+function Shop() {
   const stage = useSessionStore((state) => state.stage)
   const sessionId = useSessionStore((state) => state.sessionId)
   const query = useSessionStore((state) => state.query)
@@ -26,6 +51,7 @@ export default function App() {
   const dismissError = useSessionStore((state) => state.dismissError)
   const reset = useSessionStore((state) => state.reset)
   const [purging, setPurging] = useState(false)
+  const [receipt, setReceipt] = useState<Receipt | null>(null)
   useSessionStream(sessionId)
 
   const finishPurge = useCallback(() => {
@@ -41,7 +67,7 @@ export default function App() {
     <div className="min-h-screen bg-white text-left text-stone-900">
       <header className="flex items-center justify-between border-b px-6 py-4">
         <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
-        <Badge variant="outline">Sandbox — simulated Visa flow</Badge>
+        <Badge variant="outline">{SANDBOX_LABEL}</Badge>
       </header>
       <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
         {RESULT_STAGES.has(stage) ? (
@@ -72,7 +98,18 @@ export default function App() {
                   scores={scores}
                   recommendation={recommendation}
                 />
-                {best ? <CheckoutSheet listing={best} /> : null}
+                {receipt ? (
+                  <ReceiptView receipt={receipt} />
+                ) : best && scores[best.id] ? (
+                  <CheckoutSheet
+                    listing={best}
+                    verdict={scores[best.id].verdict}
+                    score={scores[best.id].score}
+                    confidence={scores[best.id].confidence}
+                    sessionId={sessionId ?? "ses_mock"}
+                    onComplete={setReceipt}
+                  />
+                ) : null}
               </>
             )}
             <PurgeOverlay active={purging} onComplete={finishPurge} />
