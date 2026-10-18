@@ -1,5 +1,7 @@
 # Three-Person Work Split — Sniff + Visa
 
+> **This is the reference map, not the live checklist.** Use it for ownership ("who owns Task 23?") and the cut order. For "what do I do in this block?", use **`docs/checklist.md` §9** — it tracks the actual gate state and carries the current assignments. `docs/status.md` still wins over both.
+
 **Read with:** `docs/superpowers/plans/2026-10-17-sniff-visa.md` (task numbers below refer to §14 of that plan).
 
 **Assumption:** three people, all on-site, AI/backend-strong. One person (C) owns the frontend; A and B own the backend. If C is also the strongest designer, protect their focus — A and B absorb copy, screenshots, and polish.

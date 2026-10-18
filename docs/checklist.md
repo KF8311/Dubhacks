@@ -11,19 +11,20 @@ One shared checklist. Personal scratch notes do not belong here.
 
 **How to use it:** Section 1 is once per machine. After that, work the timed block you are in — each block has a column per person and a proof you have to produce before moving on. Tick boxes in the commit that completes them. `docs/status.md` still wins if the two disagree.
 
-## Where we are now — 17:25 PT
+> **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
+
+## Where we are now — 17:35 PT
 
 | Thing | State |
 |---|---|
-| `main` | PRs #1–#8: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`. **122 backend / 4 frontend tests pass.** |
-| PR #9 (`merge/agent-backend`) | A's Tasks 16 + 22 — orchestrator fan-out and the payability guard — plus the `MAX_LISTINGS` fix. **123 backend tests pass.** |
-| PR #10 (`c/web`) | C's Tasks 17–21 — live `EventSource` client, results grid, best pick, purge, empty/error states. |
-| `integration/hookup` | Merges both PRs and **turns the frontend live by default**. Fixes the `ses_mock` submit bug and the `0 · Trusted` badge. **123 backend / 9 frontend tests pass**, build clean. This is the branch to review and land. |
+| `main` | `fa6c2a7` — **everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, and the live frontend. **123 backend / 9 frontend tests pass**, build clean. |
+| Follow-on branch | **None. `main` is the source of truth** — branch from it for the next block. |
 | Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. Checkout/confirm (Task 23) not built yet. |
+| Frontend | Live by default. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI from `data/mock-session.json`. |
 | Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** G4 is next. |
-| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web` fully merged. |
+| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup` all merged into `main`. |
 
-**Before anyone starts:** land **PR #9 and PR #10**, or merge **`integration/hookup`** (it contains both plus the live wiring). Branching from old `main` gives you no orchestrator fan-out, no payability guard, and a frontend stuck on mock data.
+**Before anyone starts:** `git checkout main && git pull`. There is nothing left to merge — if you are on an older branch, rebase onto `main` before writing code.
 
 **Recovery stance:** G1 was 45 minutes late, not lost. Do not skip a block's proof to catch up — the proofs are the gate.
 
@@ -178,6 +179,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] Hookup fix: discovery submitted to a hardcoded `ses_mock`, so the live flow 404'd on the answers step. It now uses the session id the server returned, pinned by `DiscoveryFlow.test.tsx`.
 - [x] Hookup fix: allowlisted merchants rendered as `0 · Trusted`. `listing.scored` now carries `allowlisted` and the badge reads `Verified · Trusted` (D-015 display consequence).
 - [x] CORS verified for `http://localhost:5173` on both the JSON routes and the SSE stream
+- [x] **All merges landed** — PRs #9, #10, #11 into `main`; `main` is `fa6c2a7` and green
 
 ## 6. Gate board
 
@@ -208,9 +210,15 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page flags.
 
-## 9. What to work on next — after `integration/hookup` lands
+## 9. Next block — start here
 
-Everything below assumes the hub is merged and the browser is talking to the real API. Work top to bottom; each person owns their column and nobody waits on another column.
+**State:** `main` is fully merged and green. Nothing is blocked on a merge; the only thing between us and G4 is Task 23.
+
+**First 15 minutes of the block, every person:**
+
+1. `git checkout main && git pull`
+2. Run your baseline: backend `pytest -q` → **123 passed**; frontend `npx vitest run` → **9 passed**.
+3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
 
 ### A — checkout backend (G4's critical path)
 

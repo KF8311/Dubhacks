@@ -20,9 +20,9 @@ This is the only file that claims to be current.
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is the next build. |
 | Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
 | Blockers | Task 23 checkout routes; Fly serves the pre-merge build |
-| Branches | `main` has PRs #1–#8. **PR #9** (`merge/agent-backend`) and **PR #10** (`c/web`, frontend) are open. `integration/hookup` merges both and turns the frontend live by default — that is the branch to review. |
+| Branches | **`main` is `fa6c2a7` and fully merged** (PRs #1–#11). No follow-on branch is required; branch from `main` for the next block. |
 
-Last updated: 2026-10-17 17:25 PT
+Last updated: 2026-10-17 17:35 PT
 
 ## Gate board
 
