@@ -156,3 +156,11 @@ Format:
 - **Why:** Google's generateContent API returns NOT_FOUND for `models/gemini-2.5-flash` for new users and points at `models/gemini-3.8-flash`.
 - **Alternatives considered:** Keep 2.5 (broken for this key); Interactions API (rejected: extra client surface mid-demo).
 - **Consequences:** `.env.example` and Settings default follow 3.8. Override with `GEMINI_MODEL` if a key still has 2.5 access.
+
+## D-018 — Default Gemini model is `gemini-3.5-flash-lite`
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Default `GEMINI_MODEL` is `gemini-3.5-flash-lite`. Lite models omit `thinkingConfig` (they 400 on it). Non-lite models still send `thinkingBudget: 0`.
+- **Why:** `gemini-3.8-flash` exceeds the 2.5s session-create budget (timeouts / 503), so questions, narration, and explain always fell back to templates. Lite returned in under 1s on this key.
+- **Alternatives considered:** Keep 3.8 and raise the timeout (violates the plan's 2.5s cap); `gemini-flash-lite-latest` (alias, less reproducible).
+- **Consequences:** Override with `GEMINI_MODEL` if a judge laptop still has 2.5/3.8 access. Templates remain the fallback.

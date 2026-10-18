@@ -6,7 +6,7 @@ import pytest
 from app.core.config import Settings
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, Recommendation, TrustCheckResult
-from app.services.llm import explain_check, generate_questions, narrate
+from app.services.llm import _gemini_complete, explain_check, generate_questions, narrate
 from app.sessions.questions import QUESTIONS
 
 
@@ -17,7 +17,85 @@ def _settings(**kwargs) -> Settings:
 
 
 @pytest.mark.asyncio
+async def test_gemini_complete_sends_gemini_api_key_header(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "env-secret")
+    monkeypatch.setattr(
+        "app.services.llm.get_settings",
+        lambda: Settings(gemini_api_key=None, gemini_model="gemini-3.8-flash", offline=False),
+    )
+    captured: dict = {}
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"candidates": [{"content": {"parts": [{"text": '{"ok": true}'}]}}]}
+
+    class FakeClient:
+        def __init__(self, **_kwargs) -> None:
+            return None
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc) -> None:
+            return None
+
+        async def post(self, url, headers=None, json=None):
+            captured["url"] = url
+            captured["headers"] = headers
+            captured["json"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeClient)
+    text = await _gemini_complete("ping")
+    assert captured["headers"]["x-goog-api-key"] == "env-secret"
+    assert "gemini-3.8-flash" in captured["url"]
+    assert captured["json"]["generationConfig"]["thinkingConfig"]["thinkingBudget"] == 0
+    assert '{"ok": true}' in text
+
+
+@pytest.mark.asyncio
+async def test_lite_model_omits_thinking_config(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "env-secret")
+    monkeypatch.setattr(
+        "app.services.llm.get_settings",
+        lambda: Settings(gemini_api_key=None, gemini_model="gemini-3.5-flash-lite", offline=False),
+    )
+    captured: dict = {}
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"candidates": [{"content": {"parts": [{"text": '{"ok": true}'}]}}]}
+
+    class FakeClient:
+        def __init__(self, **_kwargs) -> None:
+            return None
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc) -> None:
+            return None
+
+        async def post(self, url, headers=None, json=None):
+            captured["url"] = url
+            captured["json"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeClient)
+    await _gemini_complete("ping")
+    assert "gemini-3.5-flash-lite" in captured["url"]
+    assert "thinkingConfig" not in captured["json"]["generationConfig"]
+
+
+@pytest.mark.asyncio
 async def test_no_key_returns_template_questions(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings(gemini_api_key=None))
     out = await generate_questions("noise cancelling headphones")
     assert out == QUESTIONS

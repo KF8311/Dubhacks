@@ -57,7 +57,10 @@ def test_the_gemini_key_is_never_read_outside_config_and_llm():
         path.relative_to(APP).as_posix()
         for path in sorted(APP.rglob("*.py"))
         if path.name not in {"config.py", "llm.py"}
-        and "gemini_api_key" in path.read_text(encoding="utf-8")
+        and (
+            "gemini_api_key" in path.read_text(encoding="utf-8")
+            or "GEMINI_API_KEY" in path.read_text(encoding="utf-8")
+        )
     ]
 
     assert readers == []

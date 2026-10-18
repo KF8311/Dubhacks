@@ -10,6 +10,7 @@ from app.sessions.store import registry
 
 @pytest.fixture(autouse=True)
 def disable_live_gemini(monkeypatch):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setattr(
         "app.services.llm.get_settings",
         lambda: Settings(gemini_api_key=None, offline=False),

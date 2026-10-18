@@ -14,7 +14,6 @@ response = httpx.post(
             "temperature": 0,
             "maxOutputTokens": 512,
             "responseMimeType": "application/json",
-            "thinkingConfig": {"thinkingBudget": 0},
         },
     },
     timeout=20.0,
