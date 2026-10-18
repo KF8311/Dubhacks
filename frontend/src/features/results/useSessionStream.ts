@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react"
 import { getSnapshot } from "@/lib/api.ts"
+import { isMockMode } from "@/lib/mockMode.ts"
 import { openSessionEvents } from "@/lib/sse.ts"
 import type { StreamEvent } from "@/lib/types.ts"
 import { useSessionStore } from "@/store/sessionStore.ts"
 import { MOCK_EVENT_MS, buildMockEvents } from "@/features/results/mockEvents.ts"
-
-const useMock = import.meta.env.VITE_USE_MOCK !== "0"
 
 export function useSessionStream(sessionId: string | null) {
   const lastSeq = useSessionStore((state) => state.lastSeq)
@@ -19,7 +18,7 @@ export function useSessionStream(sessionId: string | null) {
   useEffect(() => {
     if (!sessionId) return
 
-    if (useMock) {
+    if (isMockMode()) {
       const timers = buildMockEvents().map((event, index) =>
         window.setTimeout(() => onEvent(event), index * MOCK_EVENT_MS),
       )

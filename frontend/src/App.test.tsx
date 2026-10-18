@@ -1,6 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import App from "./App.tsx"
 
+beforeEach(() => {
+  // Mock mode is opt-in now, so the tests ask for it explicitly.
+  window.history.replaceState({}, "", "/?mock=1")
+})
+
 test("renders the app shell", () => {
   render(<App />)
   expect(screen.getByText(/sniff/i)).toBeInTheDocument()

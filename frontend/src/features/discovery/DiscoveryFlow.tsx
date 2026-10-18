@@ -16,6 +16,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const startSession = useSessionStore((state) => state.startSession)
   const [query, setLocalQuery] = useState("")
   const [questions, setQuestions] = useState<Question[]>([])
+  const [sessionId, setSessionId] = useState<string | null>(null)
   const [index, setIndex] = useState(0)
   const [phase, setPhase] = useState<"query" | "questions" | "submitting">("query")
   const [picked, setPicked] = useState<string | null>(null)
@@ -31,6 +32,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
     setQuery(trimmed)
     setError(null)
     const created = await createSession({ query: trimmed, client_id: "demo" })
+    setSessionId(created.session_id)
     setQuestions(created.questions)
     showQuestions(created.questions)
     setIndex(0)
@@ -48,7 +50,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
 
   async function onNext() {
     const answer = currentAnswer()
-    if (!question || !answer) return
+    if (!question || !answer || !sessionId) return
     const nextAnswers = [...answers, answer]
     setAnswers(nextAnswers)
     setPicked(null)
@@ -60,7 +62,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
     setPhase("submitting")
     setError(null)
     try {
-      const submitted = await submitAnswers("ses_mock", {
+      const submitted = await submitAnswers(sessionId, {
         answers: nextAnswers,
         skip_remaining: false,
       })

@@ -4,6 +4,7 @@ import type { Verdict } from "@/lib/types.ts"
 type Props = {
   score?: number
   verdict?: Verdict
+  allowlisted?: boolean
 }
 
 const styleFor: Record<Verdict, { color: string; background: string; label: string }> = {
@@ -24,8 +25,8 @@ const styleFor: Record<Verdict, { color: string; background: string; label: stri
   },
 }
 
-export function TrustBadge({ score, verdict }: Props) {
-  if (score === undefined || verdict === undefined) {
+export function TrustBadge({ score, verdict, allowlisted = false }: Props) {
+  if (verdict === undefined) {
     return (
       <Badge
         variant="outline"
@@ -39,9 +40,12 @@ export function TrustBadge({ score, verdict }: Props) {
     )
   }
   const tone = styleFor[verdict]
+  // Allowlisted merchants score 0 by design (the score measures suspicion), so the
+  // raw number reads as alarming. Show the verification instead of the zero.
+  const label = allowlisted ? `Verified · ${tone.label}` : `${score ?? 0} · ${tone.label}`
   return (
     <Badge variant="outline" style={{ color: tone.color, background: tone.background }}>
-      {score} · {tone.label}
+      {label}
     </Badge>
   )
 }

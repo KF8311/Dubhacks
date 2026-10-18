@@ -11,7 +11,7 @@ from app.sessions.questions import build_search_spec, generate_questions
 from app.sessions.store import registry
 
 router = APIRouter()
-orchestrator = SessionOrchestrator(registry, bus, checks=[])
+orchestrator = SessionOrchestrator(registry, bus)
 
 
 class SessionCreateIn(BaseModel):

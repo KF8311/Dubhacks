@@ -95,6 +95,18 @@ async def test_respects_limit_on_provider_results():
     assert len(listings) == 2
 
 
+async def test_the_default_limit_keeps_the_whole_demo_catalog():
+    """The demo needs all 8 trusted listings *and* the villain to be present."""
+
+    catalog = load_catalog()
+
+    listings, source = await search(SPEC, provider=StubProvider(), catalog=catalog)
+
+    assert source == "catalog"
+    assert len(listings) == len(catalog)
+    assert "lst_vln_xm5" in {item.id for item in listings}
+
+
 @pytest.mark.parametrize("limit", [0, -1])
 async def test_rejects_non_positive_limit(limit: int):
     with pytest.raises(ValueError):

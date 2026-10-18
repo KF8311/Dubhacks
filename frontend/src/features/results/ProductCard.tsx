@@ -52,7 +52,11 @@ export function ProductCard({ listing, checks, score, isBest }: Props) {
           <span className="text-stone-400"> · {listing.merchant_domain}</span>
         </p>
         <p className="text-xl font-semibold">{formatCents(listing.price_cents, listing.currency)}</p>
-        <TrustBadge score={score?.score} verdict={score?.verdict} />
+        <TrustBadge
+          score={score?.score}
+          verdict={score?.verdict}
+          allowlisted={score?.allowlisted}
+        />
       </CardHeader>
       <CardContent>
         {ALL_CHECKS.map((meta) => {

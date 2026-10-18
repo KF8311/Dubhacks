@@ -64,6 +64,7 @@ function asScore(fields: Record<string, unknown>): ScoreResult {
     fatal_flags: (fields.fatal_flags as string[]) ?? [],
     top_reason: String(fields.top_reason ?? ""),
     scoring_version: String(fields.scoring_version ?? "1.0"),
+    allowlisted: fields.allowlisted === true,
   }
 }
 

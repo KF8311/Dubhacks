@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     google_safe_browsing_key: str | None = None
     receipt_signing_secret: str = "dev-only-change-me"
     version: str = "0.9.0"
-    max_listings: int = 8
+    max_listings: int = 9
     investigation_budget_s: float = 14.0
     check_concurrency: int = 8
 

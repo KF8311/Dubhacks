@@ -4,12 +4,27 @@ import asyncio
 import time
 from datetime import datetime, timezone
 
-from app.core.timeouts import MAX_LISTINGS, SEARCH_S
-from app.domain.enums import SessionStage
-from app.domain.models import Session, SessionStats
+from app.checks.base import CheckContext, CheckTarget, TrustCheck
+from app.checks.registry import get_checks
+from app.checks.runner import run_checks
+from app.core.config import get_settings
+from app.core.ids import new_id
+from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LISTINGS, SEARCH_S
+from app.domain.enums import SessionStage, TrustStatus, Verdict
+from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
 from app.search.service import search as default_search
 from app.sessions.events import EventBus
 from app.sessions.store import SessionRegistry
+from app.trust.allowlist import Allowlist, load_allowlist
+from app.trust.recommendation import recommend
+from app.trust.scoring import score_investigation
+
+
+def _load_allowlist() -> Allowlist:
+    try:
+        return load_allowlist()
+    except Exception:  # noqa: BLE001 — missing data file must not kill the session
+        return Allowlist(frozenset())
 
 
 class SessionOrchestrator:
@@ -17,13 +32,20 @@ class SessionOrchestrator:
         self,
         store: SessionRegistry,
         bus: EventBus,
-        checks: list | None = None,
+        checks: list[TrustCheck] | None = None,
         search=default_search,
+        config=None,
     ) -> None:
         self.store = store
         self.bus = bus
-        self.checks = checks or []
+        self.checks = checks
         self.search = search
+        self.config = config
+
+    def _active_checks(self) -> list[TrustCheck]:
+        if self.checks is None:
+            return get_checks()
+        return list(self.checks)
 
     async def start(self, session: Session) -> None:
         asyncio.create_task(self._run(session.id), name=f"orch-{session.id}")
@@ -76,10 +98,74 @@ class SessionOrchestrator:
                 {"listing": listing.model_dump(mode="json"), "rank": rank},
             )
 
-        # Task 16 fans out self.checks. Skeleton skips scoring.
+        allowlist = _load_allowlist()
+        checks = self._active_checks()
+        ctx = CheckContext(allowlist=allowlist, config=self.config or get_settings())
+        sem = asyncio.Semaphore(CHECK_CONCURRENCY)
+
+        async def investigate(listing: Listing) -> None:
+            async with sem:
+                await self._investigate_listing(session_id, listing, checks, ctx, allowlist)
+
+        if listings:
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*(investigate(item) for item in listings)),
+                    timeout=INVESTIGATION_BUDGET_S,
+                )
+            except TimeoutError:
+                self.bus.publish(
+                    session_id,
+                    "session.error",
+                    {
+                        "code": "INVESTIGATION_TIMEOUT",
+                        "message": "Investigation hit the 14s budget.",
+                        "recoverable": True,
+                    },
+                )
+
+        pairs = []
+        for listing in listings:
+            inv = self.store.investigation_for(session_id, listing.id)
+            if inv is not None:
+                pairs.append((listing, inv.score))
+
+        rec = recommend(pairs)
+        session.recommended_listing_id = rec.recommended_listing_id
+        self.store.set_recommendation(session_id, rec.model_dump(mode="json"))
+        self.bus.publish(
+            session_id,
+            "recommendation.ready",
+            {
+                "recommended_listing_id": rec.recommended_listing_id,
+                "median_trusted_cents": rec.median_trusted_cents,
+                "savings_cents": rec.savings_cents,
+                "eligible_ids": rec.eligible_ids,
+            },
+        )
+
         duration_ms = int((time.monotonic() - started) * 1000)
-        session.stats = SessionStats(listings=len(listings), duration_ms=duration_ms)
-        session.stage = SessionStage.READY if listings else SessionStage.FAILED
+        trusted = caution = danger = 0
+        for _, score in pairs:
+            if score.verdict == Verdict.TRUSTED:
+                trusted += 1
+            elif score.verdict == Verdict.CAUTION:
+                caution += 1
+            else:
+                danger += 1
+        session.stats = SessionStats(
+            listings=len(listings),
+            trusted=trusted,
+            caution=caution,
+            danger=danger,
+            duration_ms=duration_ms,
+        )
+        if not listings:
+            session.stage = SessionStage.FAILED
+        elif rec.no_trusted_option:
+            session.stage = SessionStage.NO_TRUSTED_OPTION
+        else:
+            session.stage = SessionStage.READY
         session.updated_at = datetime.now(timezone.utc)
         self.store.update(session)
         self.bus.publish(session_id, "session.stage", {"stage": session.stage.value})
@@ -89,3 +175,85 @@ class SessionOrchestrator:
             {"stats": session.stats.model_dump(), "duration_ms": duration_ms},
         )
         self.bus.close(session_id)
+
+    async def _investigate_listing(
+        self,
+        session_id: str,
+        listing: Listing,
+        checks: list[TrustCheck],
+        ctx: CheckContext,
+        allowlist: Allowlist,
+    ) -> None:
+        started = time.monotonic()
+        allowlisted = allowlist.matches(listing.merchant_domain)
+        target = CheckTarget(
+            listing_id=listing.id,
+            product_url=listing.product_url,
+            merchant_domain=listing.merchant_domain,
+            merchant_name=listing.merchant_name,
+            price_cents=listing.price_cents,
+            category=listing.category,
+        )
+        results: list[TrustCheckResult] = []
+        for index, check in enumerate(checks):
+            self.bus.publish(
+                session_id,
+                "check.started",
+                {
+                    "listing_id": listing.id,
+                    "check_id": check.id.value,
+                    "name": check.display_name,
+                    "index": index,
+                },
+            )
+
+        if allowlisted:
+            for check in checks:
+                result = TrustCheckResult(
+                    id=check.id,
+                    name=check.display_name,
+                    status=TrustStatus.SKIPPED,
+                    severity=0,
+                    summary="Allowlisted merchant; checks skipped.",
+                    source="allowlist",
+                )
+                results.append(result)
+                self.bus.publish(
+                    session_id,
+                    "check.completed",
+                    {"listing_id": listing.id, "check": result.model_dump(mode="json")},
+                )
+        elif checks:
+            async for result in run_checks(target, checks, ctx=ctx, timeout_s=6.0):
+                results.append(result)
+                self.bus.publish(
+                    session_id,
+                    "check.completed",
+                    {"listing_id": listing.id, "check": result.model_dump(mode="json")},
+                )
+
+        score = score_investigation(results, allowlisted=allowlisted)
+        inv = Investigation(
+            id=new_id("inv"),
+            listing_id=listing.id,
+            session_id=session_id,
+            checks=results,
+            score=score,
+            allowlisted=allowlisted,
+            duration_ms=int((time.monotonic() - started) * 1000),
+            created_at=datetime.now(timezone.utc),
+        )
+        self.store.attach_investigation(session_id, inv)
+        self.bus.publish(
+            session_id,
+            "listing.scored",
+            {
+                "listing_id": listing.id,
+                "score": score.score,
+                "verdict": score.verdict.value,
+                "confidence": score.confidence,
+                "top_reason": score.top_reason,
+                "allowlisted": score.allowlisted,
+                "penalties": [p.model_dump(mode="json") for p in score.penalties],
+            },
+        )
