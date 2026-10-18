@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 
 type Props = {
   active: boolean
@@ -14,13 +14,15 @@ export function PurgeOverlay({ active, onComplete }: Props) {
     return () => window.clearTimeout(timer)
   }, [active, onComplete])
 
+  const reduced = useReducedMotion()
   if (!active) return null
 
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center bg-red-950/80 text-4xl font-bold tracking-wide text-white"
-      initial={{ opacity: 0 }}
+      initial={reduced ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
+      transition={{ duration: reduced ? 0 : 0.25 }}
       role="status"
     >
       PURGE CURSED

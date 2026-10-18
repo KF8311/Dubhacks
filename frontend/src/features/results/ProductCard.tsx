@@ -26,7 +26,7 @@ export function ProductCard({ listing, checks, score, isBest }: Props) {
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
 
   return (
-    <Card className={isBest ? "ring-2 ring-stone-900" : undefined}>
+    <Card className={isBest ? "min-w-0 ring-2 ring-stone-900" : "min-w-0"}>
       <CardHeader className="space-y-3">
         {imageFailed ? (
           <div
@@ -49,7 +49,7 @@ export function ProductCard({ listing, checks, score, isBest }: Props) {
         <CardTitle className="line-clamp-2 text-lg">{listing.title}</CardTitle>
         <p className="text-sm text-stone-600">
           <span>{listing.merchant_name}</span>
-          <span className="text-stone-400"> · {listing.merchant_domain}</span>
+          <span className="text-stone-600"> · {listing.merchant_domain}</span>
         </p>
         <p className="text-xl font-semibold">{formatCents(listing.price_cents, listing.currency)}</p>
         <TrustBadge

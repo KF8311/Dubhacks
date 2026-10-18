@@ -166,3 +166,10 @@
   --trust-pending: #374151;
   --trust-pending-bg: #f3f4f6;
 }
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--trust-trusted);
+  outline-offset: 2px;
+}

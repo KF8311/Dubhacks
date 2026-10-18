@@ -25,9 +25,11 @@ export default function App() {
   if (shareId) {
     return (
       <div className="min-h-screen bg-white text-left text-stone-900">
-        <header className="flex items-center justify-between border-b px-6 py-4">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4">
           <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
-          <Badge variant="outline">{SANDBOX_LABEL}</Badge>
+          <Badge variant="outline" className="h-auto max-w-full shrink whitespace-normal py-1 text-left">
+            {SANDBOX_LABEL}
+          </Badge>
         </header>
         <main className="mx-auto max-w-6xl px-6 py-8">
           <ReceiptPage shareId={shareId} />
@@ -65,15 +67,17 @@ function Shop() {
 
   return (
     <div className="min-h-screen bg-white text-left text-stone-900">
-      <header className="flex items-center justify-between border-b px-6 py-4">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-4">
         <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
-        <Badge variant="outline">{SANDBOX_LABEL}</Badge>
+        <Badge variant="outline" className="h-auto max-w-full shrink whitespace-normal py-1 text-left">
+          {SANDBOX_LABEL}
+        </Badge>
       </header>
       <main className="mx-auto max-w-6xl space-y-6 px-6 py-8">
         {RESULT_STAGES.has(stage) ? (
           <>
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="text-2xl font-semibold">Results for “{query}”</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="min-w-0 text-2xl font-semibold">Results for “{query}”</h2>
               <div className="flex gap-2">
                 {hasDanger ? (
                   <Button type="button" variant="destructive" onClick={() => setPurging(true)}>
