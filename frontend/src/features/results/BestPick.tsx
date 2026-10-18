@@ -15,7 +15,7 @@ export function BestPick({ recommendation, listings, budgetMaxCents = null }: Pr
   const link = productLink(listing)
 
   return (
-    <section className="ticket-best rounded-lg p-6">
+    <section className="ticket-best rounded-3xl p-6">
       <p className="text-sm font-semibold text-accent">Best pick</p>
       <h3 className="mt-1 break-words font-heading text-3xl font-semibold tracking-tight">{listing.title}</h3>
       <p className="mt-2 text-muted-foreground">

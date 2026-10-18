@@ -37,7 +37,7 @@ export function ResultsGrid({
 
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <ul className="space-y-2">
+      <ul className="space-y-1.5">
         {ordered.map((listing) => (
           <li key={listing.id}>
             <ProductCard

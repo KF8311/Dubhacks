@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button"
 import { MandateCard } from "@/features/checkout/MandateCard.tsx"
 import { TrustBadge } from "@/features/results/TrustBadge.tsx"
 import { PasskeyDialog } from "@/features/checkout/PasskeyDialog.tsx"
-import { PhonePayLink } from "@/features/checkout/PhonePayLink.tsx"
+import { PhonePayLink, payUrl } from "@/features/checkout/PhonePayLink.tsx"
 import { ProcessingState } from "@/features/checkout/ProcessingState.tsx"
 import { ApiError, confirmCheckout, createCheckout } from "@/lib/api.ts"
 import { formatCents } from "@/lib/format.ts"
+import { sendPhoneText } from "@/lib/phoneBridge.ts"
 import type { Checkout, Listing, Receipt, Verdict } from "@/lib/types.ts"
 
 export const SANDBOX_LABEL = "Sandbox — simulated Visa Intelligent Commerce flow"
@@ -44,6 +45,8 @@ export function CheckoutSheet({
     (allowlisted || (score >= 70 && confidence >= 0.6))
   const [phase, setPhase] = useState<"review" | "mandate" | "passkey" | "processing">("review")
   const [intent, setIntent] = useState<"here" | "phone">("here")
+  const [phoneSend, setPhoneSend] = useState<"idle" | "sending" | "sent" | "failed">("idle")
+  const [phoneError, setPhoneError] = useState<string | null>(null)
   const [checkout, setCheckout] = useState<Checkout | null>(null)
   const [receipt, setReceipt] = useState<Receipt | null>(null)
   // The server's PayabilityCode is part of the refusal; keep it beside the message.
@@ -67,6 +70,18 @@ export function CheckoutSheet({
       })
       setCheckout(created)
       setPhase("mandate")
+      if (next === "phone") {
+        setPhoneSend("sending")
+        try {
+          await sendPhoneText(
+            `Sykes checkout: ${formatCents(listing.price_cents, listing.currency)} at ${listing.merchant_name}. Approve with your passkey: ${payUrl(created.id)}`,
+          )
+          setPhoneSend("sent")
+        } catch (caught) {
+          setPhoneError(caught instanceof Error ? caught.message : null)
+          setPhoneSend("failed")
+        }
+      }
     } catch (caught) {
       setFailure(describe(caught, "Checkout failed."))
     } finally {
@@ -90,7 +105,7 @@ export function CheckoutSheet({
   }
 
   return (
-    <aside className="ticket rounded-2xl p-6">
+    <aside className="ticket rounded-3xl p-6">
       <p className="text-sm text-muted-foreground">{SANDBOX_LABEL}</p>
       <h3 className="mt-2 font-heading text-lg font-semibold tracking-tight">Checkout</h3>
       {phase === "review" ? (
@@ -128,12 +143,26 @@ export function CheckoutSheet({
       ) : null}
       {phase === "mandate" && checkout ? (
         <div className="mt-3 space-y-3">
-          {intent === "phone" ? (
-            <p className="text-sm font-medium text-accent">
-              Your checkout is ready. Open this link on your phone to approve it.
+          {intent === "phone" && phoneSend === "sent" ? (
+            <div
+              className="rounded-2xl bg-[var(--trust-trusted-bg)] px-4 py-3 text-sm text-[var(--trust-trusted)]"
+              role="status"
+            >
+              <p className="font-semibold">Sent to your phone.</p>
+              <p className="mt-0.5">Open the message and approve with your passkey.</p>
+            </div>
+          ) : intent === "phone" && phoneSend === "sending" ? (
+            <p className="text-sm font-medium text-accent" role="status">
+              Texting your phone…
+            </p>
+          ) : intent === "phone" && phoneSend === "failed" ? (
+            <p className="text-sm" role="alert">
+              Could not text your phone. {phoneError ?? "Use the link below instead."}
             </p>
           ) : null}
-          <PhonePayLink checkoutId={checkout.id} prominent={intent === "phone"} />
+          {intent === "phone" && phoneSend === "sent" ? null : (
+            <PhonePayLink checkoutId={checkout.id} prominent={intent === "phone"} />
+          )}
           <MandateCard mandate={checkout.mandate} onContinue={() => setPhase("passkey")} />
         </div>
       ) : null}

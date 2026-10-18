@@ -21,8 +21,8 @@ function NavLink({ to, label }: { to: string; label: string }) {
       aria-current={current ? "page" : undefined}
       className={
         current
-          ? "font-semibold text-foreground"
-          : "text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          ? "rounded-full bg-[var(--paper)] px-3 py-1.5 font-semibold text-foreground shadow-[0_6px_16px_-14px_rgb(23_37_30/70%)]"
+          : "rounded-full px-3 py-1.5 text-muted-foreground hover:bg-[var(--paper)] hover:text-foreground"
       }
       onClick={(event) => {
         event.preventDefault()
@@ -41,7 +41,7 @@ export function AppShell({ children }: Props) {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <a
             href={withSearch("/")}
-            className="min-w-0"
+            className="inline-flex min-w-0 items-center rounded-full bg-[var(--paper)] px-3 py-1.5 shadow-[0_10px_24px_-20px_rgb(23_37_30/60%)] ring-1 ring-[color-mix(in_srgb,var(--ink)_10%,transparent)]"
             onClick={(event) => {
               event.preventDefault()
               go("/")

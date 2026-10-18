@@ -63,7 +63,7 @@ test("leads with a compact ticket, not a hero photo", () => {
     />,
   )
   const photo = document.querySelector("img")
-  expect(photo).toHaveClass("size-12")
+  expect(photo).toHaveClass("size-10")
   const title = screen.getByText("Sony WH-1000XM5")
   expect(photo && title.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
 })

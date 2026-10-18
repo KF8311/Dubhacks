@@ -45,7 +45,7 @@ export function ProductCard({
 
   const thumb = imageFailed ? (
     <div
-      className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[var(--ink)] text-base font-semibold text-[var(--paper)]"
+      className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--ink)] text-sm font-semibold text-[var(--paper)]"
       aria-hidden="true"
     >
       {initial}
@@ -54,7 +54,7 @@ export function ProductCard({
     <img
       src={listing.image_url}
       alt=""
-      className="size-12 shrink-0 rounded-xl bg-muted object-cover"
+      className="size-10 shrink-0 rounded-lg bg-muted object-cover"
       onError={() => setImageFailed(true)}
     />
   )
@@ -69,7 +69,7 @@ export function ProductCard({
           <span>{listing.merchant_name}</span>
           <span> · {listing.merchant_domain}</span>
         </p>
-        <p className="font-heading text-lg font-semibold">
+        <p className="font-heading text-base font-semibold">
           {formatCents(listing.price_cents, listing.currency)}
         </p>
         {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
@@ -116,7 +116,7 @@ export function ProductCard({
   // hover only: the link and the select button stay reachable by keyboard
   // without the face they are on rotating away.
   const front = (
-    <div className="flip-face flip-front flex flex-col rounded-2xl bg-[var(--paper)] p-3">
+    <div className="flip-face flip-front flex flex-col rounded-2xl p-2.5">
       {onSelect ? (
         <button
           type="button"
@@ -159,7 +159,7 @@ export function ProductCard({
 
   const back = (
     <div
-      className="flip-face flip-back flex flex-col justify-center rounded-2xl bg-[var(--paper)] p-3"
+      className="flip-face flip-back flex flex-col justify-center rounded-2xl p-2.5"
       data-testid="site-stats"
     >
       {onSelect ? (
@@ -184,8 +184,9 @@ export function ProductCard({
 
   return (
     <Card
+      data-verdict={score?.verdict ?? "pending"}
       className={cn(
-        "product-card min-w-0 rounded-2xl",
+        "product-card min-w-0 rounded-3xl",
         /** Only the actual pick wears the marigold edge. A merely selected
             row gets a neutral ring so several cards never compete for it. */
         isBest && !expanded ? "ticket-best" : "ticket",

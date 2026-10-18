@@ -6,30 +6,30 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --ink: #1e2a24;
-  --canvas: #dce8e0;
-  --paper: #f7f3ea;
-  --marigold: #e8a317;
-  --marigold-ink: #1e2a24;
-  --marigold-wash: color-mix(in srgb, var(--marigold) 16%, var(--paper));
-  --leaf: #1f6b4a;
-  --background: #dce8e0;
-  --foreground: #1e2a24;
-  --card: #f7f3ea;
-  --card-foreground: #1e2a24;
-  --popover: #f7f3ea;
-  --popover-foreground: #1e2a24;
-  --primary: #e8a317;
-  --primary-foreground: #1e2a24;
-  --secondary: #cfe0d4;
-  --secondary-foreground: #1e2a24;
-  --muted: #cfe0d4;
-  --muted-foreground: #3d4f46;
-  --accent: #1f6b4a;
-  --accent-foreground: #f7f3ea;
+  --ink: #17251e;
+  --canvas: #cfeade;
+  --paper: #fffaf0;
+  --marigold: #f2a71b;
+  --marigold-ink: #17251e;
+  --marigold-wash: color-mix(in srgb, var(--marigold) 18%, var(--paper));
+  --leaf: #0f7a52;
+  --background: #cfeade;
+  --foreground: #17251e;
+  --card: #fffaf0;
+  --card-foreground: #17251e;
+  --popover: #fffaf0;
+  --popover-foreground: #17251e;
+  --primary: #f2a71b;
+  --primary-foreground: #17251e;
+  --secondary: #c2e7d3;
+  --secondary-foreground: #17251e;
+  --muted: #c2e7d3;
+  --muted-foreground: #35503f;
+  --accent: #0f7a52;
+  --accent-foreground: #fffaf0;
   --destructive: #b42318;
-  --border: #b7c9bc;
-  --input: #b7c9bc;
+  --border: #a9cfba;
+  --input: #a9cfba;
   --ring: #e8a317;
   --chart-1: #e8a317;
   --chart-2: #1f6b4a;
@@ -131,14 +131,14 @@
 }
 
 :root {
-  --trust-trusted: #1f6b4a;
-  --trust-trusted-bg: #d5ede0;
+  --trust-trusted: #0f7a52;
+  --trust-trusted-bg: #cdf0dd;
   --trust-caution: #9a5b12;
-  --trust-caution-bg: #f8e6c0;
+  --trust-caution-bg: #fbe7bc;
   --trust-danger: #8a1c12;
-  --trust-danger-bg: #f8d4d0;
-  --trust-pending: #3d4f46;
-  --trust-pending-bg: #cfe0d4;
+  --trust-danger-bg: #fbd3ce;
+  --trust-pending: #35503f;
+  --trust-pending-bg: #c2e7d3;
 }
 
 .app-canvas {
@@ -170,6 +170,14 @@
   box-shadow:
     0 1px 0 rgb(30 42 36 / 6%),
     0 14px 30px -26px rgb(30 42 36 / 45%);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ticket:hover {
+  border-color: color-mix(in srgb, var(--leaf) 40%, var(--border));
 }
 
 .ticket-best {
@@ -187,35 +195,65 @@
     0 14px 30px -24px rgb(30 42 36 / 45%);
 }
 
-/* ProductCard supplies its own padding inside the flipping faces. */
+/* ProductCard supplies its own padding inside the flipping faces. The verdict
+   becomes a slim color edge; hover answers with a wash and a stronger border,
+   never with movement. */
 .product-card {
   padding: 0;
   gap: 0;
+  border-left-width: 3px;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
-.shelf-row {
-  transition:
-    transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1),
-    box-shadow 180ms ease;
+.product-card[data-verdict="trusted"] {
+  background: color-mix(in srgb, var(--trust-trusted-bg) 40%, var(--paper));
+  border-left-color: var(--trust-trusted);
+}
+
+.product-card[data-verdict="caution"] {
+  background: color-mix(in srgb, var(--trust-caution-bg) 40%, var(--paper));
+  border-left-color: var(--trust-caution);
+}
+
+.product-card[data-verdict="danger"] {
+  background: color-mix(in srgb, var(--trust-danger-bg) 50%, var(--paper));
+  border-left-color: var(--trust-danger);
+}
+
+.product-card[data-verdict="pending"] {
+  border-left-color: var(--border);
+}
+
+.product-card:hover {
+  background: var(--marigold-wash);
+  border-color: rgb(23 37 30 / 30%);
+}
+
+.product-card[data-verdict="trusted"]:hover {
+  border-left-color: var(--trust-trusted);
+}
+
+.product-card[data-verdict="caution"]:hover {
+  border-left-color: var(--trust-caution);
+}
+
+.product-card[data-verdict="danger"]:hover {
+  border-left-color: var(--trust-danger);
 }
 
 .shelf-row:hover {
-  transform: translateY(-3px);
   box-shadow:
-    0 1px 0 rgb(30 42 36 / 6%),
-    0 18px 34px -24px rgb(30 42 36 / 55%);
+    0 1px 0 rgb(23 37 30 / 8%),
+    0 18px 32px -24px rgb(23 37 30 / 55%);
 }
 
 .ticket-best.shelf-row:hover {
   box-shadow:
-    5px 7px 0 var(--marigold),
-    0 18px 34px -24px rgb(30 42 36 / 45%);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shelf-row:hover {
-    transform: none;
-  }
+    5px 5px 0 var(--marigold),
+    0 18px 32px -24px rgb(23 37 30 / 45%);
 }
 
 /* A product ticket turns over on hover to show its site stats. Both faces
