@@ -117,7 +117,7 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 
 ## Fill before submitting
 
-- [ ] `[LIVE URL]` — the Fly app after A's redeploy
+- [x] `https://sykes.select` — live on Vercel (runs live search; the video uses the curated local catalog)
 - [ ] `[REPO URL]`
 - [ ] `[VIDEO]` — the 3-minute path: question → stream → villain → pick → refusal → receipt
 - [ ] `[SCREENSHOT: results grid]`, `[SCREENSHOT: danger detail]`, `[SCREENSHOT: receipt]`

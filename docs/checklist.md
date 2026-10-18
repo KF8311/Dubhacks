@@ -18,7 +18,7 @@ One shared checklist. Personal scratch notes do not belong here.
 | Thing | Link |
 |---|---|
 | Repository | [KF8311/Dubhacks](https://github.com/KF8311/Dubhacks) · [`main`](https://github.com/KF8311/Dubhacks/tree/main) |
-| Live health | [`/api/health`](https://sniff-visa-dubhacks.fly.dev/api/health) ([Fly config](../fly.toml)) |
+| Live health | [`/api/health`](https://sykes.select/api/health) (**Vercel**, live) · [Fly config](../fly.toml) is the stale second path |
 | Current state | [`docs/status.md`](status.md) · [decisions](decisions.md) · [contracts](contracts.md) · [index](INDEX.md) |
 | Spec and plan | [product spec](../project-a-sniff-visa.md) · [implementation plan](superpowers/plans/2026-10-17-sniff-visa.md) · [3-person split](team-split-3.md) |
 | Devpost | [draft story](devpost.md) · [field-by-field form](devpost-form.md) · [technical claims](devpost-technical-claims.md) |
@@ -29,7 +29,7 @@ One shared checklist. Personal scratch notes do not belong here.
 | Test commands | [backend suite](../backend/tests) · [frontend suite](../frontend/src) · [offline replay](../scripts/replay_offline.py) |
 | Local servers | [localhost:5173](http://localhost:5173) · [localhost:8000/docs](http://localhost:8000/docs) |
 
-## Where we are now — 22:49 PT · **Block 5 close-out; all three branches are on `main`**
+## Where we are now — 23:10 PT · **Block 5 close-out; the deploy is live at [sykes.select](https://sykes.select)**
 
 | Thing | State |
 |---|---|
@@ -37,7 +37,7 @@ One shared checklist. Personal scratch notes do not belong here.
 | Follow-on branch | **None pending.** [PR #26](https://github.com/KF8311/Dubhacks/pull/26) merged A's `agent_backend` with a merge commit so A's four commits and authorship survive. Local `main` and `origin/main` are the same commit. `origin/agent_backend` is A's to archive. [`scratch/integration`](https://github.com/KF8311/Dubhacks/tree/scratch/integration) is stale; do not reuse it. |
 | Live API | Sessions create/answers/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm**, **receipts + public share**, `POST /api/demo/reset`. Contracts: [`docs/contracts.md`](contracts.md). |
 | Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from [`frontend/src/data/mock-session.json`](../frontend/src/data/mock-session.json). The sheet refuses to offer payment without a real session id — no more `ses_mock` fallback. Reflowed for 390px ([C's Block 6 notes](personC%20files/person-c-block-6.md)). |
-| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is built and merged end to end**; its gate proof (one browser click-through) is the first action of Block 5. **G5 is open**: the stories are written, the artifacts are not. |
+| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is proven end to end on the public URL** (`sykes.select`: checkout → confirm → receipt); the browser click-through is C's. **G5 is open**: the stories are written and the URL exists; the images and video are not. |
 | Dead branches | All of them. `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `integration/block4`, `integration/block4-ui`, `b/block4-refusals`, `b/block5-devpost`, `b/block5-veylz-audit`, `b/mongo-ownership` are all contained in `main` (`git rev-list --count main..origin/<branch>` is 0 for every head). `scratch/integration` is stale — do not reuse it. |
 
 **Before anyone starts:** `git checkout main && git pull`. There is nothing left to merge — if you are on an older branch, rebase onto `main` before writing code. Baseline commands are in [§1](#1-universal--once-per-machine); current health is at [`docs/status.md`](status.md).
@@ -147,7 +147,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | ✅ **Merged post-block:** the SerpAPI `source`→domain fallback ([D-021](decisions.md), [`serpapi.py`](../backend/app/search/serpapi.py)), `under_150`-style budget parsing ([`questions.py`](../backend/app/sessions/questions.py)), and the checkout sheet's session guard. ⬜ [`fly deploy`](../fly.toml) from current `main` so [the live app](https://sniff-visa-dubhacks.fly.dev/api/health) matches the repo; [`smoke_http.py`](../backend/scripts/smoke_http.py) against the public URL. **Then Task 29 ([D-020](decisions.md)):** install the VEYZL app on the repo, run the audit on a PR, fix one finding with a test — scope in [`docs/veylz-audit.md`](veylz-audit.md). |
+| **A** | ✅ **Deploy is live at [https://sykes.select](https://sykes.select/api/health)** — Vercel services, verified checkout → confirm → public receipt over the internet at 23:00 PT. ✅ **Merged post-block:** the SerpAPI `source`→domain fallback ([D-021](decisions.md), [`serpapi.py`](../backend/app/search/serpapi.py)), `under_150`-style budget parsing ([`questions.py`](../backend/app/sessions/questions.py)), and the checkout sheet's session guard. ⬜ **The hosted catalog decision:** the deploy runs live SerpAPI, so it has no villain — set `OFFLINE=1` there to pin the curated catalog, or record the demo locally. ⬜ **Task 29 ([D-020](decisions.md)):** the VEYZL app is installed and the audit ran; read the failing report on PR #26, reproduce it, and re-run — scope in [`docs/veylz-audit.md`](veylz-audit.md). |
 | **B** | ✅ Devpost story ([`docs/devpost.md`](devpost.md)), [README](../README.md), [`docs/devpost-form.md`](devpost-form.md), and the audit scope/reproduction. ⬜ Fill the form as A's URL and C's screenshots land; final numbers in [`status.md`](status.md); review A's audit finding. |
 | **C** | ✅ Block 6 UI work landed early ([notes](personC%20files/person-c-block-6.md)). ⬜ Three screenshots — results grid, danger detail, receipt — and one screen recording of the full path. This is the only thing G5 is waiting on from C. |
 
@@ -179,7 +179,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 ### Block 7 — Sunday 08:00–09:50 · G7: submit
 
-- [ ] Wake the Fly machine; hit [`/api/health`](https://sniff-visa-dubhacks.fly.dev/api/health) until it returns 200.
+- [ ] Warm the deploy before judging: hit [`/api/health`](https://sykes.select/api/health), then create one session (a cold start can 500 once).
 - [ ] Rehearse offline path once.
 - [ ] Every Devpost claim true: sandbox payment, synthetic data, no production Visa integration.
 - [ ] Say out loud: "no unprotected checkout" — then show the refusal.
@@ -280,6 +280,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 **What changed in the last hour:**
 
+- **`https://sykes.select` is live and the payment path works there.** Vercel-hosted; health 200, session 201, answers `ready`, checkout `201 awaiting_passkey`, confirm `200` (`rcp_Z-Oqv9M-trZ2yOok`), public receipt 200 with a valid signature. **It has a working `SERPAPI_KEY`, so it serves live search:** 9 real products, all trusted, no villain. The curated demo numbers only appear locally or under `OFFLINE=1`. See [REMAINING.md](REMAINING.md) before recording.
 - **A's `agent_backend` is merged.** Four commits: the VEYZL input/output guard ([`llm_guard.py`](../backend/app/services/llm_guard.py), [D-023](decisions.md)), the Vercel services config and data bundling ([`vercel.json`](../vercel.json), [`paths.py`](../backend/app/core/paths.py)), a failed live search now falls back to the catalog instead of an empty grid, and the session store hydrates a finished snapshot. Five conflicts resolved by hand: A's decision renumbered to D-023, the existing `veylz-audit.md` scaffold kept and extended with A's real results, the README left as the current version, both SerpAPI tests and both orchestrator paths kept. `apiBase()` now defaults to `localhost:8000` in a dev build and same-origin in production, so local dev still works without a `.env`.
 - **The VEYZL audit actually ran** — two hosted audits, ids in [`veylz-audit.md`](veylz-audit.md). It found the missing guard on the generative path; A fixed it with tests. **A clean re-run is still owed** before the side track can be claimed.
 
@@ -295,7 +296,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 | Owner | Now — Block 5 (due 22:30) | Then — Block 6 (freeze 02:00) | Done when |
 |---|---|---|---|
-| **A** | Deploy — `fly deploy` from the repo root **or** the Vercel services path — then `smoke_http.py` against the public URL | ✅ The audit ran, finding 1 is fixed with tests ([D-023](decisions.md), [results](veylz-audit.md)), and **the GitHub App is installed** — `VEYZL Audit` now posts on every PR. ⬜ That check **failed on PR #26**; read the report in the portal, reproduce what it names, and re-run. Do not re-add it as a required check until it passes. Sign off the `Question` shape (last G0 item) | Public URL carries checkout → receipt; a passing VEYZL check run linked from the audit doc; `pytest -q` still 204 |
+| **A** | ✅ **Deployed** — `https://sykes.select` serves checkout → receipt. ⬜ **Decide the hosted catalog:** it runs live search, so it has no villain; set `OFFLINE=1` on Vercel or record the demo locally | ✅ The audit ran, finding 1 is fixed with tests ([D-023](decisions.md), [results](veylz-audit.md)), and **the GitHub App is installed** — `VEYZL Audit` now posts on every PR. ⬜ That check **failed on PR #26**; read the report in the portal, reproduce what it names, and re-run. Do not re-add it as a required check until it passes. Sign off the `Question` shape (last G0 item) | Public URL carries checkout → receipt; a passing VEYZL check run linked from the audit doc; `pytest -q` still 204 |
 | **C** | Browser click-through at **$300–$600**: grid (villain red, best pick), Pay → passkey → receipt, villain refusal. Three screenshots + one recording, handed to B | `skipped` renders as **"Could not verify"** ([`CheckRow.tsx`](../frontend/src/features/results/CheckRow.tsx) still says "Skipped"); an over-budget badge or "closest match" copy for [D-022](decisions.md) | Screenshots in the Devpost gallery; both copy changes visible in the running app; `npm run build` clean |
 | **B** (you) | Pre-fill everything in [`devpost-form.md`](devpost-form.md) that does not need an artifact: story sections, Built with, repo link, generative-AI answer, tracks. Then drop in the live URL and gallery as they land; put replay numbers in [`status.md`](status.md) | TTL/index check against a real cluster — **if it does not happen, remove the MLH MongoDB Atlas claim and the checkbox**; review A's finding against the payability tests | Form complete with URL, images, video, VEYZL track; every number traced to a command |
 
@@ -322,7 +323,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
    - B already reproduced `/api/demo/reset`: unauthenticated POST → `200`, session destroyed. If VEYZL reports the same, the transcript is ready; if VEYZL reports something else, **the tool's finding wins**.
 5. Sign off the `Question` shape in `docs/contracts.md` (the last G0 item).
 
-**Proof:** [public health URL](https://sniff-visa-dubhacks.fly.dev/api/health) + checkout and receipt on the public URL; a VEYZL check run visible on a PR; `pytest -q` still 204.
+**Proof:** [public health URL](https://sykes.select/api/health) + checkout and receipt on the public URL (`rcp_Z-Oqv9M-trZ2yOok`, 23:00 PT); a VEYZL check run visible on a PR; `pytest -q` still 204.
 
 ### C — browser proof + screenshots
 
@@ -353,7 +354,7 @@ The Block 6 table in §4 is the authority. This is the same work in start order:
 
 | Order | Task | Owner | Done when |
 |---|---|---|---|
-| 1 | Deploy and public smoke | A | [`smoke_http.py`](../backend/scripts/smoke_http.py) passes against [Fly](https://sniff-visa-dubhacks.fly.dev/api/health) |
+| 1 | Deploy and public smoke | A | ✅ [https://sykes.select](https://sykes.select/api/health) — health 200, checkout → confirm → receipt verified. Note: it runs live search and has no villain; see [REMAINING.md](REMAINING.md) |
 | 2 | VEYZL audit + fix PR | A | check run visible; one finding fixed with a test ([scope](veylz-audit.md)) |
 | 3 | Devpost fields filled | B | [form](devpost-form.md) has URL, images, video, VEYZL track |
 | 4 | Repository review ([D-016](decisions.md)) | B | ✅ first pass in [`8c89260`](https://github.com/KF8311/Dubhacks/commit/8c89260) — protocol complete, `idempotency_key` null-safe. ⬜ TTL indexes checked against a real cluster; no Mongo type leaks |
