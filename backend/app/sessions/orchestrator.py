@@ -298,23 +298,10 @@ class SessionOrchestrator:
                 },
             )
 
-        if allowlisted:
-            for check in checks:
-                result = TrustCheckResult(
-                    id=check.id,
-                    name=check.display_name,
-                    status=TrustStatus.SKIPPED,
-                    severity=0,
-                    summary="Allowlisted merchant; checks skipped.",
-                    source="allowlist",
-                )
-                results.append(result)
-                self.bus.publish(
-                    session_id,
-                    "check.completed",
-                    {"listing_id": listing.id, "check": result.model_dump(mode="json")},
-                )
-        elif checks:
+        # The allowlist exempts a merchant from the score floor (D-015); it does
+        # not exempt the page from inspection. Every listing gets the same five
+        # checks, so the counter never shows "skipped" for a real store (D-043).
+        if checks:
             async for result in run_checks(target, checks, ctx=ctx, timeout_s=6.0):
                 results.append(result)
                 self.bus.publish(

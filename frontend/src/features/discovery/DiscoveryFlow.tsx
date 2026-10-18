@@ -164,7 +164,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
             <Button
               type="submit"
               disabled={asking || query.trim().length === 0}
-              className="h-12 rounded-full px-6 text-base font-semibold"
+              className="h-12 rounded-full px-6 text-base font-semibold transition-all duration-200 ease-out hover:scale-[1.03]"
             >
               {asking ? "Asking a few questions…" : "Find products"}
             </Button>
@@ -175,7 +175,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
                 key={starter.label}
                 type="button"
                 variant="outline"
-                className="h-9 rounded-full border-[color-mix(in_srgb,var(--ink)_14%,transparent)] px-4"
+                className="h-9 rounded-full border-[color-mix(in_srgb,var(--ink)_14%,transparent)] px-4 transition-all duration-200 ease-out hover:scale-[1.05]"
                 style={{ background: starter.tint }}
                 disabled={asking}
                 onClick={() => setLocalQuery(starter.label)}
@@ -203,7 +203,11 @@ export function DiscoveryFlow({ onStarted }: Props) {
           ))}
         </ul>
         <p className="mt-6 text-sm">
-          <button type="button" className="font-medium text-accent underline" onClick={() => go("/how")}>
+          <button
+            type="button"
+            className="inline-block font-medium text-accent underline transition-all duration-200 ease-out hover:scale-[1.02]"
+            onClick={() => go("/how")}
+          >
             How Sykes checks a store
           </button>
         </p>
@@ -245,7 +249,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
               key={option.id}
               type="button"
               variant={selected ? "default" : "outline"}
-              className="h-11 rounded-full px-4"
+              className="h-11 rounded-full px-4 transition-all duration-200 ease-out hover:scale-[1.04]"
               onClick={() => {
                 setPicked(option.id)
                 setFreeText("")
@@ -271,13 +275,18 @@ export function DiscoveryFlow({ onStarted }: Props) {
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="button" disabled={!ready} className="h-11 rounded-full px-5 font-semibold" onClick={() => void onNext()}>
+        <Button
+          type="button"
+          disabled={!ready}
+          className="h-11 rounded-full px-5 font-semibold transition-all duration-200 ease-out hover:scale-[1.03]"
+          onClick={() => void onNext()}
+        >
           {last ? "See results" : "Next"}
         </Button>
         {phase === "questions" ? (
           <button
             type="button"
-            className="text-sm font-medium text-muted-foreground underline underline-offset-4"
+            className="inline-block text-sm font-medium text-muted-foreground underline underline-offset-4 transition-all duration-200 ease-out hover:scale-[1.02] hover:text-foreground"
             onClick={() => void submit(answers, true)}
           >
             Skip questions

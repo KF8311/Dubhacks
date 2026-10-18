@@ -164,8 +164,14 @@ export function ProductCard({
     <span className="flip-face flip-back block" aria-hidden="true">
       <span className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-1 bg-[var(--paper)] p-4 text-center">
         <span className="text-xs font-semibold text-muted-foreground">Site safety</span>
-        <span className="font-heading text-5xl font-semibold leading-none" style={{ color: scoreColor }}>
-          {score?.score ?? "—"}
+        <span
+          className={cn(
+            "font-heading font-semibold leading-none",
+            score?.allowlisted ? "text-3xl" : "text-5xl",
+          )}
+          style={{ color: scoreColor }}
+        >
+          {score?.allowlisted ? "Verified" : (score?.score ?? "—")}
         </span>
         <TrustBadge score={score?.score} verdict={score?.verdict} allowlisted={score?.allowlisted} />
         <span className="text-xs">{tally}</span>
@@ -182,6 +188,7 @@ export function ProductCard({
       data-verdict={score?.verdict ?? "pending"}
       className={cn(
         "product-card h-full min-w-0 gap-0 rounded-3xl",
+        !expanded ? "product-flip" : null,
         isBest && !expanded ? "ticket-best" : "ticket",
         !isBest && selected && !expanded ? "ticket-selected" : null,
       )}

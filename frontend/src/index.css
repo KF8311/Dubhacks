@@ -248,6 +248,56 @@
   border-left-color: var(--trust-danger);
 }
 
+/* The flip cards carry their tint and verdict edge on the faces themselves.
+   Nothing colored sits still behind the turn: the whole visible surface
+   rotates, while the Visit/Send footer below stays put. */
+.product-flip,
+.product-flip:hover {
+  background: transparent;
+  border-width: 0;
+}
+
+.product-flip .flip-front,
+.product-flip .flip-back {
+  border-left: 4px solid var(--border);
+  background: var(--paper);
+}
+
+.product-flip[data-verdict="trusted"] .flip-front {
+  background: color-mix(in srgb, var(--trust-trusted-bg) 55%, var(--paper));
+  border-left-color: var(--trust-trusted);
+}
+
+.product-flip[data-verdict="trusted"] .flip-back {
+  background: color-mix(in srgb, var(--trust-trusted-bg) 30%, var(--paper));
+  border-left-color: var(--trust-trusted);
+}
+
+.product-flip[data-verdict="caution"] .flip-front {
+  background: color-mix(in srgb, var(--trust-caution-bg) 55%, var(--paper));
+  border-left-color: var(--trust-caution);
+}
+
+.product-flip[data-verdict="caution"] .flip-back {
+  background: color-mix(in srgb, var(--trust-caution-bg) 30%, var(--paper));
+  border-left-color: var(--trust-caution);
+}
+
+.product-flip[data-verdict="danger"] .flip-front {
+  background: color-mix(in srgb, var(--trust-danger-bg) 65%, var(--paper));
+  border-left-color: var(--trust-danger);
+}
+
+.product-flip[data-verdict="danger"] .flip-back {
+  background: color-mix(in srgb, var(--trust-danger-bg) 30%, var(--paper));
+  border-left-color: var(--trust-danger);
+}
+
+.product-flip[data-verdict="pending"] .flip-front,
+.product-flip[data-verdict="pending"] .flip-back {
+  border-left-color: var(--border);
+}
+
 .shelf-row:hover {
   box-shadow:
     0 1px 0 rgb(23 37 30 / 8%),
