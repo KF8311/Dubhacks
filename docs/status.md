@@ -11,7 +11,7 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | **G4 is merged end to end** — checkout → confirm → receipt on the server, and C's sheet and receipt page are wired to the live contract. One browser click-through is all that is left. |
+| Gate | **Block 4 is closed and G5 is open.** Checkout → confirm → receipt is merged end to end, and C's sheet and receipt page are wired to the live contract. G4's browser proof is the first action of Block 5. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy in Block 5) |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
@@ -20,10 +20,10 @@ This is the only file that claims to be current.
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
-| Blockers | Fly serves the pre-merge build; the browser flow has not been clicked through since C's UI merged |
+| Blockers | Two Block 5 first actions: A redeploys Fly, C clicks the merged flow through once |
 | Branches | **`main` carries everything through Block 4 for A, B, and C** (PRs #1–#14). No branch is ahead of `main`. Branch from `main` for Block 5. |
 
-Last updated: 2026-10-17 18:25 PT
+Last updated: 2026-10-17 18:45 PT
 
 ## Gate board
 
@@ -33,8 +33,8 @@ Last updated: 2026-10-17 18:25 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **merged end to end**; browser click-through pending | 153 backend / 22 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
-| G5 Devpost draft submitted | Sat 22:30 | ⬜ | Devpost confirmation |
+| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 153 backend / 22 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
+| G5 Devpost draft submitted | Sat 22:30 | 🟡 **block open** | Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
 
