@@ -1,30 +1,16 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { ShopWindow } from "@/components/ShopWindow.tsx"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createSession, getSnapshot, submitAnswers } from "@/lib/api.ts"
-import type { Answer, Question } from "@/lib/types.ts"
 import { go } from "@/lib/path.ts"
+import type { Answer, Question } from "@/lib/types.ts"
 import { useSessionStore } from "@/store/sessionStore.ts"
 
 type Props = {
   onStarted: (sessionId: string) => void
 }
-
-const PILLARS = [
-  {
-    title: "Five trust checks",
-    body: "Domain age, SSL, Safe Browsing, Reddit, and page flags on every merchant.",
-  },
-  {
-    title: "Cheapest trusted",
-    body: "The pick is the lowest price that passed — not the cheapest listing on the page.",
-  },
-  {
-    title: "Sandbox checkout",
-    body: "A simulated Visa mandate, passkey, and receipt. No real card is charged.",
-  },
-]
 
 const STARTERS = ["Headphones", "Pens", "Water bottles"]
 
@@ -44,6 +30,12 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const [asking, setAsking] = useState(false)
 
   const question = questions[index]
+
+  useEffect(() => {
+    if (phase === "query") return
+    go("/", { scroll: true })
+    document.getElementById("shop")?.scrollIntoView?.({ block: "start" })
+  }, [phase])
 
   async function onFindProducts() {
     const trimmed = query.trim()
@@ -97,6 +89,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
         budgetMaxCents: submitted.search_spec?.budget_max_cents ?? null,
         budgetMinCents: submitted.search_spec?.budget_min_cents ?? null,
       })
+      go("/", { scroll: true })
       onStarted(snapshot.session_id)
     } catch (caught) {
       setPhase("questions")
@@ -106,86 +99,73 @@ export function DiscoveryFlow({ onStarted }: Props) {
 
   if (phase === "submitting") {
     return (
-      <div className="ticket mx-auto max-w-2xl space-y-4 rounded-lg p-6 sm:p-8" aria-busy="true">
-        <p className="text-lg font-medium">Looking at retailers…</p>
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
+      <div className="shop-floor">
+        <div className="ticket mx-auto max-w-2xl space-y-4 rounded-lg p-6 sm:p-8" aria-busy="true">
+          <p className="text-lg font-medium">Looking at retailers…</p>
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
       </div>
     )
   }
 
   if (phase === "query" || !question) {
     return (
-      <section className="mx-auto max-w-3xl">
-        <p className="text-sm font-medium text-accent">Sykes shops with you</p>
-        <h1 className="mt-2 max-w-xl font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
-          Find a deal you can actually pay for
-        </h1>
-        <form
-          className="ticket mt-8 space-y-4 rounded-lg p-5 sm:p-7"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void onFindProducts()
-          }}
-        >
-          <label className="block text-lg font-semibold tracking-tight" htmlFor="query">
-            What do you want to buy?
-          </label>
-          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Search real listings, then only offer to pay a merchant the checks can verify.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Input
-              id="query"
-              value={query}
-              placeholder="What are you looking for?"
-              onChange={(event) => setLocalQuery(event.target.value)}
-              disabled={asking}
-              className="h-12 flex-1 rounded-md bg-[var(--paper)] px-4 text-base md:text-base"
-            />
-            <Button
-              type="submit"
-              disabled={asking || query.trim().length === 0}
-              className="h-12 rounded-md px-6 text-base font-semibold"
-            >
-              {asking ? "Asking a few questions…" : "Find products"}
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {STARTERS.map((starter) => (
-              <Button
-                key={starter}
-                type="button"
-                variant="outline"
-                className="h-9 rounded-full bg-[var(--paper)]"
-                disabled={asking}
-                onClick={() => setLocalQuery(starter)}
-              >
-                {starter}
-              </Button>
-            ))}
-          </div>
-          {error ? (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
+      <>
+        <ShopWindow>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void onFindProducts()
+            }}
+          >
+            <label className="block text-lg font-semibold tracking-tight" htmlFor="query">
+              What do you want to buy?
+            </label>
+            <p className="shop-lede max-w-lg text-sm leading-relaxed text-muted-foreground">
+              Search real listings, then only offer to pay a merchant the checks can verify.
             </p>
-          ) : null}
-        </form>
-        <ul className="mt-8 grid gap-6 sm:grid-cols-3">
-          {PILLARS.map((pillar) => (
-            <li key={pillar.title} className="border-t-2 border-[var(--marigold)] pt-3">
-              <p className="text-sm font-semibold">{pillar.title}</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pillar.body}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 text-sm">
-          <button type="button" className="font-medium text-accent underline" onClick={() => go("/how")}>
-            How Sykes checks a store
-          </button>
-        </p>
-      </section>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                id="query"
+                value={query}
+                placeholder="What are you looking for?"
+                onChange={(event) => setLocalQuery(event.target.value)}
+                disabled={asking}
+                className="h-12 flex-1 rounded-md bg-[var(--paper)] px-4 text-base md:text-base"
+              />
+              <Button
+                type="submit"
+                disabled={asking || query.trim().length === 0}
+                className="h-12 rounded-md px-6 text-base font-semibold"
+              >
+                {asking ? "Asking a few questions…" : "Find products"}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {STARTERS.map((starter) => (
+                <Button
+                  key={starter}
+                  type="button"
+                  variant="outline"
+                  className="h-9 rounded-full bg-[var(--paper)]"
+                  disabled={asking}
+                  onClick={() => setLocalQuery(starter)}
+                >
+                  {starter}
+                </Button>
+              ))}
+            </div>
+            {error ? (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </form>
+        </ShopWindow>
+      </>
     )
   }
 
@@ -194,6 +174,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const progress = ((index + 1) / questions.length) * 100
 
   return (
+    <div className="shop-floor">
     <div className="ticket mx-auto max-w-xl space-y-5 rounded-lg p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
@@ -251,6 +232,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
       <Button type="button" disabled={!ready} className="h-11 rounded-md px-5 font-semibold" onClick={() => void onNext()}>
         {last ? "See results" : "Next"}
       </Button>
+    </div>
     </div>
   )
 }

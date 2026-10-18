@@ -1,20 +1,26 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { BrandMark } from "@/components/BrandMark.tsx"
 import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
-import { currentPath, go, withSearch } from "@/lib/path.ts"
+import { currentPath, go, scrollToId, withSearch } from "@/lib/path.ts"
 
 type Props = {
   children: ReactNode
+  bleed?: boolean
+  spy?: boolean
 }
 
-function NavLink({ to, label }: { to: string; label: string }) {
-  const [path, setPath] = useState(currentPath)
-  useEffect(() => {
-    const onPop = () => setPath(currentPath())
-    window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
-  }, [])
-  const current = path === to
+function NavLink({
+  to,
+  label,
+  section,
+  onSection,
+}: {
+  to: string
+  label: string
+  section: string
+  onSection?: (path: string) => void
+}) {
+  const current = section === to
   return (
     <a
       href={withSearch(to)}
@@ -26,6 +32,10 @@ function NavLink({ to, label }: { to: string; label: string }) {
       }
       onClick={(event) => {
         event.preventDefault()
+        if (onSection) {
+          onSection(to)
+          return
+        }
         go(to)
       }}
     >
@@ -34,45 +44,87 @@ function NavLink({ to, label }: { to: string; label: string }) {
   )
 }
 
-export function AppShell({ children }: Props) {
+export function AppShell({ children, bleed = false, spy = false }: Props) {
+  const [section, setSection] = useState(currentPath)
+
+  useEffect(() => {
+    const onPop = () => setSection(currentPath())
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+
+  useEffect(() => {
+    if (!spy) return
+    const nodes = [
+      ["shop", "/"],
+      ["how", "/how"],
+      ["about", "/about"],
+    ] as const
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const hit = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        if (!hit?.target.id) return
+        const next = nodes.find(([id]) => id === hit.target.id)?.[1]
+        if (!next || next === currentPath()) return
+        window.history.replaceState({}, "", withSearch(next))
+        setSection(next)
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: [0.1, 0.25, 0.5] },
+    )
+    for (const [id] of nodes) {
+      const node = document.getElementById(id)
+      if (node) observer.observe(node)
+    }
+    return () => observer.disconnect()
+  }, [spy])
+
+  function goSection(path: string) {
+    go(path, { scroll: false })
+    setSection(path)
+    const id = path === "/how" ? "how" : path === "/about" ? "about" : "shop"
+    scrollToId(id)
+  }
+
   return (
     <div className="app-canvas min-h-screen text-left text-foreground">
-      <header className="sticky top-0 z-20 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <a
             href={withSearch("/")}
             className="min-w-0"
             onClick={(event) => {
               event.preventDefault()
+              if (spy) {
+                goSection("/")
+                return
+              }
               go("/")
             }}
           >
             <BrandMark />
           </a>
           <nav className="flex items-center gap-4 text-sm" aria-label="Sykes">
-            <NavLink to="/" label="Shop" />
-            <NavLink to="/how" label="How it works" />
-            <NavLink to="/about" label="About" />
+            <NavLink to="/" label="Shop" section={section} onSection={spy ? goSection : undefined} />
+            <NavLink to="/how" label="How it works" section={section} onSection={spy ? goSection : undefined} />
+            <NavLink to="/about" label="About" section={section} onSection={spy ? goSection : undefined} />
           </nav>
         </div>
         <p className="mx-auto max-w-6xl px-4 pb-2 text-xs text-muted-foreground sm:px-6">
           {SANDBOX_LABEL}
         </p>
       </header>
-      <main className="mx-auto min-w-0 max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+      <main
+        className={
+          bleed ? "min-w-0" : "mx-auto min-w-0 max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-12"
+        }
+      >
+        {children}
+      </main>
       <footer className="border-t border-border bg-[var(--paper)]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-sm text-muted-foreground sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 py-4 text-sm text-muted-foreground sm:px-6">
           <p>Sykes — a shopkeeper for the internet.</p>
-          <a
-            href={withSearch("/how")}
-            className="font-medium text-accent underline"
-            onClick={(event) => {
-              event.preventDefault()
-              go("/how")
-            }}
-          >
-            The five checks
-          </a>
         </div>
       </footer>
     </div>

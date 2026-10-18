@@ -27,6 +27,46 @@ type Props = {
   budgetMinCents?: number | null
 }
 
+function Photo({
+  listing,
+  failed,
+  onFail,
+  hero,
+}: {
+  listing: Listing
+  failed: boolean
+  onFail: () => void
+  hero?: boolean
+}) {
+  const initial = listing.merchant_name.slice(0, 1).toUpperCase()
+  if (failed) {
+    return (
+      <div
+        className={
+          hero
+            ? "flex aspect-[4/3] w-full items-center justify-center bg-[var(--ink)] text-4xl font-semibold text-[var(--paper)]"
+            : "flex size-20 shrink-0 items-center justify-center rounded-md bg-[var(--ink)] text-lg font-semibold text-[var(--paper)]"
+        }
+        aria-hidden="true"
+      >
+        {initial}
+      </div>
+    )
+  }
+  return (
+    <img
+      src={listing.image_url}
+      alt=""
+      className={
+        hero
+          ? "listing-photo-hero aspect-[4/3] w-full bg-[var(--paper)] object-contain"
+          : "listing-photo size-20 shrink-0 rounded-md bg-[var(--paper)] object-contain"
+      }
+      onError={onFail}
+    />
+  )
+}
+
 export function ProductCard({
   listing,
   checks,
@@ -39,71 +79,61 @@ export function ProductCard({
   budgetMinCents = null,
 }: Props) {
   const [imageFailed, setImageFailed] = useState(listing.image_url.length === 0)
-  const initial = listing.merchant_name.slice(0, 1).toUpperCase()
+  const fail = () => setImageFailed(true)
 
-  const thumb = imageFailed ? (
-    <div
-      className="flex size-16 shrink-0 items-center justify-center rounded-md bg-[var(--ink)] text-lg font-semibold text-[var(--paper)]"
-      aria-hidden="true"
-    >
-      {initial}
+  const facts = (
+    <div className="min-w-0 flex-1 space-y-1 text-left">
+      {isBest ? <p className="text-sm font-semibold text-accent">Best pick</p> : null}
+      <h3 className="font-heading line-clamp-2 text-base font-semibold leading-snug">{listing.title}</h3>
+      <p className="text-sm text-muted-foreground">
+        <span>{listing.merchant_name}</span>
+        <span> · {listing.merchant_domain}</span>
+      </p>
+      <p className="font-heading text-xl font-semibold">
+        {formatCents(listing.price_cents, listing.currency)}
+      </p>
+      {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
+        <p className="text-xs font-medium text-[color:var(--trust-caution)]">Above your budget</p>
+      ) : null}
+      {budgetMinCents != null && listing.price_cents < budgetMinCents ? (
+        <p className="text-xs font-medium text-[color:var(--trust-caution)]">Below your budget</p>
+      ) : null}
+      <TrustBadge
+        score={score?.score}
+        verdict={score?.verdict}
+        allowlisted={score?.allowlisted}
+      />
     </div>
-  ) : (
-    <img
-      src={listing.image_url}
-      alt=""
-      className="size-16 shrink-0 rounded-md bg-muted object-cover"
-      onError={() => setImageFailed(true)}
-    />
-  )
-
-  const body = (
-    <>
-      {thumb}
-      <div className="min-w-0 flex-1 space-y-1 text-left">
-        {isBest ? <p className="text-sm font-semibold text-accent">Best pick</p> : null}
-        <h3 className="font-heading line-clamp-2 text-base font-semibold leading-snug">{listing.title}</h3>
-        <p className="text-sm text-muted-foreground">
-          <span>{listing.merchant_name}</span>
-          <span> · {listing.merchant_domain}</span>
-        </p>
-        <p className="font-heading text-xl font-semibold">
-          {formatCents(listing.price_cents, listing.currency)}
-        </p>
-        {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
-          <p className="text-xs font-medium text-[color:var(--trust-caution)]">Above your budget</p>
-        ) : null}
-        {budgetMinCents != null && listing.price_cents < budgetMinCents ? (
-          <p className="text-xs font-medium text-[color:var(--trust-caution)]">Below your budget</p>
-        ) : null}
-        <TrustBadge
-          score={score?.score}
-          verdict={score?.verdict}
-          allowlisted={score?.allowlisted}
-        />
-      </div>
-    </>
   )
 
   return (
     <Card
       className={cn(
-        "min-w-0 rounded-lg py-3",
+        "min-w-0 overflow-hidden rounded-lg py-3",
         isBest || selected ? "ticket-best" : "ticket shadow-none",
         onSelect && !expanded ? "shelf-row" : null,
       )}
     >
-      {onSelect ? (
+      {expanded ? (
+        <>
+          <Photo listing={listing} failed={imageFailed} onFail={fail} hero />
+          <div className="px-4 pt-3">{facts}</div>
+        </>
+      ) : onSelect ? (
         <button
           type="button"
           className="flex w-full items-start gap-3 px-4"
           aria-pressed={selected}
           onClick={onSelect}
         >
-          {body}
+          <Photo listing={listing} failed={imageFailed} onFail={fail} />
+          {facts}
         </button>
       ) : (
-        <div className="flex items-start gap-3 px-4">{body}</div>
+        <div className="flex items-start gap-3 px-4">
+          <Photo listing={listing} failed={imageFailed} onFail={fail} />
+          {facts}
+        </div>
       )}
       {expanded ? (
         <CardContent className="mt-3">

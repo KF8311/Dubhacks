@@ -34,7 +34,7 @@ test("a listing below a typed range is labelled", () => {
   expect(screen.getByText("Below your budget")).toBeInTheDocument()
 })
 
-test("leads with a compact ticket, not a hero photo", () => {
+test("the shelf ticket shows a product photo", () => {
   render(
     <ProductCard
       listing={{ ...listing, image_url: "https://example.com/xm5.jpg" }}
@@ -42,10 +42,23 @@ test("leads with a compact ticket, not a hero photo", () => {
       isBest={false}
     />,
   )
-  const photo = document.querySelector("img")
-  expect(photo).toHaveClass("size-16")
-  const title = screen.getByText("Sony WH-1000XM5")
-  expect(photo && title.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+  const photo = document.querySelector("img.listing-photo")
+  expect(photo).toHaveAttribute("src", "https://example.com/xm5.jpg")
+})
+
+test("the counter card shows a large product photo", () => {
+  render(
+    <ProductCard
+      listing={{ ...listing, image_url: "https://example.com/xm5.jpg" }}
+      checks={[]}
+      isBest={false}
+      expanded
+    />,
+  )
+  expect(document.querySelector("img.listing-photo-hero")).toHaveAttribute(
+    "src",
+    "https://example.com/xm5.jpg",
+  )
 })
 
 test("a collapsed ticket hides the check list", () => {

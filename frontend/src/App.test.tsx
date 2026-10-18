@@ -19,6 +19,64 @@ test("live search shows a loading state instead of unrelated products", () => {
   expect(screen.queryByText(/checking listings/i)).not.toBeInTheDocument()
 })
 
+test("search results stay visible when the URL is /how", () => {
+  window.history.replaceState({}, "", "/how?mock=1")
+  useSessionStore.setState({ stage: "searching", query: "kayak", listings: [] })
+  render(<App />)
+  expect(screen.getByText(/searching live listings/i)).toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: /what we found for/i })).toBeInTheDocument()
+})
+
+test("listings stay visible when the URL is /about", () => {
+  window.history.replaceState({}, "", "/about?mock=1")
+  useSessionStore.setState({
+    stage: "ready",
+    query: "headphones",
+    listings: [
+      {
+        id: "lst_sony",
+        title: "Sony WH-1000XM5",
+        price_cents: 24900,
+        currency: "USD",
+        merchant_name: "Sony",
+        merchant_domain: "sony.com",
+        image_url: "",
+        product_url: "https://sony.com/x",
+        source: "serpapi",
+      },
+    ],
+    scores: {
+      lst_sony: {
+        score: 92,
+        verdict: "trusted",
+        confidence: 1,
+        penalties: [],
+        fatal_flags: [],
+        top_reason: "ok",
+        scoring_version: "1.0",
+        allowlisted: true,
+      },
+    },
+  })
+  render(<App />)
+  expect(screen.getByRole("heading", { name: /what we found for/i })).toBeInTheDocument()
+  expect(screen.getAllByText("Sony WH-1000XM5").length).toBeGreaterThan(0)
+})
+
+test("clarifying questions stay on the shop after opening how it works", async () => {
+  render(<App />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "headphones" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  expect(await screen.findByText(/what's your ceiling/i)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole("link", { name: /how it works/i }))
+  expect(screen.getByText(/what's your ceiling/i)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole("button", { name: /\$150–\$300/i }))
+  fireEvent.click(screen.getByRole("button", { name: /^next$/i }))
+  expect(await screen.findByText(/question 2 of 3/i)).toBeInTheDocument()
+})
+
 test("a failed live search offers a retry instead of the catalog", () => {
   useSessionStore.setState({
     stage: "failed",
@@ -37,14 +95,15 @@ test("renders the app shell", () => {
   expect(screen.getByText(/sandbox — simulated visa intelligent commerce flow/i)).toBeInTheDocument()
   expect(screen.getByRole("link", { name: /how it works/i })).toBeInTheDocument()
   expect(screen.getByRole("link", { name: /^about$/i })).toBeInTheDocument()
+  expect(screen.queryByRole("link", { name: /the five checks/i })).not.toBeInTheDocument()
 })
 
 test("how it works explains the five checks and the pay rule", () => {
   window.history.replaceState({}, "", "/how")
   render(<App />)
   expect(screen.getByRole("heading", { name: /how sykes checks a store/i })).toBeInTheDocument()
-  expect(screen.getByText(/domain age/i)).toBeInTheDocument()
-  expect(screen.getByText(/safe browsing/i)).toBeInTheDocument()
+  expect(screen.getAllByText(/domain age/i).length).toBeGreaterThan(0)
+  expect(screen.getAllByText(/safe browsing/i).length).toBeGreaterThan(0)
   expect(screen.getByText(/cannot pay a merchant it cannot verify/i)).toBeInTheDocument()
 })
 
@@ -62,6 +121,27 @@ test("landing shows the branded search hero", () => {
   expect(screen.getByText(/what do you want to buy/i)).toBeInTheDocument()
   expect(screen.getByText(/five trust checks/i)).toBeInTheDocument()
   expect(screen.getByRole("button", { name: /^headphones$/i })).toBeInTheDocument()
+})
+
+test("landing has a shop window you can scroll into", () => {
+  render(<App />)
+  expect(screen.getByTestId("shop-window")).toBeInTheDocument()
+  expect(screen.getByText(/drag to turn/i)).toBeInTheDocument()
+})
+
+test("the shop globe can be turned with the pointer", () => {
+  render(<App />)
+  expect(screen.getByTestId("shop-orb").getAttribute("aria-label")).toMatch(/drag to turn/i)
+})
+
+test("how it works and about live on the shop page", () => {
+  render(<App />)
+  fireEvent.click(screen.getByRole("link", { name: /how it works/i }))
+  expect(screen.getByRole("heading", { name: /find a deal you can actually pay for/i })).toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: /how sykes checks a store/i })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole("link", { name: /^about$/i }))
+  expect(screen.getByRole("heading", { name: /about sykes/i })).toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: /find a deal you can actually pay for/i })).toBeInTheDocument()
 })
 
 test("walks discovery into the mock results", async () => {
