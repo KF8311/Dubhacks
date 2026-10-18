@@ -9,7 +9,7 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **232 passed**, frontend **49 passed**, `npm run build` clean, replay exit 0. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **234 passed**, frontend **49 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Run it:** `.\scripts\dev.cmd` → open **http://localhost:5173/**. Offline: `.\scripts\dev.cmd offline`. Details: [`RUN.md`](RUN.md).
 
@@ -25,6 +25,7 @@ Everything else on A's plate is done (see "Already done"). One item remains:
   ```powershell
   iwr https://fly.io/install.ps1 -useb | iex
   fly auth login
+  fly secrets set MONGODB_URI="<the same Atlas URI as backend/.env>" SERPAPI_KEY="<...>" GEMINI_API_KEY="<...>"
   fly deploy
   backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://sniff-visa-dubhacks.fly.dev
   ```
@@ -35,7 +36,7 @@ Everything else on A's plate is done (see "Already done"). One item remains:
 ## B — docs, claims, Devpost
 
 - [ ] **VEYZL: cut it.** The app is not installed and the probe work lives in the parked commits. Mark the side track **not selected** in [`devpost-form.md`](devpost-form.md) and note the decision in [`veylz-audit.md`](veylz-audit.md). Do not claim it.
-- [ ] **Drop the MLH MongoDB claim.** A found `MONGODB_URI` unset and the adapter has not run against Atlas, so remove the checkbox from [`devpost-form.md`](devpost-form.md). In-memory is the default and `degraded` with Mongo off is expected.
+- [ ] **Support the MLH MongoDB claim.** Atlas is connected and proven (D-026), so keep the checkbox in [`devpost-form.md`](devpost-form.md) and make sure the deployed app gets `MONGODB_URI` as a Fly secret — otherwise the public health reads `degraded` and the claim looks thin.
 - [ ] **Claim scrub.** `README.md` describes the Vercel path and the embedded bundle makes it plausible again — verify it against a real deploy before claiming it, or reword it to "Fly is the deploy path". Remove or qualify the VEYZL reference in `README.md`.
 - [ ] **Pre-fill the Devpost.** [`devpost.md`](devpost.md) and [`devpost-form.md`](devpost-form.md) are drafted; fill every field that does not need the URL, screenshots, or video. The generative-AI answer is **Yes**.
 - [ ] **Fill the artifacts and submit.** URL from A, three screenshots and the video from C, then the final submit and the confirmation capture.
@@ -63,7 +64,7 @@ Everything else on A's plate is done (see "Already done"). One item remains:
 ## Shared gates — run before calling anything done
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 232 passed
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 234 passed
 cd frontend; npx vitest run; npm run build                       # 49 passed, clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
@@ -105,6 +106,7 @@ Live page fetching → Reddit → SerpAPI → Mongo → page flags.
 - [x] `frontend/.env` holds only `VITE_API_BASE_URL` and `VITE_USE_MOCK`; only `.env.example` files are tracked
 - [x] Live search proven over HTTP: `noise cancelling headphones` + `$300–$600` → `source: "serpapi"`; invalid key → `SEARCH_UNAVAILABLE`, stage `failed`, zero listings
 - [x] Docker image builds and the container serves health, live search, and checkout → confirm → public receipt (`smoke_http.py` passes)
-- [x] Mongo/Atlas result recorded: not exercised (`MONGODB_URI` unset) → MLH claim drops
+- [x] Atlas connected and proven: health `db: ok`, checkout → confirm → public receipt, and the receipt survives a backend restart (D-026)
+- [x] Two Mongo-only bugs fixed — naive datetimes on hydrate, and an empty `idempotency_key` colliding on the unique index — with regression tests (backend now 234)
 - [x] Five trust checks, deterministic scoring, recommendation, checkout → passkey → receipt, public share, refusal paths
 - [x] Offline replay reproduces the frozen numbers: 9 listings, 8 trusted, 1 danger, pick `lst_tgt_bsp`, median $374.49, savings $194.50

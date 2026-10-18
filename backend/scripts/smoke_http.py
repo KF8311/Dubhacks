@@ -82,7 +82,7 @@ def main() -> None:
     confirm_url = f"http://127.0.0.1:8000/api/checkout/{checkout['checkout_id']}/confirm"
     payload = {
         "passkey_assertion": {"credential_id": "mock", "client_data": "mock"},
-        "idempotency_key": "smoke1",
+        "idempotency_key": f"smoke-{checkout['checkout_id']}",
     }
     status, confirmed = req("POST", confirm_url, payload)
     print(

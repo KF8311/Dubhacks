@@ -132,6 +132,27 @@ def test_confirm_twice_returns_same_receipt(monkeypatch):
     assert a["receipt_id"] == b["receipt_id"]
 
 
+def test_a_pending_checkout_stores_no_idempotency_key(monkeypatch):
+    """The unique index is partial on strings; "" made every second checkout collide in Mongo."""
+    import asyncio
+
+    from app.services.repository import get_repository
+
+    client = TestClient(create_app())
+    sid, listing = _setup(client, monkeypatch)
+    co = client.post(
+        "/api/checkout",
+        json={
+            "session_id": sid,
+            "listing_id": listing["id"],
+            "mandate": {"max_amount_cents": 50000, "currency": "USD", "expires_in_seconds": 600},
+        },
+    ).json()
+    stored = asyncio.run(get_repository().get_checkout(co["checkout_id"]))
+    assert stored is not None
+    assert stored.idempotency_key is None
+
+
 def test_confirm_fail_returns_402(monkeypatch):
     client = TestClient(create_app())
     sid, listing = _setup(client, monkeypatch)

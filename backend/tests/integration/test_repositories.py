@@ -149,6 +149,26 @@ async def test_mongo_transition_uses_find_one_and_update():
 
 
 @pytest.mark.asyncio
+async def test_mongo_hydrates_naive_datetimes_as_utc():
+    """Motor hands back naive UTC datetimes; the payability gate compares them to an aware now."""
+    from app.services.repository import MongoRepository
+
+    db = _FakeDB()
+    repo = MongoRepository(db)
+    checkout = _checkout()
+    await repo.save_checkout(checkout)
+    stored = db.checkouts.docs[checkout.id]
+    stored["created_at"] = stored["created_at"].replace(tzinfo=None)
+    stored["expires_at"] = stored["expires_at"].replace(tzinfo=None)
+
+    loaded = await repo.get_checkout(checkout.id)
+    assert loaded is not None
+    assert loaded.created_at.tzinfo is not None
+    assert loaded.created_at == checkout.created_at
+    assert loaded.expires_at == checkout.expires_at
+
+
+@pytest.mark.asyncio
 async def test_indexes_include_ttl_and_unique():
     from app.db.indexes import ensure_indexes
 
