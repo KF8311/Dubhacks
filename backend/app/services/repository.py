@@ -74,8 +74,12 @@ class Repository(Protocol):
     def clear(self) -> Awaitable[None] | None: ...
     async def save_session(self, session: Session) -> None: ...
     async def save_listing(self, listing: Listing) -> None: ...
+    async def get_listing(self, listing_id: str) -> Listing | None: ...
     async def save_investigation(self, inv: Investigation) -> None: ...
     async def get_investigation(self, investigation_id: str) -> Investigation | None: ...
+    async def get_investigation_for(
+        self, session_id: str, listing_id: str
+    ) -> Investigation | None: ...
     async def save_mandate(self, mandate: Mandate) -> None: ...
     async def get_mandate(self, mandate_id: str) -> Mandate | None: ...
     async def save_checkout(self, checkout: Checkout) -> None: ...
@@ -140,10 +144,29 @@ class InMemoryRepository:
         async with self._lock:
             self._investigations[inv.id] = inv.model_copy(deep=True)
 
+    async def get_listing(self, listing_id: str) -> Listing | None:
+        async with self._lock:
+            found = self._listings.get(listing_id)
+            return found.model_copy(deep=True) if found else None
+
     async def get_investigation(self, investigation_id: str) -> Investigation | None:
         async with self._lock:
             found = self._investigations.get(investigation_id)
             return found.model_copy(deep=True) if found else None
+
+    async def get_investigation_for(
+        self, session_id: str, listing_id: str
+    ) -> Investigation | None:
+        async with self._lock:
+            matches = [
+                inv
+                for inv in self._investigations.values()
+                if inv.session_id == session_id and inv.listing_id == listing_id
+            ]
+            if not matches:
+                return None
+            newest = max(matches, key=lambda inv: inv.created_at)
+            return newest.model_copy(deep=True)
 
     async def save_mandate(self, mandate: Mandate) -> None:
         async with self._lock:
@@ -232,8 +255,20 @@ class MongoRepository:
     async def save_investigation(self, inv: Investigation) -> None:
         await self.db.investigations.replace_one({"_id": inv.id}, _doc(inv), upsert=True)
 
+    async def get_listing(self, listing_id: str) -> Listing | None:
+        return _hydrate(Listing, await self.db.listings.find_one({"_id": listing_id}))
+
     async def get_investigation(self, investigation_id: str) -> Investigation | None:
         return _hydrate(Investigation, await self.db.investigations.find_one({"_id": investigation_id}))
+
+    async def get_investigation_for(
+        self, session_id: str, listing_id: str
+    ) -> Investigation | None:
+        doc = await self.db.investigations.find_one(
+            {"session_id": session_id, "listing_id": listing_id},
+            sort=[("created_at", -1)],
+        )
+        return _hydrate(Investigation, doc)
 
     async def save_mandate(self, mandate: Mandate) -> None:
         await self.db.mandates.replace_one({"_id": mandate.id}, _doc(mandate), upsert=True)

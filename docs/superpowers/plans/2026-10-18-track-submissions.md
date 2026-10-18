@@ -288,7 +288,7 @@ git commit -m "Add the DEV Writing Challenge article"
 - Modify: `docs/devpost-form.md`
 - Modify: `docs/checklist.md`
 
-- [ ] **Step 1: Record D-027 — the slate**
+- [ ] **Step 1: Record D-028 — the slate**
 
 Title: **Visa: Reimagine Shopping**.
 Sponsored (3): **SideShift** (Best Startup Idea — no build requirement), **Cloudforce** (entry is a raffle ticket; Most Interesting is a judges' pick), and a third slot held for **VEYZL** if the audit app is actually installable, otherwise **Photon** if a channel can be provisioned inside two hours, otherwise left empty.
@@ -311,7 +311,7 @@ Replace the "B — docs, claims, Devpost" MLH line with a link to this plan and 
 
 ```bash
 git add docs/decisions.md docs/devpost-form.md docs/checklist.md
-git commit -m "Pick the track slate and record D-027"
+git commit -m "Pick the track slate and record D-028"
 ```
 
 ---

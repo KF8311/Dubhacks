@@ -85,6 +85,36 @@ async def test_memory_repo_round_trips_a_receipt_share_id():
     assert loaded.token_last4 == "4242"
 
 
+def _listing():
+    from app.domain.models import Listing
+
+    return Listing(
+        id="lst_1",
+        title="x",
+        price_cents=1000,
+        merchant_name="m",
+        merchant_domain="bestbuy.com",
+        image_url="",
+        product_url="https://bestbuy.com/p/1",
+    )
+
+
+def _investigation(session_id: str, listing_id: str):
+    from app.domain.enums import Verdict
+    from app.domain.models import Investigation, ScoreResult
+
+    return Investigation(
+        id="inv_1",
+        listing_id=listing_id,
+        session_id=session_id,
+        checks=[],
+        score=ScoreResult(score=90, verdict=Verdict.TRUSTED, confidence=1.0, top_reason="ok"),
+        allowlisted=True,
+        duration_ms=1,
+        created_at=datetime.now(timezone.utc),
+    )
+
+
 class _FakeCollection:
     def __init__(self) -> None:
         self.docs: dict = {}
@@ -97,13 +127,20 @@ class _FakeCollection:
     async def replace_one(self, filt, doc, upsert=False):
         self.docs[filt["_id"]] = doc
 
-    async def find_one(self, filt):
+    async def find_one(self, filt, sort=None):
         if "_id" in filt:
             return self.docs.get(filt["_id"])
-        for doc in self.docs.values():
-            if all(doc.get(key) == value for key, value in filt.items()):
-                return doc
-        return None
+        matches = [
+            doc
+            for doc in self.docs.values()
+            if all(doc.get(key) == value for key, value in filt.items())
+        ]
+        if not matches:
+            return None
+        if sort:
+            field, direction = sort[0]
+            matches.sort(key=lambda doc: doc.get(field), reverse=direction < 0)
+        return matches[0]
 
     async def find_one_and_update(self, filt, update):
         self.calls.append((filt, update))
@@ -131,6 +168,44 @@ class _FakeDB:
         if name not in self._cols:
             self._cols[name] = _FakeCollection()
         return self._cols[name]
+
+
+@pytest.mark.asyncio
+async def test_mongo_round_trips_a_listing():
+    from app.services.repository import MongoRepository
+
+    db = _FakeDB()
+    repo = MongoRepository(db)
+    listing = _listing()
+    await repo.save_listing(listing)
+    loaded = await repo.get_listing(listing.id)
+    assert loaded is not None
+    assert loaded.product_url == listing.product_url
+
+
+@pytest.mark.asyncio
+async def test_get_listing_returns_none_for_an_unknown_id():
+    assert await InMemoryRepository().get_listing("lst_missing") is None
+
+
+@pytest.mark.asyncio
+async def test_get_investigation_for_matches_session_and_listing():
+    repo = InMemoryRepository()
+    inv = _investigation(session_id="ses_1", listing_id="lst_1")
+    await repo.save_investigation(inv)
+    assert await repo.get_investigation_for("ses_1", "lst_1") is not None
+    assert await repo.get_investigation_for("ses_2", "lst_1") is None
+
+
+@pytest.mark.asyncio
+async def test_mongo_get_investigation_for_matches_session_and_listing():
+    from app.services.repository import MongoRepository
+
+    repo = MongoRepository(_FakeDB())
+    inv = _investigation(session_id="ses_1", listing_id="lst_1")
+    await repo.save_investigation(inv)
+    assert await repo.get_investigation_for("ses_1", "lst_1") is not None
+    assert await repo.get_investigation_for("ses_2", "lst_1") is None
 
 
 @pytest.mark.asyncio

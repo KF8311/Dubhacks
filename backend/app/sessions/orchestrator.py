@@ -16,6 +16,7 @@ from app.domain.models import Investigation, Listing, Session, SessionStats, Tru
 from app.search.catalog import load_catalog
 from app.search.service import search as default_search
 from app.services.llm import narrate
+from app.services.repository import get_repository
 from app.sessions.events import EventBus
 from app.sessions.store import SessionRegistry
 from app.trust.allowlist import Allowlist, load_allowlist
@@ -145,6 +146,11 @@ class SessionOrchestrator:
         )
         session.listing_ids = [item.id for item in listings]
         self.store.replace_listings(session_id, listings)
+        # Persist them too: the registry dies with the process, and the checkout
+        # path must still find the listing after a restart.
+        repo = get_repository()
+        for listing in listings:
+            await repo.save_listing(listing)
         session.stage = SessionStage.INVESTIGATING
         self.store.update(session)
         self.bus.publish(session_id, "session.stage", {"stage": session.stage.value})
@@ -301,6 +307,7 @@ class SessionOrchestrator:
             created_at=datetime.now(timezone.utc),
         )
         self.store.attach_investigation(session_id, inv)
+        await get_repository().save_investigation(inv)
         self.bus.publish(
             session_id,
             "listing.scored",

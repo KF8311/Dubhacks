@@ -43,8 +43,14 @@ def _setup(client, monkeypatch, verdict="trusted", completed=5):
     )
     import app.api.routes_checkout as rc
 
-    monkeypatch.setattr(rc, "_get_listing", lambda lid: listing)
-    monkeypatch.setattr(rc, "_get_investigation", lambda sid, lid: inv)
+    async def fake_listing(_lid):
+        return listing
+
+    async def fake_investigation(_sid, _lid):
+        return inv
+
+    monkeypatch.setattr(rc, "_get_listing", fake_listing)
+    monkeypatch.setattr(rc, "_get_investigation", fake_investigation)
     return s["session_id"], listing.model_dump()
 
 
@@ -173,3 +179,73 @@ def test_confirm_fail_returns_402(monkeypatch):
     )
     assert r.status_code == 402
     assert r.json()["error"]["code"] == "PAYMENT_DECLINED"
+
+
+def test_a_checkout_can_be_confirmed_after_the_registry_is_cleared():
+    """The registry dies with the process; the payment path must not.
+
+    The listing is deliberately not in the catalog, so only the repository can
+    satisfy the confirm after the registry is emptied.
+    """
+    import asyncio
+
+    from app.services.repository import get_repository
+    from app.sessions.store import registry
+
+    client = TestClient(create_app())
+    s = client.post("/api/sessions", json={"query": "headphones", "client_id": "c1"}).json()
+    listing = next(
+        item for item in load_catalog() if item.merchant_domain == "bestbuy.com"
+    ).model_copy(update={"id": "lst_restart"})
+    checks = [
+        TrustCheckResult(
+            id=cid,
+            name=cid.value,
+            status=TrustStatus.PASSED,
+            severity=0,
+            summary="ok",
+            source="live",
+        )
+        for cid in list(CheckId)[:5]
+    ]
+    inv = Investigation(
+        id="inv_restart",
+        listing_id=listing.id,
+        session_id=s["session_id"],
+        checks=checks,
+        score=ScoreResult(score=92, verdict=Verdict.TRUSTED, confidence=0.9, top_reason="x"),
+        allowlisted=False,
+        duration_ms=1,
+        created_at=datetime.now(timezone.utc),
+    )
+    registry.replace_listings(s["session_id"], [listing])
+    registry.attach_investigation(s["session_id"], inv)
+
+    repo = get_repository()
+    asyncio.run(repo.save_listing(listing))
+    asyncio.run(repo.save_investigation(inv))
+
+    co = client.post(
+        "/api/checkout",
+        json={
+            "session_id": s["session_id"],
+            "listing_id": listing.id,
+            "mandate": {"max_amount_cents": 50000, "currency": "USD", "expires_in_seconds": 600},
+        },
+    ).json()
+    assert "checkout_id" in co
+
+    from app.payments.mock_vic import reset as reset_vic
+
+    registry.clear()  # the process that created the checkout is gone
+    reset_vic()  # the simulator's in-memory token table died with it
+
+    r = client.post(
+        f"/api/checkout/{co['checkout_id']}/confirm",
+        json={
+            "passkey_assertion": {"credential_id": "mock", "client_data": "ok"},
+            "idempotency_key": "after-restart",
+        },
+    )
+    assert r.status_code == 200
+    assert r.json()["receipt_id"].startswith("rcp_")

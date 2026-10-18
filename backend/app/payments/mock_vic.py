@@ -48,6 +48,23 @@ async def issue_token(checkout_id: str, merchant_domain: str) -> IssuedToken:
     )
 
 
+def ensure_token(token_id: str, checkout_id: str) -> None:
+    """Re-register a token the simulator lost when the process restarted.
+
+    The checkout record is the source of truth for which token it was issued,
+    so a pending checkout can still be confirmed after a restart. A token the
+    simulator already knows is left untouched.
+    """
+    if token_id in _tokens:
+        return
+    _tokens[token_id] = {
+        "checkout_id": checkout_id,
+        "token_hash": _hash(_RAW_ONCE),
+        "last4": SANDBOX_LAST4,
+        "status": "issued",
+    }
+
+
 async def consume_token(token_id: str) -> None:
     record = _tokens.get(token_id)
     if record is None:

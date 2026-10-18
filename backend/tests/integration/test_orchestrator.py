@@ -51,6 +51,26 @@ async def test_orchestrator_emits_listings_and_completes(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_orchestrator_persists_listings_and_investigations():
+    from app.services.repository import get_repository
+
+    store, bus = SessionRegistry(), EventBus()
+    orch = SessionOrchestrator(store, bus, checks=[])
+    session = store.create("c1", "headphones")
+    session.search_spec = SearchSpec(query="headphones")
+    store.update(session)
+    await orch._run(session.id)
+
+    listing_ids = [item.id for item in store.listings(session.id)]
+    assert listing_ids
+    repo = get_repository()
+    assert await repo.get_listing(listing_ids[0]) is not None
+    inv = store.investigation_for(session.id, listing_ids[0])
+    assert inv is not None
+    assert await repo.get_investigation_for(session.id, listing_ids[0]) is not None
+
+
+@pytest.mark.asyncio
 async def test_orchestrator_retries_search_after_one_timeout():
     calls = {"n": 0}
     drink = Listing(

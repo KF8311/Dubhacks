@@ -9,7 +9,7 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **237 passed**, frontend **55 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **243 passed**, frontend **55 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
 
@@ -51,10 +51,10 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 | # | Task | Time box | Status | Cut rule |
 |---|---|---|---|---|
 | **T0** | **Video + three screenshots** | must exist by 08:30 PT | not started | **never cut** — the only artifact that blocks submission outright |
-| T1 | Gemini provenance chip | 60 min | not started | none — smallest visible win |
+| T1 | Gemini provenance chip | 60 min | ✅ done 05:10 | none — smallest visible win |
 | T2 | Photon text loop | 75 min | blocked on a number | no reply within 10 min of setup → leave slot 3 empty |
-| T3 | DEV article | 60 min | not started | trim to 1,200 words; never describe a feature we do not have |
-| T4 | Atlas payment-path durability | 90 min | not started | abandon at 90 min — the Atlas claim already stands on D-026 |
+| T3 | DEV article | 60 min | ✅ drafted; publish pending a DEV account | trim to 1,200 words; never describe a feature we do not have |
+| T4 | Atlas payment-path durability | 90 min | ✅ done 05:30 | abandon at 90 min — the Atlas claim already stands on D-026 |
 | T5 | Slate, SideShift paragraph, project number | 30 min | partly done | none |
 
 #### T0 — Artifacts (blocks the submission)
@@ -104,7 +104,7 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 - [ ] Replace the echo: text → `POST /api/sessions` → answers → results → reply with the top trusted pick and its one-line reason
 - [ ] Capture one real round trip for the video
 
-**Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-027, and stop.
+**Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-028, and stop.
 
 #### T3 — DEV Writing Challenge
 
@@ -128,20 +128,21 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 **Read first:** [`status.md:21`](status.md#L21) — sessions, listings and investigations are still registry-only. That sentence is what this task deletes.
 
-- [ ] Failing test: `MongoRepository` round-trips a listing through `get_listing`
-- [ ] Add `get_listing` to the protocol and both adapters
-- [ ] Failing test: the orchestrator leaves a listing and an investigation in the repository
-- [ ] Write through after `replace_listings` and `attach_investigation`
-- [ ] Add `get_investigation_for(session_id, listing_id)` to both adapters, with its test
-- [ ] Make `_get_listing` / `_get_investigation` async with registry → repository → catalog, and update the four call sites
-- [ ] Restart-survival test: clear the registry, confirm the checkout, expect a `rcp_` receipt
-- [ ] Prove it over HTTP against Atlas and record the ids in `docs/status.md`
+- [x] Failing test: `MongoRepository` round-trips a listing through `get_listing`
+- [x] Add `get_listing` to the protocol and both adapters
+- [x] Failing test: the orchestrator leaves a listing and an investigation in the repository
+- [x] Write through after `replace_listings` and `attach_investigation`
+- [x] Add `get_investigation_for(session_id, listing_id)` to both adapters, with its test
+- [x] Make `_get_listing` / `_get_investigation` async with registry → repository → catalog, and update the four call sites
+- [x] Restart-survival test: clear the registry, reset the token simulator, confirm the checkout, expect a `rcp_` receipt
+- [x] **Found a second gap:** the real restart returned a 500 — `store.token_by_checkout[...]` raised `KeyError` because the simulator's token table is in memory. `Checkout` now carries `token_id`, confirm re-registers it, and a checkout with no token refuses with 409 (D-027)
+- [x] Prove it over HTTP against Atlas and record the ids in [`status.md`](status.md): `chk_dzr98nwVykDASG4L` → `rcp_ZSgCEO8uD7hwhCjs` across a real process restart
 
-**Done when:** a checkout created before a backend restart still confirms after it. **Cut at 90 minutes.**
+**Done when:** a checkout created before a backend restart still confirms after it. ✅ 2026-10-18 05:30 PT
 
 #### T5 — Slate, startup paragraph, project number
 
-- [ ] Append D-027 to [`decisions.md`](decisions.md#L224) (after D-026): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
+- [ ] Append D-028 to [`decisions.md`](decisions.md) (after D-027): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
 - [ ] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT)
 - [ ] Read the Gemini **project number** from the [AI Studio project selector](https://aistudio.google.com/apikey) (public id, not the key) and paste it into the Devpost field at [`devpost-form.md:132`](devpost-form.md#L132)
 - [ ] Tick the sponsored and non-sponsored checkboxes in [`devpost-form.md`](devpost-form.md); VEYZL stays unticked
@@ -197,7 +198,7 @@ Everything else on A's plate is done (see "Already done"). One item remains:
 ## Shared gates — run before calling anything done
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 237 passed
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 243 passed
 cd frontend; npx vitest run; npm run build                       # 55 passed, clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
