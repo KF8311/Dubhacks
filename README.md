@@ -100,7 +100,7 @@ All optional; the demo runs with none of them set.
 | `GEMINI_API_KEY` | unset | Questions, narration, and check explanations; templates are the fallback |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Override if your key has different model access (D-019) |
 | `GOOGLE_SAFE_BROWSING_KEY` | unset | Live reputation; static denylist when unset |
-| `MONGODB_URI` | unset | Reserved for the persistence swap (D-006, D-016) |
+| `MONGODB_URI` | unset | Off by default; when set, persists the payment path only (D-006, D-016) |
 
 ## API
 
@@ -170,7 +170,7 @@ docs/           status, contracts, decisions, plans
 
 - **The payment is a mock.** No Visa network, no token service, no real merchant. Every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label.
 - **The score is deterministic; a model never decides anything.** Gemini Flash Lite writes the clarifying questions, the one-line recommendation narration, and on-demand check explanations when `GEMINI_API_KEY` is set — every call has a 2.5 s timeout and falls back to templates. Scoring, checks, payability, and checkout are Python-only, and `backend/tests/unit/test_no_llm_path.py` fails the build if the trust, check, or payment modules import the LLM or read the key.
-- **The store is in memory.** `MONGODB_URI` is reserved for the persistence swap; the in-memory adapter is the default and keeps the demo reproducible.
+- **The store is in memory by default; Mongo covers the payment path only.** With `MONGODB_URI` unset — the default — everything lives in the in-memory adapter, which keeps the demo reproducible. With it set, `MongoRepository` persists mandates, checkouts, transactions, receipts, and audit events. Session state, listings, and investigations stay in the in-process registry either way, so a restart loses them. The mock VIC token store is also in-process: raw tokens are never stored anywhere, and even the token hash and `last4` stay out of Mongo.
 - **Fixtures are labelled.** Any check that answers from a fixture carries `source: "fixture"`.
 
 ## Docs

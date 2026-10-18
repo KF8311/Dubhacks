@@ -21,7 +21,11 @@ async def ensure_indexes(db) -> None:
     await db.mandates.create_index("session_id")
     await db.mandates.create_index([("status", 1), ("expires_at", 1)])
 
-    await db.checkouts.create_index("idempotency_key", unique=True, sparse=True)
+    await db.checkouts.create_index(
+        "idempotency_key",
+        unique=True,
+        partialFilterExpression={"idempotency_key": {"$type": "string"}},
+    )
     await db.checkouts.create_index([("stage", 1), ("expires_at", 1)])
 
     await db.transactions.create_index("checkout_id", unique=True)

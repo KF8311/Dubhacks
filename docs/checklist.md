@@ -17,7 +17,7 @@ One shared checklist. Personal scratch notes do not belong here.
 
 | Thing | State |
 |---|---|
-| `main` | **Everything merged** (`3038c6b`): scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, the frozen refusal paths, **Gemini questions/narration/explanations (D-017–D-019)**, and **the `Repository` protocol with in-memory + Mongo adapters**. **177 backend / 13 files · 31 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
+| `main` | **Everything merged** (`3038c6b`): scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, the frozen refusal paths, **Gemini questions/narration/explanations (D-017–D-019)**, and **the `Repository` protocol with in-memory + Mongo adapters**. **180 backend / 13 files · 31 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
 | Follow-on branch | **None. `main` is the source of truth** — branch from it. `scratch/integration` is stale; do not reuse it. |
 | Live API | Sessions create/answers/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm**, **receipts + public share**, `POST /api/demo/reset`. |
 | Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from `data/mock-session.json`. |
@@ -239,7 +239,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 ## 9. Next blocks — start here
 
-**State (19:25 PT):** `main` carries everything from all three people — checkout → confirm → receipt, the live frontend, all five checks, Gemini for questions/narration/explanations, the in-memory + Mongo repositories, and the offline replay. Green: **177 backend / 13 files · 31 frontend tests**, `npm run build` clean, `replay_offline.py` exits 0.
+**State (19:25 PT):** `main` carries everything from all three people — checkout → confirm → receipt, the live frontend, all five checks, Gemini for questions/narration/explanations, the in-memory + Mongo repositories, and the offline replay. Green: **180 backend / 13 files · 31 frontend tests**, `npm run build` clean, `replay_offline.py` exits 0.
 
 **Block 5 is close-out only.** Every text artifact is written: the Devpost story, the field-by-field form map, the README, the audit scope, and the reproduced reset transcript. What is missing is artifacts that only A and C can produce. Do not start Block 6 work until your Block 5 action is done or explicitly cut.
 
@@ -260,7 +260,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 **First 15 minutes, every person:**
 
 1. `git checkout main && git pull`
-2. Baseline: backend `pytest -q` → **177 passed**; frontend `npx vitest run` → **31 passed**; `scripts/replay_offline.py` → exit 0. If `motor` is missing, `pip install motor`.
+2. Baseline: backend `pytest -q` → **180 passed**; frontend `npx vitest run` → **31 passed**; `scripts/replay_offline.py` → exit 0. If `motor` is missing, `pip install motor`.
 3. Take your column below. Nobody waits on another column.
 
 **Handoff contract, now live (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`; a declined passkey is `402 PAYMENT_DECLINED`. The confirm path is **`POST /api/checkout/{checkout_id}/confirm`** (singular `checkout`) and takes `{passkey_assertion: {credential_id, client_data}, idempotency_key}`. Confirm returns a **pointer** (`receipt_id`, `receipt_url`); the receipt itself is `GET /api/public/receipts/{share_id}`. Every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label. The frontend's request/response mapping is pinned in `frontend/src/lib/api.test.ts` — if the shape has to change, say it in the channel before committing.
@@ -277,7 +277,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
    - B already reproduced `/api/demo/reset`: unauthenticated POST → `200`, session destroyed. If VEYZL reports the same, the transcript is ready; if VEYZL reports something else, **the tool's finding wins**.
 4. Sign off the `Question` shape in `docs/contracts.md` (the last G0 item).
 
-**Proof:** public health URL + checkout and receipt on the public URL; a VEYZL check run visible on a PR; `pytest -q` still 177.
+**Proof:** public health URL + checkout and receipt on the public URL; a VEYZL check run visible on a PR; `pytest -q` still 180.
 
 ### C — browser proof + screenshots
 
@@ -296,7 +296,7 @@ The screens are merged. This block is about proving them in a real browser:
 The story and the form map are written. Remaining:
 
 1. **Devpost** — fill `docs/devpost-form.md` in order as artifacts land: live URL (A), gallery images (C), video (team), VEYZL side-track selection (A's check run). Story: `docs/devpost.md`. Generative-AI answer: **Yes**, with the paragraph in the form map.
-2. **Final numbers** — run `scripts/replay_offline.py`, put its numbers in `docs/status.md`, and confirm the Devpost's `153 → 177` / `22 → 31` claims match the run.
+2. **Final numbers** — run `scripts/replay_offline.py`, put its numbers in `docs/status.md`, and confirm the Devpost's `153 → 180` / `22 → 31` claims match the run.
 3. **Review A's audit finding** before it is written up — B owns the trust/payment claims, A owns the run. If the finding touches the payability gate, check it against D-015 and the refusal tests.
 4. **Never submit a claim the code cannot support.** Sandbox label, synthetic data, no production Visa integration, and the model never decides.
 
@@ -343,7 +343,7 @@ The Block 6 table in §4 is the authority. This is the same work in start order:
 **Gate check before each rehearsal:**
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q                     # 177 passed
+cd backend && .venv/Scripts/python.exe -m pytest -q                     # 180 passed
 cd frontend && npx vitest run && npm run build                          # 31 passed, clean
 backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```

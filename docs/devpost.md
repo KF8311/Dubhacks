@@ -89,7 +89,7 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 - A score anyone can audit: every deduction names the check and the evidence.
 - A payment moment that puts the human in the loop with a passkey.
 - A receipt that turns a private checkout into a public trust signal.
-- A test suite that treats the demo script as a contract: **153 backend and 22 frontend tests**, plus an offline replay that must reproduce the live numbers exactly.
+- A test suite that treats the demo script as a contract: **180 backend and 31 frontend tests**, plus an offline replay that must reproduce the live numbers exactly.
 
 ## What we learned
 

@@ -192,3 +192,35 @@ async def test_empty_or_failed_mongo_selects_memory(monkeypatch):
     await init_persistence()
     assert isinstance(get_repository(), InMemoryRepository)
     assert get_db_status() == "unavailable"
+
+
+def _public_callables(cls: type) -> set[str]:
+    return {name for name in dir(cls) if not name.startswith("_") and callable(getattr(cls, name))}
+
+
+def test_protocol_declares_every_method_both_adapters_expose():
+    from app.services.repository import InMemoryRepository, MongoRepository, Repository
+
+    shared = _public_callables(InMemoryRepository) & _public_callables(MongoRepository)
+    declared = {name for name in dir(Repository) if not name.startswith("_")}
+    assert shared - declared == set()
+
+
+def test_get_repository_is_typed_as_the_protocol():
+    from typing import get_type_hints
+
+    from app.services.repository import Repository, get_repository
+
+    assert get_type_hints(get_repository)["return"] is Repository
+
+
+@pytest.mark.asyncio
+async def test_checkout_idempotency_index_ignores_nulls_but_rejects_duplicates():
+    from app.db.indexes import ensure_indexes
+
+    db = _FakeDB()
+    await ensure_indexes(db)
+    [index] = [kwargs for args, kwargs in db.checkouts.indexes if args and args[0] == "idempotency_key"]
+    assert index.get("unique") is True
+    assert index.get("sparse") is not True
+    assert index.get("partialFilterExpression") == {"idempotency_key": {"$type": "string"}}

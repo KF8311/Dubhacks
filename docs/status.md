@@ -16,7 +16,7 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **177 passed**. Frontend **13 files / 31 tests passed**, `npm run build` clean. |
+| Tests | Backend **180 passed**. Frontend **13 files / 31 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
@@ -34,7 +34,7 @@ Last updated: 2026-10-17 19:25 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 177 backend / 31 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
+| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 180 backend / 31 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
 | G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done; URL, VEYZL check, screenshots, video pending | `docs/devpost-form.md` + Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
