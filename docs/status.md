@@ -13,9 +13,9 @@ This is the only file that claims to be current.
 |---|---|
 | Gate | **Block 5 is closed and G5 is close-out.** The code is done and the public deploy is live. What remains is C's browser screenshots, the video, the Devpost form, and a clean VEYZL re-run. |
 | Health | **https://sykes.select/api/health** → 200, `{"status":"degraded","db":"unavailable","version":"0.9.0"}` (`degraded` is correct: Mongo is optional and unset). Served by Vercel. The Fly URL still serves the pre-merge build. |
-| Deploy | **Live on Vercel at `https://sykes.select`** via [`vercel.json`](../vercel.json) — backend `app.main:app` with `bundle_data.py`, frontend on the same origin, `/api/*` rewritten to the service. Fly (`dubhacks` / `sniff-visa-dubhacks` / `sjc`, D-010, D-012, D-013) remains a second path; Render is backup. **Caution: the deployment built from the Git-connected repo (`a81bcc4`) does not carry `data/` and 500s on answers and checkout.** The 23:00 end-to-end proof below was measured against the previous CLI-built deployment. Fix is [PR #30](https://github.com/KF8311/Dubhacks/pull/30) — see "The Git deploy shipped no data" below. |
+| Deploy | **Live on Vercel at `https://sykes.select`** via [`vercel.json`](../vercel.json) — backend `app.main:app` with `bundle_data.py`, frontend on the same origin, `/api/*` rewritten to the service. **The Git-connected deploy now ships its data** ([PR #30](https://github.com/KF8311/Dubhacks/pull/30), verified 00:15 PT); the 23:00 proof below predates the Git build and is kept as history. Fly (`dubhacks` / `sniff-visa-dubhacks` / `sjc`, D-010, D-012, D-013) remains a second path; Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
-| SerpAPI | **The Vercel deploy has a working key.** Every listing comes back with `"source": "serpapi"` and a hashed id, so the public URL runs real Google Shopping search (D-021). Locally with no key the app is catalog-only. The live path is now exercised against a real key — this row previously said otherwise. |
+| SerpAPI | **Changed after the Git rebuild.** At 23:00 the Vercel deploy returned `"source": "serpapi"` with real Google Shopping results; at 00:15 on the Git-built deploy the same probe returned `"source": "catalog"` (curated listings, villain included). Most likely `OFFLINE=1` was set in the project — B cannot read Vercel env vars. **Check before saying "live search" on stage.** Locally with no key the app is catalog-only. |
 | Tests | Backend **204 passed** (35 files). Frontend **39 passed** (15 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
@@ -24,7 +24,7 @@ This is the only file that claims to be current.
 | Branches | **`main` carries everything and is pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20)–[PR #25](https://github.com/KF8311/Dubhacks/pull/25) rebase-merged or open; every working branch deleted after its diff against `main` came back empty). Run `git log --oneline origin/main` for the current tip — recording the hash here just goes stale on the next docs commit. Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 23:10 PT
+Last updated: 2026-10-18 00:20 PT
 
 ## Gate board
 
@@ -73,7 +73,29 @@ GET  /r/{share_id}                   → 200  amount 3999, last4 4242, HMAC sign
 (Sony WH-1000XM6, Sennheiser, JBL, …) with hashed ids and `"source": "serpapi"`; recommendation
 `Cheapest of 9 trusted options`; **all 9 trusted, no villain.** The catalog's `lst_tgt_bsp` /
 `lst_vln_xm5` numbers do not appear on the public URL. One answers call returned a transient `500` on a
-cold start and succeeded immediately on retry.
+cold start and succeeded immediately on retry. **This snapshot describes the CLI-built deployment; it was
+later rebuilt from Git and then repaired — see the two sections below for what is true now.**
+
+## Proof after the repair (2026-10-18 00:15 PT)
+
+`https://sykes.select` on the Git-built deployment from `ed4e95b` (Vercel status `success`):
+
+```
+GET  /api/health                     → 200
+POST /api/sessions                   → 201
+POST /api/sessions/{id}/answers      → 202 in 0.47 s, stage "ready", 9 listings
+POST /api/checkout  lst_vln_xm5      → 409  MERCHANT_NOT_TRUSTED, verdict "danger"
+POST /api/checkout  lst_tgt_bsp      → 201  awaiting_passkey, amount 17999, mandate single-use
+POST /api/checkout/{id}/confirm      → 200  "captured", txn approved, mode "sandbox", token last4 4242
+GET  /r/{share_id}                   → 200
+GET  /api/public/receipts/{share_id} → 200  amount 17999, HMAC signature present, sandbox_label present
+```
+
+**The hosted listings are now the curated catalog** (`"source": "catalog"`, `lst_tgt_bsp` recommended at
+$179.99, median $374.49, the villain refused). That is the demo's numbers, not live SerpAPI. Something in
+the project's environment made the catalog path active — most likely `OFFLINE=1`, which was the
+recommended action in the previous revision of this file. Only the Vercel owner can confirm which; do not
+claim a live search on stage until the environment is checked.
 
 ## The Git deploy shipped no data (2026-10-17 23:40 PT)
 
@@ -89,17 +111,25 @@ POST /api/checkout  (unknown id)      → 500  (expected 404 LISTING_NOT_FOUND)
 GET  /api/health                      → 200
 ```
 
-**Cause.** `.gitignore` excluded `backend/data/`, which `bundle_data.py` copies from repo `data/` during
-the build. The old CLI deploy uploaded the working directory, where that copy already existed. A Git build
-packages tracked files, so the function started without a catalog and `load_catalog()` raised.
+**Cause was two bugs, not one.** (a) `.gitignore` excluded `backend/data/`, which `bundle_data.py` copies
+from repo `data/` during the build; the old CLI deploy uploaded the working directory where that copy
+already existed, a Git build packages tracked files only. (b) Even with the bundle committed, the resolver
+in `app/core/paths.py` checked `parents[3]/data` and `parents[2]/data`, which inside a function packaged as
+`<root>/app/core` are the parent of the function root and `/data` — never `<root>/data`. Fixing only (a)
+would have kept the 500.
 
-**Fix.** [PR #30](https://github.com/KF8311/Dubhacks/pull/30): unignore `backend/data/` and commit the
-bundle. `bundle_data.py` still refreshes it on every build, so it cannot drift on Vercel. Verified locally
-with `VERCEL=1`: answers `202`, stage `ready`, 9 listings.
+**Fix, merged as [PR #30](https://github.com/KF8311/Dubhacks/pull/30) (`ed4e95b`).** `backend/data/` is
+committed (`bundle_data.py` still refreshes it every build), and `parents[1]/data` is a resolver
+candidate. Two path tests were written first and watched fail. Backend suite **206 passed**.
 
-**Until PR #30 merges**, `sykes.select` is broken for answers and checkout. The Vercel dashboard can
-promote the previous deployment (Deployments → the build before `a81bcc4` → Promote to Production) to
-restore service immediately. Do not put a URL that 500s on the answers step in front of a judge.
+**Reproduced the failure before the fix and the recovery after it** by copying `backend/` to a temp root —
+the exact function layout — and running with `VERCEL=1` and no `SERPAPI_KEY`: answers `500` → `202`, stage
+`ready`, 9 listings, unknown listing id `500` → `404`. Production was then re-tested over the internet;
+see "Proof after the repair" above.
+
+**Lesson for the next deploy:** a Vercel CLI deploy and a Git deploy are not the same artifact. Anything
+the build *generates* has to be tracked, or the code has to find it after packaging.
+
 
 ## In progress
 
@@ -160,9 +190,9 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
-| **The Git deploy shipped no data** | **yes, live now** | Build `a81bcc4` 500s on answers and checkout because `.gitignore` kept `backend/data/` out of the function package. [PR #30](https://github.com/KF8311/Dubhacks/pull/30) commits the bundle; until it merges, promote the previous deployment in the dashboard. The video and screenshots do not depend on this — record locally |
+| **The Git deploy shipped no data** | **yes — fixed 00:15 PT** | Build `a81bcc4` 500'd on answers and checkout: `backend/data/` was gitignored, and `paths.py` never looked at the function root's `data/`. [PR #30](https://github.com/KF8311/Dubhacks/pull/30) fixed both; production re-verified 00:15. Do not repeat the trick: anything the build generates must be tracked or discoverable after packaging |
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; the public URL completes checkout → confirm → receipt |
-| **The public URL has no villain** | **yes, measured 23:00** | `sykes.select` runs live SerpAPI: 9 real listings, all trusted, pick "cheapest of 9 trusted". The catalog's danger merchant only appears when the catalog is used. **Take the screenshots and record the video locally**; decide separately whether to set `OFFLINE=1` on Vercel |
+| **The public URL has no villain** | **cleared 00:15 PT** | At 23:00 `sykes.select` ran live SerpAPI (9 real listings, all trusted, no villain). At 00:15 the Git-built deploy returned the curated catalog: `lst_tgt_bsp` recommended at $179.99, median $374.49, and `lst_vln_xm5` refused `409 MERCHANT_NOT_TRUSTED`. The hosted link now matches the scripted demo. Confirm the `OFFLINE` setting before describing it on stage |
 | Hosted cold start can 500 once | **yes, once** | The first answers call after idle returned 500, then succeeded on retry. Warm the deploy (health + one session) before judging, and rehearse the local path as the primary |
 | Fly serves the pre-merge build | **yes** | The Fly app is still stale; **`sykes.select` is the live URL now**. Redeploy Fly only if it is the URL you are putting in the form |
 | VEYZL audit produced no usable report | **yes** | Two hosted runs were all-error or wrong response shape; the guard and shape are fixed (D-023). The GitHub App is now installed and posts `VEYZL Audit` on PRs, but its report on PR #26 **failed** and has not been read in the portal. Do not claim the side track, and do not re-add the check as required, until it passes |
