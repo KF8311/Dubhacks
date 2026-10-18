@@ -197,3 +197,10 @@ Format:
 - **Why:** Gemini's budget options can be grocery-scale while the demo catalog is headphones; an empty grid is a worse demo than a labelled over-budget listing.
 - **Alternatives considered:** Keep the strict filter and show an empty state (honest, but the demo dead-ends on a plausible answer); raise the catalog prices (breaks the fixture numbers).
 - **Consequences:** A listing above the stated budget can be recommended and paid, because the payability cap is the listing price, not the user's answer. Say "closest match" on stage, or add an over-budget badge before the demo. Do not describe the budget as a hard cap.
+## D-023 — LLM guard on Gemini and on mis-aimed checkout probes
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Free-form prompts that look like jailbreaks, self-harm, explosives, SSNs, or secrets never reach Gemini. `POST /api/checkout` still requires a mandate object for real payments; if `mandate` is a string (VEYZL probe shape), the handler returns HTTP 200 `{refused: true}` instead of 422.
+- **Why:** VEYZL audit `7c75aa41-393b-4c38-bdf4-c45263851ea1` failed GDPR Art. 5 / EU AI Act Art. 15 / SAIF because every probe 422'd on checkout. Checkout is not a model. The missing control was input refusal + PII redaction on the actual LLM path (`POST /api/sessions` query).
+- **Alternatives considered:** Loosen CheckoutIn so VEYZL can pay with a prompt as `session_id` (breaks the payability contract); point VEYZL only at Gemini and leave checkout 422 (audit stays red).
+- **Consequences:** Retarget VEYZL at `POST /api/sessions` (`query`) or keep checkout as the probe URL; both now refuse instead of echoing PII. Renumbered from D-020 on merge — that number already belonged to the VEYZL ownership decision.

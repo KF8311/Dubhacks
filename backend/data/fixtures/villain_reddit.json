@@ -1,0 +1,43 @@
+{
+  "kind": "Listing",
+  "data": {
+    "modhash": "",
+    "children": [
+      {
+        "kind": "t3",
+        "data": {
+          "title": "premium-audio-deals.shop is a scam — took my money and vanished",
+          "permalink": "https://www.reddit.com/r/Scams/comments/fixture01/premium_audio_deals_shop_scam/",
+          "subreddit": "Scams",
+          "created_utc": 1759820400,
+          "score": 412,
+          "num_comments": 63
+        }
+      },
+      {
+        "kind": "t3",
+        "data": {
+          "title": "PSA: do not order from premium-audio-deals.shop",
+          "permalink": "https://www.reddit.com/r/headphones/comments/fixture02/warning_premium_audio_deals/",
+          "subreddit": "headphones",
+          "created_utc": 1759647600,
+          "score": 287,
+          "num_comments": 41
+        }
+      },
+      {
+        "kind": "t3",
+        "data": {
+          "title": "Anyone else get scammed by premium-audio-deals.shop? Crypto only, no refunds",
+          "permalink": "https://www.reddit.com/r/Scams/comments/fixture03/anyone_else_premium_audio_deals/",
+          "subreddit": "Scams",
+          "created_utc": 1759474800,
+          "score": 198,
+          "num_comments": 29
+        }
+      }
+    ],
+    "after": null,
+    "before": null
+  }
+}

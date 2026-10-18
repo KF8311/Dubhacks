@@ -72,13 +72,32 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   ...empty,
   setQuery: (query) => set({ query }),
   showQuestions: (questions) => set({ questions, stage: "clarifying" }),
-  startSession: (snapshot) =>
+  startSession: (snapshot) => {
+    const finished =
+      snapshot.listings.length > 0 ||
+      snapshot.stage === "ready" ||
+      snapshot.stage === "no_trusted_option"
+    if (finished) {
+      set({
+        ...empty,
+        sessionId: snapshot.session_id,
+        stage: snapshot.stage,
+        query: snapshot.query,
+        listings: snapshot.listings,
+        checks: snapshot.checks,
+        scores: snapshot.scores,
+        recommendation: snapshot.recommendation,
+        lastSeq: snapshot.last_seq,
+      })
+      return
+    }
     set({
       ...empty,
       sessionId: snapshot.session_id,
       stage: "searching",
       query: snapshot.query,
-    }),
+    })
+  },
   applyEvent: (event) => {
     if (event.seq <= get().lastSeq) return false
     const fields = eventFields(event)

@@ -13,19 +13,19 @@ import socket
 import time
 from datetime import UTC, datetime
 from functools import lru_cache
-from pathlib import Path
 
 import httpx
 
 from app.checks.base import CheckContext, CheckTarget
 from app.core.config import get_settings
+from app.core.paths import data_dir
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, TrustCheckResult
 
 RDAP_URL = "https://rdap.org/domain/{domain}"
 RDAP_TIMEOUT_S = 4.0
 WHOIS_TIMEOUT_S = 4.0
-FIXTURE_DIR = Path(__file__).resolve().parents[3] / "data" / "fixtures"
+FIXTURE_DIR = data_dir() / "fixtures"
 
 YOUNG_DOMAIN_DAYS = 30
 NEW_DOMAIN_DAYS = 90

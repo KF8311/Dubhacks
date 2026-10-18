@@ -1,3 +1,4 @@
+import { apiBase } from "@/lib/apiBase.ts"
 import type { StreamEvent } from "@/lib/types.ts"
 
 const EVENT_TYPES = [
@@ -17,7 +18,7 @@ export function openSessionEvents(
   sessionId: string,
   handlers: { onEvent: (event: StreamEvent) => void; onError: () => void },
 ): () => void {
-  const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"
+  const base = apiBase()
   const source = new EventSource(`${base}/api/sessions/${sessionId}/events`)
   let closed = false
 

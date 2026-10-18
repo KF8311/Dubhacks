@@ -1,0 +1,113 @@
+{
+  "query": "headphones",
+  "listings": [
+    {
+      "id": "lst_amz_xm5",
+      "title": "Sony WH-1000XM5 Wireless Noise Canceling Headphones",
+      "price_cents": 32999,
+      "currency": "USD",
+      "merchant_name": "Amazon",
+      "merchant_domain": "amazon.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=Sony+WH-1000XM5",
+      "product_url": "https://www.amazon.com/s?k=sony+wh-1000xm5",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_bb_xm5",
+      "title": "Sony WH-1000XM5 Wireless Headphones - Black",
+      "price_cents": 34999,
+      "currency": "USD",
+      "merchant_name": "Best Buy",
+      "merchant_domain": "bestbuy.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=Sony+WH-1000XM5",
+      "product_url": "https://www.bestbuy.com/site/searchpage.jsp?st=sony+wh-1000xm5",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_bb_qcu",
+      "title": "Bose QuietComfort Ultra Headphones",
+      "price_cents": 42900,
+      "currency": "USD",
+      "merchant_name": "Best Buy",
+      "merchant_domain": "bestbuy.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=Bose+QC+Ultra",
+      "product_url": "https://www.bestbuy.com/site/searchpage.jsp?st=bose+quietcomfort+ultra",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_bh_qcu",
+      "title": "Bose QuietComfort Ultra Wireless Headphones",
+      "price_cents": 39900,
+      "currency": "USD",
+      "merchant_name": "B&H Photo",
+      "merchant_domain": "bhphotovideo.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=Bose+QC+Ultra",
+      "product_url": "https://www.bhphotovideo.com/c/search?q=bose+quietcomfort+ultra",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_amz_apm",
+      "title": "Apple AirPods Max - Space Gray",
+      "price_cents": 54900,
+      "currency": "USD",
+      "merchant_name": "Amazon",
+      "merchant_domain": "amazon.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=AirPods+Max",
+      "product_url": "https://www.amazon.com/s?k=airpods+max",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_tgt_apm",
+      "title": "Apple AirPods Max - Silver",
+      "price_cents": 54999,
+      "currency": "USD",
+      "merchant_name": "Target",
+      "merchant_domain": "target.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=AirPods+Max",
+      "product_url": "https://www.target.com/s?searchTerm=airpods+max",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_wmt_m4",
+      "title": "Sennheiser Momentum 4 Wireless Headphones",
+      "price_cents": 29900,
+      "currency": "USD",
+      "merchant_name": "Walmart",
+      "merchant_domain": "walmart.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=Momentum+4",
+      "product_url": "https://www.walmart.com/search?q=sennheiser+momentum+4",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_tgt_bsp",
+      "title": "Beats Studio Pro Wireless Headphones",
+      "price_cents": 17999,
+      "currency": "USD",
+      "merchant_name": "Target",
+      "merchant_domain": "target.com",
+      "image_url": "https://placehold.co/600x600/f4f4f5/18181b/png?text=Beats+Studio+Pro",
+      "product_url": "https://www.target.com/s?searchTerm=beats+studio+pro",
+      "category": "headphones",
+      "source": "catalog"
+    },
+    {
+      "id": "lst_vln_xm5",
+      "title": "Sony WH-1000XM5 Wireless Headphones - 70% OFF TODAY",
+      "price_cents": 14999,
+      "currency": "USD",
+      "merchant_name": "Premium Audio Deals",
+      "merchant_domain": "premium-audio-deals.shop",
+      "image_url": "https://placehold.co/600x600/fef2f2/991b1b/png?text=70%25+OFF",
+      "product_url": "https://premium-audio-deals.shop/products/sony-wh1000xm5",
+      "category": "headphones",
+      "source": "catalog"
+    }
+  ]
+}
