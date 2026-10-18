@@ -17,6 +17,24 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 
 ---
 
+## Tracks — one title, three sponsored, unlimited non-sponsored
+
+Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](superpowers/plans/2026-10-18-track-submissions.md).
+
+| Slot | Track | State |
+|---|---|---|
+| **Title** | Visa: Reimagine Shopping | Locked. The build is the pitch. |
+| Sponsored 1 | **SideShift — Best Startup Idea** | Enter. No build requirement, any stack, $1,500 first. Write the "who pays and how it spreads" paragraph. |
+| Sponsored 2 | **Cloudforce** | Enter. Every entry is a raffle ticket; Most Interesting is a judges' pick. The public receipt share link is the viral hook. |
+| Sponsored 3 | **VEYZL** if the audit app installs, else **Photon** if a channel provisions in under 2h, else leave empty | Decide by 07:00 PT. Both are real integrations — do not claim either without the evidence. |
+| Non-sponsored | **MLH: Best Use of Gemini API** | Task 1 (provenance chip) + the project number from the key owner. |
+| Non-sponsored | **MLH: Best Use of MongoDB Atlas** | Proven (D-026). Task 2 makes it load-bearing. |
+| Non-sponsored | **MLH: DEV Writing Challenge** | Task 3 — publish, then link it on Devpost. |
+| Non-sponsored | **DubHacks NEXT**, **MLH Commit Fellowship** | Free entries; the startup paragraph doubles as the NEXT pitch. |
+| Not selected | T-Mobile, SpaceXAI, Perceptron | T-Mobile's track is wireless commerce and this build is headphones; SpaceXAI needs Cursor + Grok; Perceptron's arm workshop closed. |
+
+---
+
 ## A — deploy only
 
 Everything else on A's plate is done (see "Already done"). One item remains:
