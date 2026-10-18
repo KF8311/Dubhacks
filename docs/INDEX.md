@@ -31,6 +31,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 | `docs/superpowers/plans/2026-10-17-sniff-visa.md` | Engineering plan: architecture, API, data model, 30 TDD tasks, schedule, risks | Current |
 | `docs/team-split-3.md` | Three-person ownership map, time-boxed checklists, gates, cuts | Current |
 | `docs/checklist.md` | **Shared team checklist** — universal rules plus one block per person, with completed items ticked | **Work from this** |
+| `docs/REMAINING.md` | One page: the six items left in the whole project, and what happens if the deploy or screenshots do not land | **Read this first when you are lost** |
 | `docs/status.md` | The only file that claims to be current: gate, owners, blockers | **Update every 90 min** |
 | `docs/decisions.md` | Append-only decision log with rationale and alternatives | Append-only |
 | `docs/devpost.md` | Devpost draft: title, copy, tech claims, sandbox disclosure, fill-in list | Draft |

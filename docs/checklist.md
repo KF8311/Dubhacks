@@ -270,6 +270,8 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 ## 9. Next blocks — start here
 
+> **Lost?** Read [`REMAINING.md`](REMAINING.md) first — six items, one page, including what to do if the deploy or screenshots do not land.
+
 **State (20:35 PT, [`main`](https://github.com/KF8311/Dubhacks/tree/main)):** `main` carries everything from all three people — checkout → confirm → receipt, the live frontend, all five checks, Gemini for questions/narration/explanations, the in-memory + Mongo repositories, A's live-search and budget changes ([D-021](decisions.md), [D-022](decisions.md)), C's phone-width reflow and search hardening, and the offline replay. Green: **187 backend / 13 files · 34 frontend tests**, `npm run build` clean, [`replay_offline.py`](../scripts/replay_offline.py) exits 0.
 
 **Block 5 is close-out only.** Every text artifact is written: the Devpost story, the field-by-field form map, the technical-claims handoff, the README, the audit scope, and the reproduced reset transcript. What is missing is artifacts that only A and C can produce. Do not start Block 6 work until your Block 5 action is done or explicitly cut.
