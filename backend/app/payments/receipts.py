@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.ids import new_id
 from app.domain.enums import TrustStatus
 from app.domain.models import Checkout, Investigation, Listing, Receipt, Transaction
+from app.services.repository import get_repository
 
 
 def _share_id() -> str:
@@ -55,3 +56,8 @@ def create_receipt(
 def verify_receipt(receipt: Receipt, secret: str) -> bool:
     expected = _sign(receipt.id, receipt.share_id, receipt.amount_cents, receipt.issued_at, secret)
     return hmac.compare_digest(expected, receipt.signature)
+
+
+async def persist_receipt(receipt: Receipt) -> Receipt:
+    await get_repository().save_receipt(receipt)
+    return receipt

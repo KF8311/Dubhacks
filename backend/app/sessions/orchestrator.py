@@ -13,6 +13,7 @@ from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LIS
 from app.domain.enums import SessionStage, TrustStatus, Verdict
 from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
 from app.search.service import search as default_search
+from app.services.llm import narrate
 from app.sessions.events import EventBus
 from app.sessions.store import SessionRegistry
 from app.trust.allowlist import Allowlist, load_allowlist
@@ -132,17 +133,18 @@ class SessionOrchestrator:
 
         rec = recommend(pairs)
         session.recommended_listing_id = rec.recommended_listing_id
-        self.store.set_recommendation(session_id, rec.model_dump(mode="json"))
-        self.bus.publish(
-            session_id,
-            "recommendation.ready",
-            {
-                "recommended_listing_id": rec.recommended_listing_id,
-                "median_trusted_cents": rec.median_trusted_cents,
-                "savings_cents": rec.savings_cents,
-                "eligible_ids": rec.eligible_ids,
-            },
-        )
+        story = await narrate(rec)
+        payload = {
+            "recommended_listing_id": rec.recommended_listing_id,
+            "median_trusted_cents": rec.median_trusted_cents,
+            "savings_cents": rec.savings_cents,
+            "eligible_ids": rec.eligible_ids,
+            "reason": rec.reason,
+            "no_trusted_option": rec.no_trusted_option,
+            "narrative": story,
+        }
+        self.store.set_recommendation(session_id, payload)
+        self.bus.publish(session_id, "recommendation.ready", payload)
 
         duration_ms = int((time.monotonic() - started) * 1000)
         trusted = caution = danger = 0

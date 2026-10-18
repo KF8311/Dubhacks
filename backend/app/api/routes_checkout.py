@@ -11,8 +11,10 @@ from app.payments.mandates import create_mandate
 from app.payments.memory import store
 from app.payments.mock_vic import authorize, consume_token, issue_token
 from app.payments.payability import MandateDraft, PayabilityError, assert_payable
-from app.payments.receipts import create_receipt
+from app.payments.receipts import create_receipt, persist_receipt
 from app.search.catalog import load_catalog
+from app.services.audit import AuditEvent
+from app.services.repository import get_repository
 from app.sessions.store import registry
 
 SANDBOX = "Sandbox — simulated Visa Intelligent Commerce flow."
@@ -73,10 +75,14 @@ def _raise_payability(exc: PayabilityError) -> None:
     raise AppError(exc.code.value, message, status_code=409, details=exc.details)
 
 
-def _confirm_payload(checkout: Checkout) -> dict:
-    receipt_id = store.by_checkout[checkout.id]
-    receipt = store.receipts[receipt_id]
-    txn = store.transactions[receipt.transaction_id]
+async def _confirm_payload(checkout: Checkout) -> dict:
+    repo = get_repository()
+    receipt = await repo.get_receipt_for_checkout(checkout.id)
+    if receipt is None:
+        raise AppError("RECEIPT_NOT_FOUND", "Receipt not found.", status_code=404)
+    txn = await repo.get_transaction(receipt.transaction_id)
+    if txn is None:
+        raise AppError("RECEIPT_NOT_FOUND", "Receipt not found.", status_code=404)
     return {
         "checkout_id": checkout.id,
         "status": checkout.stage.value,
@@ -144,9 +150,19 @@ async def create_checkout(body: CheckoutIn) -> dict:
         expires_at=now + timedelta(minutes=5),
     )
     issued = await issue_token(checkout.id, listing.merchant_domain)
-    store.mandates[mandate.id] = mandate
-    store.checkouts[checkout.id] = checkout
+    repo = get_repository()
+    await repo.save_mandate(mandate)
+    await repo.save_checkout(checkout)
     store.token_by_checkout[checkout.id] = issued.token_id
+    await repo.audit(
+        AuditEvent(
+            session_id=checkout.session_id,
+            actor="system",
+            action="checkout.created",
+            subject_id=checkout.id,
+            payload_redacted={"listing_id": listing.id, "amount_cents": checkout.amount_cents},
+        )
+    )
     return {
         "checkout_id": checkout.id,
         "stage": checkout.stage.value,
@@ -180,17 +196,20 @@ async def create_checkout(body: CheckoutIn) -> dict:
 
 @router.post("/api/checkout/{checkout_id}/confirm")
 async def confirm_checkout(checkout_id: str, body: ConfirmIn) -> dict:
-    checkout = store.checkouts.get(checkout_id)
+    repo = get_repository()
+    checkout = await repo.get_checkout(checkout_id)
     if checkout is None:
         raise AppError("CHECKOUT_NOT_FOUND", "Checkout not found.", status_code=404)
-    if checkout.stage == CheckoutStage.CAPTURED and checkout_id in store.by_checkout:
-        return _confirm_payload(checkout)
+    if checkout.stage == CheckoutStage.CAPTURED:
+        existing = await repo.get_receipt_for_checkout(checkout_id)
+        if existing is not None:
+            return await _confirm_payload(checkout)
     if checkout.stage == CheckoutStage.DECLINED:
         raise AppError("PAYMENT_DECLINED", "Payment was declined.", status_code=402)
 
     listing = _get_listing(checkout.listing_id)
     investigation = _get_investigation(checkout.session_id, checkout.listing_id)
-    mandate = store.mandates.get(checkout.mandate_id)
+    mandate = await repo.get_mandate(checkout.mandate_id)
     if listing is None or investigation is None or mandate is None:
         raise AppError("INVESTIGATION_STALE", "Checkout is missing investigation state.", status_code=409)
 
@@ -204,20 +223,38 @@ async def confirm_checkout(checkout_id: str, body: ConfirmIn) -> dict:
     token_id = store.token_by_checkout[checkout.id]
     txn = await authorize(checkout.amount_cents, token_id, declined=declined)
     if declined:
-        checkout.stage = CheckoutStage.DECLINED
-        store.checkouts[checkout.id] = checkout
+        await repo.transition_checkout(
+            checkout.id, CheckoutStage.AWAITING_PASSKEY, CheckoutStage.DECLINED
+        )
         raise AppError("PAYMENT_DECLINED", "Payment was declined.", status_code=402)
 
     await consume_token(token_id)
-    checkout.stage = CheckoutStage.AUTHORIZED
-    checkout.idempotency_key = body.idempotency_key
-    checkout.stage = CheckoutStage.CAPTURED
-    mandate.status = "consumed"
+    moved = await repo.transition_checkout(
+        checkout.id, CheckoutStage.AWAITING_PASSKEY, CheckoutStage.CAPTURED
+    )
+    if not moved:
+        current = await repo.get_checkout(checkout.id)
+        if current is not None and current.stage == CheckoutStage.CAPTURED:
+            return await _confirm_payload(current)
+        raise AppError("ALREADY_PAID", "This checkout was already paid.", status_code=409)
+
+    checkout = await repo.get_checkout(checkout.id)
+    if checkout is None:
+        raise AppError("CHECKOUT_NOT_FOUND", "Checkout not found.", status_code=404)
+    checkout = checkout.model_copy(update={"idempotency_key": body.idempotency_key})
+    mandate = mandate.model_copy(update={"status": "consumed"})
     receipt = create_receipt(checkout, txn, listing, investigation)
-    store.checkouts[checkout.id] = checkout
-    store.mandates[mandate.id] = mandate
-    store.transactions[txn.id] = txn
-    store.receipts[receipt.id] = receipt
-    store.by_share[receipt.share_id] = receipt.id
-    store.by_checkout[checkout.id] = receipt.id
-    return _confirm_payload(checkout)
+    await repo.save_checkout(checkout)
+    await repo.save_mandate(mandate)
+    await repo.save_transaction(txn)
+    await persist_receipt(receipt)
+    await repo.audit(
+        AuditEvent(
+            session_id=checkout.session_id,
+            actor="shopper",
+            action="checkout.captured",
+            subject_id=checkout.id,
+            payload_redacted={"receipt_id": receipt.id, "amount_cents": checkout.amount_cents},
+        )
+    )
+    return await _confirm_payload(checkout)

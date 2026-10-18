@@ -20,6 +20,7 @@ export function BestPick({ recommendation, listings }: Props) {
       <p className="mt-3 text-lg">
         You save {formatCents(recommendation.savings_cents)} compared with the typical trusted price.
       </p>
+      {recommendation.narrative ? <p className="mt-2 text-stone-700">{recommendation.narrative}</p> : null}
     </section>
   )
 }

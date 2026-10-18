@@ -106,8 +106,9 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 7:30–9:00 PM — persistence (moved to B)
 
-- Task 27 belongs to B as of D-016. A's job here is limited to reviewing the `Repository` interface and confirming the app still runs with `MONGODB_URI` unset.
-- [ ] Review B's `Repository` protocol before it merges; it must not leak Mongo types into `app/`.
+- Task 27 was built on `agent_backend` by A: `InMemoryRepository` + `MongoRepository`, TTL indexes, `transition_checkout` via `find_one_and_update`.
+- [x] Verified the app still runs with `MONGODB_URI` unset.
+- As of D-016 the task and its review belong to B. B reviews the `Repository` protocol in Block 6 and keeps Mongo types from leaking into `app/`.
 
 ### 9:00–10:30 PM — integration and Devpost draft
 

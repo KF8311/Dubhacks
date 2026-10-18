@@ -10,13 +10,16 @@ def test_root_points_at_health():
     assert r.json()["health"] == "/api/health"
 
 
-def test_health_returns_200_even_without_db():
+def test_health_returns_200_even_without_db(monkeypatch):
+    from app.core.config import Settings
+
+    monkeypatch.setattr("app.db.mongo.get_settings", lambda: Settings(mongodb_uri=None))
     client = TestClient(create_app())
     r = client.get("/api/health")
     assert r.status_code == 200
-    assert r.json()["status"] in {"ok", "degraded"}
     body = r.json()
-    assert "db" in body
+    assert body["status"] == "degraded"
+    assert body["db"] == "unavailable"
     assert "version" in body
     assert "demo_mode" in body
     assert "uptime_s" in body

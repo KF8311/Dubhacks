@@ -148,3 +148,27 @@ Format:
 - **Why:** A does not want to take on MongoDB, and B already owns persistence-adjacent work: the `Repository` protocol shape, fixture data, redaction rules, and the offline replay that must keep working with `MONGODB_URI` unset. Ownership was the only thing out of place; the schedule was not.
 - **Alternatives considered:** Drop Task 27 and stay in-memory only (loses the MLH MongoDB track and the "investigations and receipts are documents" story in D-006); move it to C (C is the critical path on G4/G5); assign it to A anyway (the owner has said no, and a half-owned task is worse than a deferred one).
 - **Consequences:** Block 5 is unchanged — nobody starts Mongo work until Block 6. The in-memory adapter remains the default and the cut-order survivor; Mongo stays a swap behind the existing protocol. B owns the Atlas cluster question in `docs/open-questions.md`.
+
+## D-017 — Gemini explains and asks; it never decides
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Wire Gemini into clarifying questions, optional recommendation narration, and on-demand check explanations (model fixed by D-019). Templates remain the fallback. Scoring, checks, payability, and checkout stay Python-only.
+- **Why:** The plan already scoped the LLM to those three surfaces. Session create must not fail if the key is missing, the call exceeds 2.5s, or the JSON is invalid.
+- **Alternatives considered:** Per-check explanations on the SSE stream (rejected: 8×5 calls would blow quota and the demo); LLM scoring (rejected: D-005).
+- **Consequences:** `recommendation.ready` may include `narrative`. `POST /api/sessions/{id}/explain` is additive. `test_no_llm_path.py` allows `llm.py` to read `gemini_api_key`; trust and payment modules still cannot.
+
+## D-018 — Gemini model is `gemini-3.8-flash` for new API keys
+- **Date:** 2026-10-17
+- **Status:** superseded by D-019
+- **Decision:** Default `GEMINI_MODEL` is `gemini-3.8-flash`. New Gemini API keys receive 404 on `gemini-2.5-flash`.
+- **Why:** Google's generateContent API returns NOT_FOUND for `models/gemini-2.5-flash` for new users and points at `models/gemini-3.8-flash`.
+- **Alternatives considered:** Keep 2.5 (broken for this key); Interactions API (rejected: extra client surface mid-demo).
+- **Consequences:** `.env.example` and Settings default follow 3.8. Override with `GEMINI_MODEL` if a key still has 2.5 access.
+
+## D-019 — Default Gemini model is `gemini-3.5-flash-lite`
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Default `GEMINI_MODEL` is `gemini-3.5-flash-lite`. Lite models omit `thinkingConfig` (they 400 on it). Non-lite models still send `thinkingBudget: 0`.
+- **Why:** `gemini-3.8-flash` exceeds the 2.5s session-create budget (timeouts / 503), so questions, narration, and explain always fell back to templates. Lite returned in under 1s on this key.
+- **Alternatives considered:** Keep 3.8 and raise the timeout (violates the plan's 2.5s cap); `gemini-flash-lite-latest` (alias, less reproducible).
+- **Consequences:** Override with `GEMINI_MODEL` if a judge laptop still has 2.5/3.8 access. Templates remain the fallback.

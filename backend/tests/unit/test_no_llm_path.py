@@ -52,12 +52,28 @@ def test_no_module_imports_a_generative_client():
     assert offenders == []
 
 
-def test_the_gemini_key_is_never_read_outside_config():
+def test_the_gemini_key_is_never_read_outside_config_and_llm():
     readers = [
         path.relative_to(APP).as_posix()
         for path in sorted(APP.rglob("*.py"))
-        if path.name != "config.py"
-        and "gemini_api_key" in path.read_text(encoding="utf-8")
+        if path.name not in {"config.py", "llm.py"}
+        and (
+            "gemini_api_key" in path.read_text(encoding="utf-8")
+            or "GEMINI_API_KEY" in path.read_text(encoding="utf-8")
+        )
     ]
 
     assert readers == []
+
+
+def test_scoring_and_checks_do_not_import_the_llm():
+    trust_root = APP / "trust"
+    checks_root = APP / "checks"
+    payments_root = APP / "payments"
+    offenders = []
+    for path in sorted([*trust_root.rglob("*.py"), *checks_root.rglob("*.py"), *payments_root.rglob("*.py")]):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for module in _imported_modules(tree):
+            if module == "app.services.llm" or module.startswith("app.services.llm."):
+                offenders.append(path.relative_to(APP).as_posix())
+    assert offenders == []
