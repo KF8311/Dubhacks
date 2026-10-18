@@ -77,6 +77,8 @@ export interface ScoreResult {
   fatal_flags: string[]
   top_reason: string
   scoring_version: string
+  /** Allowlisted merchants score 0 because the score measures suspicion, not safety. */
+  allowlisted?: boolean
 }
 
 export interface QuestionOption {
@@ -132,6 +134,13 @@ export interface SessionSnapshot {
   recommendation: Recommendation | null
   last_seq: number
   stats: SessionStats
+}
+
+export interface StreamEvent {
+  type: string
+  seq: number
+  payload?: Record<string, unknown>
+  [key: string]: unknown
 }
 
 export interface CreateSessionResponse {

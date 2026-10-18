@@ -11,69 +11,84 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | G0 partial — health live, contracts not frozen. **G1 server side proven on PR #3** (8 `listing.found` events); the browser half is C's next step. |
-| Health | https://sniff-visa-dubhacks.fly.dev/api/health |
+| Gate | **G1 server side and browser wiring are both in place**; G2 and G3 are proven server-side and render through the live SSE client. Next gate is G4 checkout. |
+| Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy in Block 5) |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
-| Contracts | `docs/contracts.md` carries domain types, `Recommendation`, and SSE ordering. `Question` is the one open shape; `ScoreResult.allowlisted` (D-015) needs A's acknowledgement, then frozen. |
-| SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011) |
-| Tests | Backend **56 passed** (46 on `main`, +10 on `b/recommendation`); frontend **3 files / 4 tests passed**, `npm run build` clean |
-| Routes | Sessions create/answer/snapshot plus SSE events, all live on `main`. Orchestrator still runs `checks=[]` — no checks or scores emitted yet. |
-| Owners | A: platform + orchestrator. B: trust + data. C: frontend. |
-| Blockers | Orchestrator still runs `checks=[]`; contracts not frozen; C renders from mock data |
-| Branches | `main` `4132b67` — PR #3 merged. `b/recommendation` adds `recommend()` + D-015, unmerged. Existing branches should `git merge origin/main` before continuing. |
+| Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
+| SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
+| Tests | Backend **123 passed**. Frontend **6 files / 9 tests passed**, `npm run build` clean. |
+| Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is the next build. |
+| Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
+| Blockers | Task 23 checkout routes; Fly serves the pre-merge build |
+| Branches | `main` has PRs #1–#8. **PR #9** (`merge/agent-backend`) and **PR #10** (`c/web`, frontend) are open. `integration/hookup` merges both and turns the frontend live by default — that is the branch to review. |
 
-Last updated: 2026-10-17 16:45 PT
+Last updated: 2026-10-17 17:25 PT
 
 ## Gate board
 
 | Gate | Due | State | Proof |
 |---|---|---|---|
-| G0 Contracts frozen + health deployed | Sat 13:15 | 🟡 health live, contracts not frozen | URL above + `docs/contracts.md` |
-| G1 Listings stream to browser | Sat 15:30 | 🟡 server side proven on PR #3; browser pending | 8 `listing.found` events captured; C's grid still on mock data |
-| G2 Full investigation, 5 checks, score | Sat 18:00 | ⬜ | Browser: villain red with named reasons |
-| G3 Recommendation + best pick | Sat 19:30 | ⬜ | Browser: cheapest trusted listing picked |
-| G4 Checkout → passkey → receipt | Sat 21:00 | ⬜ | Browser, real backend, refusal path shown |
+| G0 Contracts frozen + health deployed | Sat 13:15 | 🟡 health live, `Question` shape still open | URL above + `docs/contracts.md` |
+| G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
+| G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
+| G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
+| G4 Checkout → passkey → receipt | Sat 21:00 | ⬜ | Needs Task 23 (A) and C's checkout sheet |
 | G5 Devpost draft submitted | Sat 22:30 | ⬜ | Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
+
+## Proof of the connected path (2026-10-17 17:20 PT)
+
+Backend over real HTTP, with `Origin: http://localhost:5173` (CORS verified on both the API and the SSE stream):
+
+```
+POST /api/sessions            → 201, question ids q_budget / q_use / q_priority
+POST /api/sessions/{id}/answers → 202, stage "searching"
+GET  /api/sessions/{id}       → stage "ready", 9 listings
+GET  /api/sessions/{id}/events → 107 events, seq 1..107, closes on investigation.complete
+stats:  {'listings': 9, 'trusted': 8, 'caution': 0, 'danger': 1}
+pick:   lst_tgt_bsp ($179.99) · median $374.49 · savings $194.50
+villain: lst_vln_xm5 → danger, score 0, "Reported by the local threat list: LOCAL_DENYLIST"
+```
+
+Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run build` clean.
 
 ## In progress
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Session routes + SSE (`listing.found`) | 16:15 | 17:00 | Block 1 |
-| B | Task 4 search service, then Task 14 scoring | 16:15 | 17:00 | Block 1 |
-| C | Wire `api.ts` to live SSE, keep `?mock=1` | 16:15 | 17:00 | Block 1 |
+| A | Task 23 checkout/confirm HTTP | 18:00 | 19:30 | Block 4 — the only thing between the demo and G4 |
+| C | Browser verification of the live stream, checkout sheet, receipt page | 17:30 | 19:30 | Tasks 25, 26; `?mock=1` remains the fallback |
+| B | Integration golden test + `scripts/replay_offline.py` | 17:30 | 18:30 | Task 28 |
 
 ## Done since last update
 
-- [x] PR #1 merged — backend scaffold, trust foundation, data, docs on `main`
-- [x] Frontend branch reconciled with `main` and pushed; PR #2 open
-- [x] Region resolved as `sjc` from `fly.toml` (D-013)
-- [x] `oldIdeas/` removed (D-014)
-- [x] `docs/contracts.md` gained domain types and the SSE ordering guarantee
-- [x] Both suites verified on merged code: 15 backend, 4 frontend, build clean
-- [x] B: Task 4 search service with catalog fallback — 8 tests
-- [x] B: Task 14 scoring engine + golden tests — 17 tests; villain `0 danger`, hero `100 trusted`
-- [x] B: Task 15 `recommend()` + `Recommendation` + D-015 allowlist exemption — 9 tests
+- [x] C: Tasks 17–21 — discovery, results grid, check rows, best pick, purge, empty/error states (PR #10)
+- [x] Hookup: `api.ts` and `useSessionStream` now default to the **live** backend; `?mock=1` is the fallback
+- [x] Fixed: discovery submitted answers to a hardcoded `ses_mock`, so the live flow 404'd at the second step
+- [x] Fixed: allowlisted merchants rendered as `0 · Trusted`; the badge now reads `Verified · Trusted`
+- [x] `listing.scored` carries `allowlisted` end to end
+- [x] CORS confirmed for `http://localhost:5173` on both JSON and SSE
 
 ## Next three actions
 
-1. A wires `run_checks()` + `score_investigation()` into the orchestrator — the only thing between us and G2.
-2. B writes the five checks, starting with domain age — until three complete, the coverage cap holds every score at 69.
-3. C points `api.ts` at the live SSE stream and renders `listing.found`; that closes G1's browser half.
+1. A builds Task 23 — `POST /api/checkout` and `POST /{id}/confirm` — so the payability guard is reachable over HTTP.
+2. C opens `npm run dev` against `uvicorn` on :8000 and confirms the villain card turns red and the best pick is `lst_tgt_bsp` in the actual browser.
+3. B adds the villain integration golden test and `scripts/replay_offline.py`.
+
+## Demo trap to avoid
+
+Picking **"Under $150"** filters the catalog to the villain alone and ends in `no_trusted_option`. That is a legitimate refusal path worth showing *after* the happy path, but the demo run should answer with **$150–$300**. See `docs/checklist.md` §9.
 
 ## Risks that are currently live
 
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
-| G1 missed, later gates compress | **yes** | Blocks re-cut to 45–90 min; proofs unchanged |
-| PR #3 unmerged | **yes** | `main` has no session routes, no `search()`, no scoring — nobody should branch from it until this lands |
-| Orchestrator emits no checks or scores | **yes** | `checks=[]` — G2 needs A to wire `run_checks` + `score_investigation` |
+| Checkout not reachable over HTTP | **yes** | Task 23 is A's next block; payability logic itself is tested |
+| Fly serves the pre-merge build | **yes** | Redeploy from `main` in Block 5 |
 | SerpAPI key unavailable | yes | Catalog-only per D-011 |
-| C building against mock data | **yes** | `?mock=1` fallback so a dead backend never kills the demo |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
-| Merged state never deployed | **yes** | Fly still serves the platform-branch build; redeploy in Block 5 |
+| Browser never exercised the live stream | **yes** | Wiring is merged; C must click through it once |
 
 ## Cut list in effect
 

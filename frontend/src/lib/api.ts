@@ -1,4 +1,5 @@
 import mockFile from "../data/mock-session.json"
+import { isMockMode } from "@/lib/mockMode.ts"
 import type {
   Answer,
   CreateSessionResponse,
@@ -13,8 +14,6 @@ type MockFile = {
 }
 
 const mock = mockFile as MockFile
-
-const useMock = import.meta.env.VITE_USE_MOCK !== "0"
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -45,12 +44,9 @@ export async function createSession(input: {
   query: string
   client_id: string
 }): Promise<CreateSessionResponse> {
-  if (useMock) {
+  if (isMockMode()) {
     await delay(300)
-    return {
-      ...mock.create_session,
-      questions: mock.create_session.questions,
-    }
+    return { ...mock.create_session }
   }
   return request<CreateSessionResponse>("/api/sessions", {
     method: "POST",
@@ -62,22 +58,22 @@ export async function submitAnswers(
   sessionId: string,
   input: { answers: Answer[]; skip_remaining: boolean },
 ): Promise<SubmitAnswersResponse> {
-  const budget = input.answers.find((answer) => answer.question_id === "q_budget")
-  const budgetCents =
-    budget?.option_id === "150"
-      ? 15000
-      : budget?.option_id === "300"
-        ? 30000
-        : budget?.option_id === "600"
-          ? 60000
-          : null
-  const searchSpec: SearchSpec = {
-    query: mock.snapshot.query,
-    budget_max_cents: budgetCents,
-    category: "audio",
-    merchants_preferred: [],
-  }
-  if (useMock) {
+  if (isMockMode()) {
+    const budget = input.answers.find((answer) => answer.question_id === "q_budget")
+    const budgetCents =
+      budget?.option_id === "150"
+        ? 15000
+        : budget?.option_id === "300"
+          ? 30000
+          : budget?.option_id === "600"
+            ? 60000
+            : null
+    const searchSpec: SearchSpec = {
+      query: mock.snapshot.query,
+      budget_max_cents: budgetCents,
+      category: "audio",
+      merchants_preferred: [],
+    }
     await delay(400)
     return {
       session_id: sessionId,
@@ -93,7 +89,7 @@ export async function submitAnswers(
 }
 
 export async function getSnapshot(sessionId: string): Promise<SessionSnapshot> {
-  if (useMock) {
+  if (isMockMode()) {
     await delay(300)
     return mock.snapshot
   }
