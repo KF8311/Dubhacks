@@ -238,7 +238,7 @@ Client sends only IDs and a cap. Server re-derives price, merchant, and score.
 
 409 codes: `MERCHANT_NOT_TRUSTED`, `SCORE_TOO_LOW`, `COVERAGE_TOO_LOW`, `MERCHANT_MISMATCH`, `AMOUNT_EXCEEDS_CAP`, `MANDATE_EXPIRED`, `ALREADY_PAID`, `INVESTIGATION_STALE`.
 
-A caution or danger listing is always `MERCHANT_NOT_TRUSTED`. Payability is enforced in `assert_payable` now; the HTTP route is Task 23.
+A caution or danger listing is always `MERCHANT_NOT_TRUSTED`. **HTTP is live:** `POST /api/checkout` and `POST /api/checkout/{id}/confirm`.
 
 ## `POST /api/checkout/{checkout_id}/confirm` → 200 or 402
 

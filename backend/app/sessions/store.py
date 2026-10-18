@@ -49,6 +49,13 @@ class SessionRegistry:
     def listings(self, session_id: str) -> list[Listing]:
         return list(self._listings.get(session_id, []))
 
+    def listing_by_id(self, listing_id: str) -> Listing | None:
+        for items in self._listings.values():
+            for item in items:
+                if item.id == listing_id:
+                    return item
+        return None
+
     def attach_investigation(self, session_id: str, inv: Investigation) -> None:
         self._investigations.setdefault(session_id, []).append(inv)
 
