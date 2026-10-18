@@ -46,3 +46,12 @@ data/*.local.json
 
 # Cursor
 .cursorrules
+
+# Vercel CLI
+.vercel
+frontend/.vercel
+backend/.vercel
+
+# Copied onto the FastAPI function during the Vercel build
+backend/data/
+.env*

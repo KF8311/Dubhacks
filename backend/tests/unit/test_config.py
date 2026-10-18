@@ -1,6 +1,13 @@
 from app.core.config import Settings
 
 
+def test_default_cors_allows_vite_dev_ports(monkeypatch, tmp_path):
+    monkeypatch.delenv("ALLOWED_ORIGINS", raising=False)
+    settings = Settings(_env_file=tmp_path / "unused.env")
+    assert "http://localhost:5173" in settings.cors_origins()
+    assert "http://localhost:5174" in settings.cors_origins()
+
+
 def test_settings_read_gemini_api_key_from_process_env(monkeypatch, tmp_path):
     monkeypatch.setenv("GEMINI_API_KEY", "from-env")
     settings = Settings(_env_file=tmp_path / "unused.env")

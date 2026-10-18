@@ -50,6 +50,7 @@ export function CheckoutSheet({
   }, [onComplete, receipt])
 
   async function onPay() {
+    if (!sessionId) return
     setFailure(null)
     setBusy(true)
     try {

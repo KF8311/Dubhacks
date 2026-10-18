@@ -71,3 +71,26 @@ def test_rejects_google_hosted_and_empty_domains():
 
 def test_merchant_host_strips_www():
     assert merchant_host("https://www.Target.com/p/1") == "target.com"
+
+
+def test_source_hostname_is_used_when_product_link_is_google():
+    payload = {
+        "shopping_results": [
+            {
+                "title": "Purple cotton tee",
+                "product_link": "https://www.google.com/shopping/product/9",
+                "source": "oldnavy.gap.com",
+                "extracted_price": 12.0,
+                "product_id": "tee1",
+            },
+            {
+                "title": "ASOS purple t-shirt",
+                "product_link": "https://www.google.com/shopping/product/10",
+                "source": "ASOS",
+                "extracted_price": 18.0,
+                "product_id": "tee2",
+            },
+        ]
+    }
+    listings = listings_from_payload(payload, spec=SearchSpec(query="purple t shirt"), limit=8)
+    assert [item.merchant_domain for item in listings] == ["oldnavy.gap.com", "asos.com"]

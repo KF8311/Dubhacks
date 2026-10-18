@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 from datetime import datetime, timezone
 
@@ -49,6 +50,12 @@ class SessionOrchestrator:
         return list(self.checks)
 
     async def start(self, session: Session) -> None:
+        # Vercel freezes the isolate when the HTTP handler returns, so the
+        # background task never finishes. Await the run there; locally keep
+        # fire-and-forget so SSE can stream while POST /answers returns 202.
+        if os.environ.get("VERCEL"):
+            await self._run(session.id)
+            return
         asyncio.create_task(self._run(session.id), name=f"orch-{session.id}")
 
     async def _run(self, session_id: str) -> None:
@@ -67,16 +74,18 @@ class SessionOrchestrator:
         try:
             listings, source = await asyncio.wait_for(
                 self.search(session.search_spec, MAX_LISTINGS),
-                timeout=SEARCH_S,
+                timeout=12.0 if os.environ.get("VERCEL") else SEARCH_S,
             )
         except Exception:
-            listings, source = [], "catalog"
+            from app.search.catalog import load_catalog
+
+            listings, source = load_catalog()[:MAX_LISTINGS], "catalog"
             self.bus.publish(
                 session_id,
                 "session.error",
                 {
                     "code": "SEARCH_FAILED",
-                    "message": "Search failed; no listings.",
+                    "message": "Search failed; showing catalog listings.",
                     "recoverable": True,
                 },
             )
