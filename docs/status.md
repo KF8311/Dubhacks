@@ -13,7 +13,7 @@ This is the only file that claims to be current.
 |---|---|
 | Gate | **Block R — recovery close-out.** The kept build is green; the remaining work is browser proof, the thin-search fix, the docs scrub, and the Devpost. **Freeze 04:00 PT.** |
 | Code | **`96cf47f`** — live SerpAPI search, catalog fallback, five checks, deterministic scoring, SSE, recommendation, checkout → passkey → receipt, Gemini copy with template fallback. |
-| Branch | Local `main` = `96cf47f` + archive/docs commits. `origin/main` still points at the old tip (`1562772`). **The open PR is what restores `main`**; the 20 removed commits stay reachable on `backup/main-post-96cf47f` and the `origin/restore/*` branches. |
+| Branch | **`main` is restored** — [PR #34](https://github.com/KF8311/Dubhacks/pull/34) merged as `2d53ca1`. The 20 removed commits stay reachable on `backup/main-post-96cf47f` and the `origin/restore/*` branches. |
 | Parked work | Every removed commit with links and a revisit table: [`ideas-after-96cf47f.md`](ideas-after-96cf47f.md). Nothing was deleted. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health — **serves an older build**. Deploy in the morning from the repo root. Do not submit `sykes.select`; it runs the removed code. |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc`. Vercel Git deploy is broken at this commit (no `data/` shipped); fix is parked as idea A. |
