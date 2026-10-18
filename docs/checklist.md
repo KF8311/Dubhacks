@@ -33,7 +33,7 @@ One shared checklist. Personal scratch notes do not belong here.
 
 | Thing | State |
 |---|---|
-| [`main`](https://github.com/KF8311/Dubhacks/tree/main) | **Everything merged and pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20) and [PR #21](https://github.com/KF8311/Dubhacks/pull/21) rebase-merged; run `git log --oneline origin/main` for the current tip): scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, the frozen refusal paths, **Gemini questions/narration/explanations (D-017–D-019)**, **the `Repository` protocol with in-memory + Mongo adapters**, **A's live-search path plus budget parsing (D-021, D-022)**, and **C's phone-width reflow, unknown-merchant resolution, offline catalog pinning, and `api_key` redaction**. **187 backend / 13 files · 34 frontend tests pass**, [`npm run build`](../frontend) clean, [`scripts/replay_offline.py`](../scripts/replay_offline.py) exits 0. |
+| [`main`](https://github.com/KF8311/Dubhacks/tree/main) | **Everything merged and pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20) and [PR #21](https://github.com/KF8311/Dubhacks/pull/21) rebase-merged; run `git log --oneline origin/main` for the current tip): scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, the frozen refusal paths, **Gemini questions/narration/explanations (D-017–D-019)**, **the `Repository` protocol with in-memory + Mongo adapters**, **A's live-search path plus budget parsing (D-021, D-022)**, and **C's phone-width reflow, unknown-merchant resolution, offline catalog pinning, and `api_key` redaction**. **204 backend / 35 files · 39 frontend tests pass**, [`npm run build`](../frontend) clean, [`scripts/replay_offline.py`](../scripts/replay_offline.py) exits 0. |
 | Follow-on branch | **None pending.** [PR #20](https://github.com/KF8311/Dubhacks/pull/20) merged; the working branch was deleted after `git diff main <branch>` came back empty. Local `main` and `origin/main` are the same commit. [`scratch/integration`](https://github.com/KF8311/Dubhacks/tree/scratch/integration) is stale; do not reuse it. |
 | Live API | Sessions create/answers/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm**, **receipts + public share**, `POST /api/demo/reset`. Contracts: [`docs/contracts.md`](contracts.md). |
 | Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from [`frontend/src/data/mock-session.json`](../frontend/src/data/mock-session.json). The sheet refuses to offer payment without a real session id — no more `ses_mock` fallback. Reflowed for 390px ([C's Block 6 notes](personC%20files/person-c-block-6.md)). |
@@ -57,7 +57,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **187 passed**; `npx vitest run` → **34 passed**. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **204 passed**; `npx vitest run` → **39 passed**. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -231,7 +231,9 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] C: **unknown merchants resolve** — [`listing_from_immersive()`](../backend/app/search/serpapi.py) walks Google Shopping's immersive `stores` and takes the first store whose link is a real merchant host, so a listing with no direct merchant domain now gets one instead of being dropped. Four lookups max, 2 s cap, already-returned stores kept. 108 lines of new tests in [`test_serpapi.py`](../backend/tests/unit/test_serpapi.py).
 - [x] C: **offline demos stay on the catalog** — with `OFFLINE=1` the [orchestrator](../backend/app/sessions/orchestrator.py) loads the curated catalog directly instead of calling the search provider, so a stray `SERPAPI_KEY` in the environment cannot change the replay or refusal numbers.
 - [x] B: restored the receipt **score assertion** that C's wrap fix replaced (`Score 92` via its aria-label) and kept the new `break-words` check; both behaviours now have coverage ([`Receipt.test.tsx`](../frontend/src/features/receipt/Receipt.test.tsx), `f0014c0`).
-- [x] Verified after the merge: **187 backend**, **34 frontend**, `npm run build` clean, `replay_offline.py` exit 0, and the live HTTP run for **$300–$600** matches the replay exactly (pick `lst_tgt_bsp`, median $374.49, savings $194.50).
+- [x] Verified after the merge: **204 backend**, **39 frontend**, `npm run build` clean, `replay_offline.py` exit 0, and the live HTTP run for **$300–$600** matches the replay exactly (pick `lst_tgt_bsp`, median $374.49, savings $194.50).
+- [x] **A's `agent_backend` merged (22:49 PT).** VEYZL input/output guard ([D-023](decisions.md)) with [`llm_guard.py`](../backend/app/services/llm_guard.py), five new tests, and the OpenAI-shaped refusal on probe payloads; Vercel services config ([`vercel.json`](../vercel.json)) with [`bundle_data.py`](../backend/scripts/bundle_data.py) and [`paths.py`](../backend/app/core/paths.py) so fixtures resolve on the function; a failed live search now falls back to the catalog; `apiBase()` keeps local dev on `localhost:8000` while production stays same-origin.
+- [x] The VEYZL audit ran twice and finding 1 is fixed — see [`veylz-audit.md`](veylz-audit.md). The remaining VEYZL work is a clean re-run and a check run on a PR, not code.
 
 ## 6. Gate board
 
@@ -270,11 +272,16 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 ## 9. Next blocks — start here
 
-**State (20:35 PT, [`main`](https://github.com/KF8311/Dubhacks/tree/main)):** `main` carries everything from all three people — checkout → confirm → receipt, the live frontend, all five checks, Gemini for questions/narration/explanations, the in-memory + Mongo repositories, A's live-search and budget changes ([D-021](decisions.md), [D-022](decisions.md)), C's phone-width reflow and search hardening, and the offline replay. Green: **187 backend / 13 files · 34 frontend tests**, `npm run build` clean, [`replay_offline.py`](../scripts/replay_offline.py) exits 0.
+> **Lost?** Read [`REMAINING.md`](REMAINING.md) first — six items, one page, including what to do if the deploy or screenshots do not land.
+
+**State (22:49 PT, [`main`](https://github.com/KF8311/Dubhacks/tree/main)):** `main` carries everything from all three people — checkout → confirm → receipt, the live frontend, all five checks, Gemini for questions/narration/explanations, the in-memory + Mongo repositories, A's live-search and budget changes ([D-021](decisions.md), [D-022](decisions.md)), C's phone-width reflow and search hardening, the offline replay, and **A's VEYZL guard plus the Vercel deploy path** ([D-023](decisions.md)). Green: **204 backend / 35 files · 39 frontend tests**, `npm run build` clean, [`replay_offline.py`](../scripts/replay_offline.py) exits 0.
 
 **Block 5 is close-out only.** Every text artifact is written: the Devpost story, the field-by-field form map, the technical-claims handoff, the README, the audit scope, and the reproduced reset transcript. What is missing is artifacts that only A and C can produce. Do not start Block 6 work until your Block 5 action is done or explicitly cut.
 
 **What changed in the last hour:**
+
+- **A's `agent_backend` is merged.** Four commits: the VEYZL input/output guard ([`llm_guard.py`](../backend/app/services/llm_guard.py), [D-023](decisions.md)), the Vercel services config and data bundling ([`vercel.json`](../vercel.json), [`paths.py`](../backend/app/core/paths.py)), a failed live search now falls back to the catalog instead of an empty grid, and the session store hydrates a finished snapshot. Five conflicts resolved by hand: A's decision renumbered to D-023, the existing `veylz-audit.md` scaffold kept and extended with A's real results, the README left as the current version, both SerpAPI tests and both orchestrator paths kept. `apiBase()` now defaults to `localhost:8000` in a dev build and same-origin in production, so local dev still works without a `.env`.
+- **The VEYZL audit actually ran** — two hosted audits, ids in [`veylz-audit.md`](veylz-audit.md). It found the missing guard on the generative path; A fixed it with tests. **A clean re-run is still owed** before the side track can be claimed.
 
 - **C's branch landed (`cf24bdb`, `3ceffbc`) — fast-forward, no conflicts.** Three pieces: the 390px reflow (`px-4 sm:px-6` on every header and main, one-column grid, wrapping sandbox badge), `api_key`/`x-goog-api-key` redaction in [`logging.py`](../backend/app/core/logging.py), and two search fixes — unknown merchants now resolve through Google Shopping's immersive `stores` ([`listing_from_immersive()`](../backend/app/search/serpapi.py)), and `OFFLINE=1` reads the curated catalog directly so a stray key cannot move the replay numbers. Her own evidence is in [C's Block 6 checklist](personC%20files/person-c-block-6.md).
 - **The receipt test keeps both assertions.** C's wrap fix had swapped the score check for `break-words`; [`Receipt.test.tsx`](../frontend/src/features/receipt/Receipt.test.tsx) now asserts the score *and* the wrap (`f0014c0`).
@@ -288,7 +295,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 | Owner | Now — Block 5 (due 22:30) | Then — Block 6 (freeze 02:00) | Done when |
 |---|---|---|---|
-| **A** | `fly deploy` from the repo root, then `smoke_http.py` against the public URL | Install the VEYZL GitHub App, run the audit on a PR, reproduce one finding and fix it with a test ([D-020](decisions.md), scope in [`veylz-audit.md`](veylz-audit.md)); only then re-add `VEYZL Audit` as a required check. Sign off the `Question` shape (last G0 item) | Public URL carries checkout → receipt; a VEYZL check run is visible on a PR and linked from the audit doc; `pytest -q` still 187 |
+| **A** | Deploy — `fly deploy` from the repo root **or** the Vercel services path — then `smoke_http.py` against the public URL | ✅ The audit ran and finding 1 is fixed with tests ([D-023](decisions.md), [results](veylz-audit.md)). ⬜ **Re-run the audit on the fixed build** and capture a report that is not all-error; link the check run on a PR; only then re-add `VEYZL Audit` as a required check. Sign off the `Question` shape (last G0 item) | Public URL carries checkout → receipt; a clean VEYZL report linked from the audit doc; `pytest -q` still 204 |
 | **C** | Browser click-through at **$300–$600**: grid (villain red, best pick), Pay → passkey → receipt, villain refusal. Three screenshots + one recording, handed to B | `skipped` renders as **"Could not verify"** ([`CheckRow.tsx`](../frontend/src/features/results/CheckRow.tsx) still says "Skipped"); an over-budget badge or "closest match" copy for [D-022](decisions.md) | Screenshots in the Devpost gallery; both copy changes visible in the running app; `npm run build` clean |
 | **B** (you) | Pre-fill everything in [`devpost-form.md`](devpost-form.md) that does not need an artifact: story sections, Built with, repo link, generative-AI answer, tracks. Then drop in the live URL and gallery as they land; put replay numbers in [`status.md`](status.md) | TTL/index check against a real cluster — **if it does not happen, remove the MLH MongoDB Atlas claim and the checkbox**; review A's finding against the payability tests | Form complete with URL, images, video, VEYZL track; every number traced to a command |
 
@@ -297,7 +304,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 **First 15 minutes, every person:**
 
 1. `git checkout main && git pull`
-2. Baseline: backend `pytest -q` → **187 passed**; frontend `npx vitest run` → **34 passed**; [`scripts/replay_offline.py`](../scripts/replay_offline.py) → exit 0. If `motor` is missing, `pip install motor`.
+2. Baseline: backend `pytest -q` → **204 passed**; frontend `npx vitest run` → **39 passed**; [`scripts/replay_offline.py`](../scripts/replay_offline.py) → exit 0. If `motor` is missing, `pip install motor`.
 3. Take your column below. Nobody waits on another column.
 
 **Handoff contract, now live (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`; a declined passkey is `402 PAYMENT_DECLINED`. The confirm path is **`POST /api/checkout/{checkout_id}/confirm`** (singular `checkout`) and takes `{passkey_assertion: {credential_id, client_data}, idempotency_key}`. Confirm returns a **pointer** (`receipt_id`, `receipt_url`); the receipt itself is `GET /api/public/receipts/{share_id}`. Every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label. The frontend's request/response mapping is pinned in `frontend/src/lib/api.test.ts` — if the shape has to change, say it in the channel before committing.
@@ -315,7 +322,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
    - B already reproduced `/api/demo/reset`: unauthenticated POST → `200`, session destroyed. If VEYZL reports the same, the transcript is ready; if VEYZL reports something else, **the tool's finding wins**.
 5. Sign off the `Question` shape in `docs/contracts.md` (the last G0 item).
 
-**Proof:** [public health URL](https://sniff-visa-dubhacks.fly.dev/api/health) + checkout and receipt on the public URL; a VEYZL check run visible on a PR; `pytest -q` still 187.
+**Proof:** [public health URL](https://sniff-visa-dubhacks.fly.dev/api/health) + checkout and receipt on the public URL; a VEYZL check run visible on a PR; `pytest -q` still 204.
 
 ### C — browser proof + screenshots
 
@@ -334,7 +341,7 @@ The screens are merged. This block is about proving them in a real browser:
 The story and the form map are written. Remaining:
 
 1. **Devpost** — fill `docs/devpost-form.md` in order as artifacts land: live URL (A), gallery images (C), video (team), VEYZL side-track selection (A's check run). Story: `docs/devpost.md`. Generative-AI answer: **Yes**, with the paragraph in the form map.
-2. **Final numbers** — run [`scripts/replay_offline.py`](../scripts/replay_offline.py), put its numbers in [`docs/status.md`](status.md), and confirm the Devpost's `187` / `34` claims match the run.
+2. **Final numbers** — run [`scripts/replay_offline.py`](../scripts/replay_offline.py), put its numbers in [`docs/status.md`](status.md), and confirm the Devpost's `204` / `39` claims match the run.
 3. **Review A's audit finding** before it is written up — B owns the trust/payment claims, A owns the run. If the finding touches the payability gate, check it against D-015 and the refusal tests.
 4. **Never submit a claim the code cannot support.** Sandbox label, synthetic data, no production Visa integration, and the model never decides.
 
@@ -392,8 +399,8 @@ The catalog runs to $549.99 (AirPods Max), so only `$300–$600` contains all ni
 **Gate check before each rehearsal:**
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q                     # 187 passed
-cd frontend && npx vitest run && npm run build                          # 34 passed, clean
+cd backend && .venv/Scripts/python.exe -m pytest -q                     # 204 passed
+cd frontend && npx vitest run && npm run build                          # 39 passed, clean
 backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```
 

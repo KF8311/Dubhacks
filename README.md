@@ -139,8 +139,8 @@ Only **$300–$600** contains all nine listings — the catalog runs to $549.99 
 ## Tests
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q          # 187 passed
-cd frontend && npx vitest run && npm run build               # 34 passed, build clean
+cd backend && .venv/Scripts/python.exe -m pytest -q          # 204 passed
+cd frontend && npx vitest run && npm run build               # 39 passed, build clean
 ```
 
 **Offline rehearsal** — the whole session in-process, no server, no network:
