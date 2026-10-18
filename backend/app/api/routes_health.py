@@ -4,6 +4,8 @@ from fastapi import APIRouter
 
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.payments.memory import store as payment_store
+from app.payments.mock_vic import reset as reset_vic
 from app.sessions.events import bus
 from app.sessions.store import registry
 
@@ -46,4 +48,6 @@ def demo_reset() -> dict:
         )
     registry.clear()
     bus.reset()
+    payment_store.clear()
+    reset_vic()
     return {"ok": True, "cleared": ["sessions", "investigations", "checkouts", "receipts"]}
