@@ -99,8 +99,8 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 6:00–7:30 PM — checkout backend
 
-- [ ] Task 23: `POST /api/checkout`, `POST /{id}/confirm`, mock VIC token issue/consume, atomic transition, idempotency.
-- [ ] Task 24: `create_receipt`, HMAC signature, `GET /api/receipts/{id}`, `GET /api/public/receipts/{share_id}`.
+- [x] Task 23: `POST /api/checkout`, `POST /{id}/confirm`, mock VIC token issue/consume, atomic transition, idempotency.
+- [x] Task 24: `create_receipt`, HMAC signature, `GET /api/receipts/{id}`, `GET /api/public/receipts/{share_id}`.
 
 **Done when:** create → confirm twice returns the same receipt; decline path returns 402.
 
