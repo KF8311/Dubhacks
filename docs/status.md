@@ -21,7 +21,7 @@ This is the only file that claims to be current.
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
 | Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
-| Branches | **`main` carries everything** (PRs #1–#19, plus `c/web` and `agent_backend` merged directly; `main` is `c7c94f1`). Every remote head is contained in `main` — `git rev-list --count main..origin/<branch>` is 0 for all of them, `c/web` included. Branch from `main`. |
+| Branches | **`main` carries everything** locally (`c7c94f1`), plus the docs commit `fe6f902`; `origin/main` is 5 commits behind. **Push to `main` is rejected**: branch protection requires a `VEYZL Audit` check that nothing reports. The work is on [`integration/c-web-and-docs`](https://github.com/KF8311/Dubhacks/tree/integration/c-web-and-docs) as **[PR #20](https://github.com/KF8311/Dubhacks/pull/20)**, mergeable but `BLOCKED` on that check. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
 Last updated: 2026-10-17 20:10 PT
@@ -99,9 +99,9 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 
 ## Next three actions
 
-1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
-2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it.
-3. A installs the VEYZL app on `KF8311/Dubhacks`, opens the fix PR, and runs the audit; B fills `docs/devpost-form.md` as the URL and screenshots land.
+1. **A unblocks `main`.** Branch protection requires a `VEYZL Audit` check and nothing reports it, so pushes are rejected and PR #20 is `BLOCKED`. Install/run the VEYZL app so the check reports — or drop the requirement. Nothing else can merge until this is fixed.
+2. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
+3. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
 
 ## Demo trap to avoid
 
@@ -113,6 +113,7 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 |---|---|---|
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
 | Fly serves the pre-merge build | **yes** | Redeploy from `main` in Block 5 |
+| **`main` is protected by a required check nothing reports** | **yes** | `git push origin main` is rejected (`Required status check "VEYZL Audit" is expected`) and PR #20 is `BLOCKED` with zero checks. A must install/run VEYZL so the check reports, or the repo owner drops the rule. **No merge can land until this is resolved.** |
 | SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | An empty budget filter falls back to the full catalog | yes | D-022: an over-budget listing can be recommended and paid. Say "closest match" on stage; do not call the budget a hard cap |
