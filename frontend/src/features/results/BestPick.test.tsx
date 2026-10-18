@@ -28,7 +28,7 @@ test("shows the best pick and savings", () => {
       ]}
     />,
   )
-  expect(screen.getByText(/Sony XM5/)).toBeInTheDocument()
+  expect(screen.getByText(/Sony XM5/)).toHaveClass("break-words")
   expect(screen.getByText(/\$11\.00/)).toBeInTheDocument()
   expect(screen.getByText(/Target is the cheapest trusted XM5/)).toBeInTheDocument()
 })

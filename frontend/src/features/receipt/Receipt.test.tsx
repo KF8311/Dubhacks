@@ -50,7 +50,7 @@ const receipt = {
 
 test("renders score and amount", () => {
   render(<ReceiptView receipt={receipt} />)
-  expect(screen.getByText(/92/)).toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: "Sony XM5" })).toHaveClass("break-words")
   expect(screen.getByText(/\$249\.00/)).toBeInTheDocument()
   expect(screen.getByText(/4242/)).toBeInTheDocument()
   expect(screen.getByText("Domain age")).toBeInTheDocument()

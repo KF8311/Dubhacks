@@ -19,7 +19,7 @@ export function PurgeOverlay({ active, onComplete }: Props) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-red-950/80 text-4xl font-bold tracking-wide text-white"
+      className="fixed inset-0 z-50 flex items-center justify-center px-6 text-center text-3xl font-bold tracking-wide text-white sm:text-4xl bg-red-950/80"
       initial={reduced ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: reduced ? 0 : 0.25 }}
