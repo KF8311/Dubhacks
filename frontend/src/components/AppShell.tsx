@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { BrandMark } from "@/components/BrandMark.tsx"
 import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
-import { PAGE_SECTIONS, activeSectionPath, currentPath, go, scrollToId, withSearch } from "@/lib/path.ts"
+import { currentPath, go, scrollToId, withSearch } from "@/lib/path.ts"
 
 type Props = {
   children: ReactNode
@@ -55,31 +55,35 @@ export function AppShell({ children, bleed = false, spy = false }: Props) {
 
   useEffect(() => {
     if (!spy) return
-    const sync = () => {
-      const next = activeSectionPath((id) => {
-        const node = document.getElementById(id)
-        if (!node) return null
-        const rect = node.getBoundingClientRect()
-        return { top: rect.top, bottom: rect.bottom }
-      })
-      setSection(next)
-      if (next !== currentPath()) {
+    const nodes = [
+      ["shop", "/"],
+      ["how", "/how"],
+      ["about", "/about"],
+    ] as const
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const hit = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+        if (!hit?.target.id) return
+        const next = nodes.find(([id]) => id === hit.target.id)?.[1]
+        if (!next || next === currentPath()) return
         window.history.replaceState({}, "", withSearch(next))
-      }
+        setSection(next)
+      },
+      { rootMargin: "-45% 0px -45% 0px", threshold: [0.1, 0.25, 0.5] },
+    )
+    for (const [id] of nodes) {
+      const node = document.getElementById(id)
+      if (node) observer.observe(node)
     }
-    sync()
-    window.addEventListener("scroll", sync, { passive: true })
-    window.addEventListener("resize", sync)
-    return () => {
-      window.removeEventListener("scroll", sync)
-      window.removeEventListener("resize", sync)
-    }
+    return () => observer.disconnect()
   }, [spy])
 
   function goSection(path: string) {
     go(path, { scroll: false })
     setSection(path)
-    const id = PAGE_SECTIONS.find(([, href]) => href === path)?.[0] ?? "shop"
+    const id = path === "/how" ? "how" : path === "/about" ? "about" : "shop"
     scrollToId(id)
   }
 

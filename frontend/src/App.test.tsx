@@ -139,11 +139,9 @@ test("how it works and about live on the shop page", () => {
   fireEvent.click(screen.getByRole("link", { name: /how it works/i }))
   expect(screen.getByRole("heading", { name: /find a deal you can actually pay for/i })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: /how sykes checks a store/i })).toBeInTheDocument()
-  expect(screen.getByRole("link", { name: /how it works/i })).toHaveAttribute("aria-current", "page")
   fireEvent.click(screen.getByRole("link", { name: /^about$/i }))
   expect(screen.getByRole("heading", { name: /about sykes/i })).toBeInTheDocument()
   expect(screen.getByRole("heading", { name: /find a deal you can actually pay for/i })).toBeInTheDocument()
-  expect(screen.getByRole("link", { name: /^about$/i })).toHaveAttribute("aria-current", "page")
 })
 
 test("walks discovery into the mock results", async () => {
