@@ -1,0 +1,442 @@
+SNIFF + VISA — how to explain the project to a judge
+====================================================
+
+Read this top to bottom once. Then use the "Say this" lines out loud.
+You are Person C. You own the screens. A owns the server, sessions, and
+payments. B owns the trust checks, the score, and the recommendation.
+
+
+THE 30-SECOND PITCH
+-------------------
+
+Sniff is a shopping agent that will not pay a store it cannot verify.
+
+You type what you want. The app asks two or three short questions, searches
+real listings, and runs five trust checks on each merchant. Those checks
+stream onto the screen one at a time. The app then recommends the cheapest
+merchant that actually passed. Paying is a sandboxed Visa-style flow:
+a spending cap, a simulated passkey, a one-time token, and a receipt.
+A dangerous listing can be the cheapest thing on the page and it still
+cannot be paid.
+
+
+WORDS THAT HAVE TO STAY TRUE
+----------------------------
+
+- Payment is a sandbox. The label on checkout and the receipt is the full
+  sentence: "Sandbox — simulated Visa Intelligent Commerce flow."
+  Never say this is a real Visa charge or a production integration.
+
+- No real people, no real card numbers. Shoppers, merchants, and the card
+  ending 4242 are synthetic. The villain store, premium-audio-deals.shop,
+  is fictional.
+
+- The score is math, not a language model. Gemini writes the questions,
+  a one-line reason for the pick, and an optional explanation of a check.
+  It never picks the winner, never runs a check, and never computes a score.
+
+- Money is stored as integer cents. Dollars appear only on the screen.
+  $179.99 in the UI is 17999 in the code.
+
+- The browser never talks to the database. It talks to the API.
+
+
+WHAT TO CLICK IN A DEMO
+-----------------------
+
+1. Open http://localhost:5173/  (not another port; the API only allows 5173).
+2. Type a product. "running shoes" shows live stores. The built-in headphone
+   demo is the offline path, described in the last section.
+3. Answer the three questions. They come from Gemini and change with the
+   product. If Gemini is slow or offline, the backup questions are the
+   headphone ones. That fallback is intentional.
+4. Watch cards appear, then the five checks fill in.
+5. Point at the best pick: cheapest merchant the checks will allow.
+6. Point at a bad listing and say it cannot be paid.
+7. Pay the best pick: mandate, simulated passkey, receipt.
+8. The receipt URL looks like /r/shr_... and can be opened on its own.
+
+Catalog demo, if you want the rehearsed numbers: search headphones and
+answer "$150–$300", then use, then priority. The pick is Target Beats
+Studio Pro at $179.99. Do not answer "Under $150" on that demo. That
+filter leaves only the villain, and the app correctly refuses to pick it.
+
+
+HOW THE PIECES TALK
+-------------------
+
+Browser (React)                API (FastAPI, one worker)
+frontend/src/App.tsx           backend/app/main.py
+        |                              |
+        |  POST /api/sessions          |  questions.py  -> Gemini or templates
+        |  POST /api/sessions/{id}/answers
+        |                              |  orchestrator.py runs the investigation
+        |  EventSource /events         |  events.py  (one stream, numbered seq)
+        |                              |
+        |  cards, checks, best pick    |  search -> five checks -> score -> recommend
+        |                              |
+        |  POST /api/checkout          |  payability.py re-checks before any token
+        |  POST /api/checkout/{id}/confirm
+        |  GET  /api/public/receipts/{share_id}
+
+If the stream drops, the browser loads GET /api/sessions/{id} and draws
+whatever the server already finished. That is the snapshot fallback.
+
+
+BLOCK 0 — 12:30 to 1:15 — the skeleton
+--------------------------------------
+
+What a judge sees: a named app, a search box, and a health URL.
+
+A stood up the FastAPI app and GET /api/health, and deployed it to Fly
+(sniff-visa-dubhacks). A also froze the shared shapes: backend models in
+backend/app/domain/models.py and the matching TypeScript in
+frontend/src/lib/types.ts. Those two files are the contract. The UI does
+not invent fields the server does not send.
+
+B built the demo data, not a database:
+- data/catalog.json — eight safe headphone listings plus one villain
+- data/allowlist.json — known retailers such as Target and Best Buy
+- villain fixtures — a 12-day-old domain, a scammy product page, and
+  three Reddit scam reports
+
+You built the frontend shell: Vite, React, TypeScript, Tailwind, and the
+shadcn-style components. frontend/src/data/mock-session.json let the
+screens render before the API existed.
+
+Say this: "We froze the API shapes first, so the screen and the server
+could be built at the same time without drifting apart."
+
+
+BLOCK 1 — 1:15 to 3:30 — ask, search, and show cards
+----------------------------------------------------
+
+What a judge sees: a query, three questions, then product cards.
+
+A — sessions
+- backend/app/sessions/store.py keeps a session in memory.
+- backend/app/api/routes_sessions.py
+  POST /api/sessions creates the session and returns the questions.
+  POST /api/sessions/{id}/answers starts the investigation.
+  GET  /api/sessions/{id} is the snapshot if the live stream dies.
+
+B — search
+- backend/app/search/service.py tries a real search, and if that fails or
+  returns nothing, it loads the headphone catalog. The demo never shows
+  a blank page because a third party is down.
+
+You — the screens
+- frontend/src/features/discovery/DiscoveryFlow.tsx
+  The search box, then one question at a time, then "See results."
+- frontend/src/features/results/ProductCard.tsx and ResultsGrid.tsx
+  One card per listing: title, merchant, price in dollars, trust badge.
+- frontend/src/lib/api.ts is the only place the browser calls the API.
+- frontend/src/lib/format.ts turns cents into dollars. Nothing else does.
+
+Say this: "The browser sends the product and the answers. It never
+searches Google itself, and it never decides who is safe."
+
+
+BLOCK 2 — 3:30 to 6:00 — five checks, streamed onto the card
+------------------------------------------------------------
+
+What a judge sees: each card fills in five rows, then a color.
+
+The five checks, all in backend/app/checks/:
+1. Domain age — how old is the website? A 12-day-old domain is a bad sign.
+2. SSL certificate — is the lock real?
+3. Safe Browsing — is the site on a threat list? The villain is also on
+   our local denylist, so the demo works with no Google key.
+4. Reddit sentiment — scam-word hits in public posts. We keep keywords,
+   not usernames, and we do not send Reddit text to the model.
+5. Page flags — urgency timers, missing returns, crypto-only checkout.
+   The raw HTML stays on the server. The model only sees a short summary
+   if someone clicks Explain.
+
+B's runner (backend/app/checks/runner.py) runs those checks in parallel
+with a timeout. A check that does not finish is "skipped." Skipped is
+not a pass. The card shows a gray "Skipped," never a green tick.
+
+A's orchestrator (backend/app/sessions/orchestrator.py) runs the checks
+for every listing, then asks B's scorer for a number. It publishes events
+in order: search started, listing found, check started, check completed,
+listing scored, recommendation ready, investigation complete.
+
+You — the stream
+- frontend/src/lib/sse.ts opens one EventSource per session.
+- frontend/src/features/results/useSessionStream.ts ignores any event
+  whose sequence number it has already applied, so a reconnect cannot
+  double-count a check.
+- frontend/src/features/results/CheckRow.tsx draws one row. While the
+  check has not arrived, the row is a skeleton, not an empty gap.
+- If the connection fails, the hook loads the snapshot and keeps going.
+
+The score, backend/app/trust/scoring.py, starts at 100.
+- A failed check subtracts severity times 40.
+- A warning subtracts severity times 15.
+- 70 or above is trusted. 40 to 69 is caution. Under 40 is danger.
+- Fewer than 3 completed checks caps the score at 69, so a thin
+  investigation cannot look "trusted."
+- A failed Safe Browsing check, or a failed page plus a failed young
+  domain, forces the score to 0.
+- An allowlisted merchant (Target, Best Buy, and the other names in
+  data/allowlist.json) is trusted on purpose. The stored score is 0
+  because the checks are skipped. The screen says "Verified," not "0."
+
+Say this: "Same checks, same score, every time. The model is not in
+that function. We can show the golden tests."
+
+The villain, premium-audio-deals.shop, lands on danger: local denylist,
+a 12-day-old domain, Reddit scam reports, and page flags. It can be the
+cheapest row and it is still not the pick.
+
+
+BLOCK 3 — 6:00 on the trust side — the best pick
+-------------------------------------------------
+
+What a judge sees: one banner, "Best pick," with a dollar savings line.
+
+backend/app/trust/recommendation.py chooses the cheapest listing that is
+allowed to be paid:
+- verdict is trusted, and
+- the merchant is allowlisted, or the score is at least 70, and
+- confidence is at least 0.6
+
+Savings is the median price of the eligible listings minus the pick.
+On the headphone catalog that is Target at $179.99, median $374.49,
+savings $194.50. Those numbers are frozen. scripts/replay_offline.py
+recomputes them with no network and exits with an error if they drift.
+
+If nothing qualifies, the server sends no_trusted_option. You render
+frontend/src/components/EmptyState.tsx with the reason and a Start over
+button. That is an empty result, not a crash.
+
+frontend/src/features/results/BestPick.tsx is the banner.
+The same listing is also lifted to the top of the grid.
+
+frontend/src/features/results/PurgeOverlay.tsx is the red full-screen
+wipe. It removes danger cards only after the person clicks Purge, so a
+judge can still read why the villain failed. If the operating system
+asks for reduced motion, the wipe finishes immediately.
+
+Say this: "We do not recommend the cheapest listing. We recommend the
+cheapest listing we would actually pay."
+
+
+BLOCK 4 — checkout, passkey, receipt
+-------------------------------------
+
+What a judge sees: Pay, a spending cap, a simulated fingerprint, a receipt.
+
+The button on your screen is not the security boundary. The server
+re-checks in backend/app/payments/payability.py before it will mint a
+token. Checkout is refused unless:
+- the verdict is trusted, and
+- if the merchant is not allowlisted: score at least 70, confidence at
+  least 0.6, and at least 3 checks completed, and
+- the amount is inside the cap, the merchant matches the mandate, and
+  the investigation is less than 30 minutes old.
+
+A refusal is HTTP 409 with a code such as MERCHANT_NOT_TRUSTED.
+The sheet prints that code and a human sentence. A declined passkey is
+HTTP 402. Confirming the same checkout twice returns the same receipt.
+
+The browser sends only ids and a cap. It does not send a card number.
+backend/app/payments/ stores a hash of the token and the last four
+digits, which are the synthetic 4242. The raw token is not kept.
+
+Your screens, in order:
+- frontend/src/features/checkout/CheckoutSheet.tsx
+  Pay stays disabled unless the listing is payable AND there is a real
+  session id. There is no fake session fallback.
+- MandateCard.tsx — merchant, cap, expiry. The person agrees to a ceiling,
+  not to an open-ended charge.
+- PasskeyDialog.tsx — simulated biometric. Confirm sends a passing
+  assertion. A second control sends client_data "fail" and stays on the
+  sheet with the decline.
+- ProcessingState.tsx — tokenizing, authorizing, capturing. Those steps
+  are the sandbox story, not a live card network.
+- frontend/src/features/receipt/ReceiptPage.tsx
+  Score ring, merchant, amount, last4, which checks passed, and the
+  sandbox sentence. An allowlisted merchant's ring says "Verified."
+- App.tsx reads the path. /r/something renders the receipt. There is no
+  React Router. An unknown share id says "Receipt not found."
+
+Say this: "The button can be wrong. The server still refuses. We tested
+the villain, a stale investigation, and a cap that is too small."
+
+
+BLOCK 5 — 7:30 to 9:00 — the screens met the real server
+--------------------------------------------------------
+
+What a judge sees: the same flow, but the session id, the checks, and
+the receipt all come from the API. Mock data is no longer the default.
+
+This block was the risky one, and three real bugs showed up:
+
+1. The search form was submitting a hardcoded session id, ses_mock, so
+   the second request 404'd. DiscoveryFlow now keeps the id the server
+   returned.
+
+2. Allowlisted Target scored 0 and the badge said "0 · Trusted," which
+   looks like a failure. listing.scored now carries allowlisted, and
+   TrustBadge.tsx says "Verified · Trusted." The receipt ring matches.
+   The stored score is still 0. We did not fake a 100.
+
+3. Pay required a score of at least 70, so the legitimate Target pick
+   could not be paid. The sheet now treats an allowlisted trusted
+   merchant as payable. The server already did. The screen had to agree.
+
+Mock is still there on purpose. Add ?mock=1 to the URL, or set
+VITE_USE_MOCK=1, and the whole story plays from mock-session.json with
+no API. That is the airplane-mode demo.
+
+Say this: "Live is the default. The mock is a switch, not the product."
+
+
+BLOCK 6 — 9:00 to 10:30 — readable on a laptop
+----------------------------------------------
+
+What a judge sees: nothing new in the story. The type is readable and
+the keyboard focus is obvious.
+
+- Gray text that failed contrast (stone-400, about 2.5:1) moved to
+  stone-600. Trust colors were already about 8:1.
+- Buttons, links, and inputs use a solid green focus outline in
+  frontend/src/index.css, so a keyboard user can see where they are.
+- At 1024px wide the header and titles wrap. Cards shrink instead of
+  forcing a sideways scrollbar.
+- Reduced motion still skips the purge fade.
+
+The four demo screens (grid, one trust card, checkout, receipt) were
+reviewed in the browser. The image files were not saved into the repo,
+so the Devpost gallery still needs those pictures.
+
+
+BLOCK 7 — 10:30 to 2:00 — phone, errors, and the backup demo
+------------------------------------------------------------
+
+What a judge sees: the same app on a phone, and a clear sentence when
+something fails.
+
+Measured at 390px wide: search, results, checkout, and receipt do not
+scroll sideways. The grid is one column. The sandbox sentence wraps.
+Long titles use break-words on the best-pick heading and the receipt
+title so they stay inside the card.
+
+Loading and failure, on purpose:
+- "Looking at retailers…" and "Checking listings…" while data is in flight.
+- Skeleton rows for checks that have not arrived.
+- If Find products cannot reach the API, a role=alert stays on the
+  search screen. The form does not pretend it succeeded.
+- A session error uses ErrorBanner.tsx. Dismiss clears it.
+- An unknown receipt link says "Receipt not found."
+- A failed passkey stays on the sheet.
+
+?mock=1 still walks discovery, animated checks, best pick, purge, and
+checkout without the API. The sandbox sentence is on the header, the
+sheet, and the receipt in that mode too.
+
+Say this: "If the network dies on stage, I add ?mock=1 and the story
+still finishes. The audience can still see the villain refused."
+
+
+WHAT YOUR PARTNERS ADDED AFTER THOSE BLOCKS
+--------------------------------------------
+
+You pulled this in and it is on the branch you pushed.
+
+Gemini, backend/app/services/llm.py
+- Writes the 2 or 3 questions from the product the person typed.
+- Writes a one-sentence narration of the pick.
+- Writes an explanation when someone clicks Explain on a check row.
+- Every call has a 2.5 second limit. If it is slow, offline, or returns
+  bad JSON, the headphone templates are used and the demo continues.
+- backend/tests/unit/test_no_llm_path.py fails the build if the scoring,
+  the checks, or the payment code import that file.
+
+Live search, backend/app/search/serpapi.py
+- Google Shopping often links to google.com, which is not a merchant.
+- Known retailers (Target, Walmart, and the others in that map) are
+  turned into a real domain from the seller name.
+- If none of those match, the code follows the store list on the product
+  and keeps the first real merchant site and price. That is why
+  "running shoes" can show nike.com or a running shop instead of Sony
+  headphones.
+- If the search is slow or empty, the headphone catalog is still the
+  fallback.
+- Offline replay ignores the search key and always uses the catalog, so
+  the frozen $179.99 / $194.50 demo cannot be changed by a live query.
+
+Checkout honesty
+- The sheet will not offer Pay unless it has the session id the server
+  created.
+- A budget that matches nothing does not blank the page. Say "closest
+  match," not "hard cap." A listing can sit above the number the person
+  picked. The payment cap is still the price on the mandate.
+
+Persistence
+- With no MONGODB_URI, everything stays in memory. That is the default.
+- Mongo, if configured, stores mandates, checkouts, transactions,
+  receipts, and audit events. Sessions and investigations stay in the
+  process. The mock token never leaves the process.
+- You do not need Mongo to demo.
+
+
+IF THEY ASK
+-----------
+
+"Does it take a real card?"
+No. Sandbox only. Last four are 4242. The receipt says so.
+
+"Can I make it pay the villain?"
+No. The button is disabled, and the server returns MERCHANT_NOT_TRUSTED
+even if the button were forced.
+
+"Is the score an AI score?"
+No. Points are severity times 40 or 15, with the caps above. Gemini only
+writes sentences.
+
+"Why does Target say Verified with no checks?"
+It is on the allowlist of established retailers. We skip the five checks
+and we do not pretend the score is 100. The label is Verified.
+
+"What if Google is down?"
+The search service catches that and serves the curated catalog. The
+offline script proves the catalog path with no network.
+
+"Why one server worker?"
+The event stream is in memory. More than one worker would split the
+stream. There is no global gzip, because compression would buffer the
+live events.
+
+"What is still not the public site?"
+Fly may still be serving an older build until it is redeployed. Judge
+the laptop demo, or the public URL only after that deploy. Screenshot
+files for the Devpost gallery are not in the repo yet.
+
+
+FILES TO POINT AT IF THEY LEAN IN
+----------------------------------
+
+Screen flow          frontend/src/App.tsx
+Search box           frontend/src/features/discovery/DiscoveryFlow.tsx
+Live updates         frontend/src/lib/sse.ts
+                     frontend/src/features/results/useSessionStream.ts
+Cards and checks     frontend/src/features/results/ProductCard.tsx
+                     frontend/src/features/results/CheckRow.tsx
+Best pick            frontend/src/features/results/BestPick.tsx
+Pay                  frontend/src/features/checkout/CheckoutSheet.tsx
+Receipt              frontend/src/features/receipt/ReceiptPage.tsx
+API client           frontend/src/lib/api.ts
+
+Questions            backend/app/sessions/questions.py
+                     backend/app/services/llm.py
+Investigation        backend/app/sessions/orchestrator.py
+Five checks          backend/app/checks/
+Score                backend/app/trust/scoring.py
+Pick                 backend/app/trust/recommendation.py
+May we pay?          backend/app/payments/payability.py
+Search               backend/app/search/service.py
+                     backend/app/search/serpapi.py
+Frozen demo numbers  backend/scripts/replay_offline.py
