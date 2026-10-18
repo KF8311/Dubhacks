@@ -13,12 +13,12 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 19:00 PT (after the Block 4 B merge)
+## Where we are now — 19:30 PT (after the Block 4 A + B merge)
 
 | Thing | State |
 |---|---|
 | `main` | **Everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, and the frozen refusal paths. **152 backend / 9 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
-| Follow-on branch | **None. `main` is the source of truth** — branch from it for Block 4 (`a/checkout`, `c/checkout-ui`). `scratch/integration` is stale; do not reuse it. |
+| Follow-on branch | **None. `main` is the source of truth** — branch from it for the checkout UI (`c/checkout-ui`). `scratch/integration` is stale; do not reuse it. |
 | Live API | Sessions create/answers/snapshot/events; **`POST /api/checkout`**, **`POST /api/checkout/{checkout_id}/confirm`**, `GET /api/receipts/{id}`, `GET /api/public/receipts/{share_id}`, `POST /api/demo/reset`. |
 | Frontend | Live by default. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI from `data/mock-session.json`. |
 | Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 server-side is in place and proven over HTTP**; only C's checkout/receipt screens remain. |
