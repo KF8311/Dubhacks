@@ -141,8 +141,8 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Mongo repository behind the existing protocol **only if** everything above is green. Otherwise skip — the in-memory adapter is the cut-order survivor. |
-| **B** | ✅ **Done** — `scripts/replay_offline.py` runs a full session in-process with no server and no network: 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`. Exits 1 if those numbers drift. Domain age and SSL now honour `OFFLINE=1` (fixtures still load, nothing opens a socket). |
+| **A** | Review B's `Repository` protocol before it merges; confirm no Mongo type leaks into `app/`. |
+| **B** | **Task 27 (D-016)** — `MongoRepository` behind the existing protocol, TTL indexes, caches, redaction, **only if** everything above is green. Otherwise skip: the in-memory adapter is the cut-order survivor. ✅ Replay half already done — `scripts/replay_offline.py` runs a full session in-process with no server and no network: 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`. Exits 1 if those numbers drift. Domain age and SSL now honour `OFFLINE=1` (fixtures still load, nothing opens a socket). |
 | **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path. |
 
 **Proof:** offline replay produces the same numbers as live; plane-mode demo works.
@@ -210,7 +210,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Contracts not frozen | A | `Question` shape is a guess; cheap to confirm, expensive to discover at 21:00 |
 | SerpAPI key | A | Catalog only (D-011). Not blocking. |
 | Safe Browsing key | B | Static denylist with `source="unavailable"`. Not blocking. |
-| Mongo unassigned | A | In-memory adapter until Block 5. Not blocking. |
+| Mongo deferred to Block 6 (D-016) | B | In-memory adapter is the default. Not blocking; the Atlas cluster question is still open. |
 
 ## 8. Cut order
 

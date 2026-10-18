@@ -17,7 +17,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 | **Claude / an agent** | `CLAUDE.md` → this page → `docs/status.md` → the plan |
 | **On Cursor** | `AGENTS.md` → `.cursor/rules/project.mdc` → `docs/status.md` |
 | **Reviewing a decision** | `docs/decisions.md` |
-| **Writing the Devpost or video** | `project-a-sniff-visa.md` §10–§11 → `docs/status.md` |
+| **Writing the Devpost or video** | `docs/devpost.md` → `project-a-sniff-visa.md` §10–§11 → `docs/status.md` |
 | **Debugging the demo** | Plan §9 (fallbacks), §16 (risk register), `docs/status.md` |
 
 ## The document set
@@ -33,6 +33,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 | `docs/checklist.md` | **Shared team checklist** — universal rules plus one block per person, with completed items ticked | **Work from this** |
 | `docs/status.md` | The only file that claims to be current: gate, owners, blockers | **Update every 90 min** |
 | `docs/decisions.md` | Append-only decision log with rationale and alternatives | Append-only |
+| `docs/devpost.md` | Devpost draft: title, copy, tech claims, sandbox disclosure, fill-in list | Draft |
 | `docs/open-questions.md` | Unresolved questions for mentors, judges, or the team | Living |
 | `docs/SKILLS.md` | Committed skills and agents, when each fires, who should use it | Current |
 | `.claude/` | The vendored skills and agents themselves | Vendored |
