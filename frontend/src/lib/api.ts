@@ -129,6 +129,22 @@ export async function submitAnswers(
   })
 }
 
+export async function explainCheck(input: {
+  sessionId: string
+  listingId: string
+  checkId: string
+}): Promise<string> {
+  if (isMockMode()) {
+    await delay(200)
+    return "Sandbox explanation — Gemini is skipped in mock mode."
+  }
+  const body = await request<{ explanation: string }>(`/api/sessions/${input.sessionId}/explain`, {
+    method: "POST",
+    body: JSON.stringify({ listing_id: input.listingId, check_id: input.checkId }),
+  })
+  return body.explanation
+}
+
 export async function getSnapshot(sessionId: string): Promise<SessionSnapshot> {
   if (isMockMode()) {
     await delay(300)

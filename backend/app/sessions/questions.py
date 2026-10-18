@@ -40,9 +40,10 @@ QUESTIONS: list[dict] = [
 
 
 async def generate_questions(query: str) -> list[dict]:
-    """Templates only for now. LLM path is Task 5 optional and must not block create."""
-    del query
-    return list(QUESTIONS)
+    """Gemini when a key is present; templates on timeout, offline, or bad JSON."""
+    from app.services.llm import generate_questions as llm_questions
+
+    return await llm_questions(query, fallback=QUESTIONS)
 
 
 def build_search_spec(query: str, answers: list[Answer]) -> SearchSpec:

@@ -77,6 +77,29 @@ async def submit_answers(session_id: str, body: AnswersIn) -> dict:
     }
 
 
+class ExplainIn(BaseModel):
+    listing_id: str
+    check_id: str
+
+
+@router.post("/api/sessions/{session_id}/explain")
+async def explain_check_route(session_id: str, body: ExplainIn) -> dict:
+    _require_session(session_id)
+    investigation = registry.investigation_for(session_id, body.listing_id)
+    if investigation is None:
+        raise AppError("INVESTIGATION_STALE", "No investigation for that listing.", status_code=404)
+    check = next((item for item in investigation.checks if item.id.value == body.check_id), None)
+    if check is None:
+        raise AppError("CHECK_NOT_FOUND", "Check not found on that listing.", status_code=404)
+    from app.services.llm import explain_check
+
+    return {
+        "listing_id": body.listing_id,
+        "check_id": body.check_id,
+        "explanation": await explain_check(check),
+    }
+
+
 @router.get("/api/sessions/{session_id}")
 def get_session(session_id: str) -> dict:
     _require_session(session_id)

@@ -111,6 +111,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
           eligible_ids: (fields.eligible_ids as string[]) ?? [],
           reason: String(fields.reason ?? (recommended ? "cheapest trusted" : "no trusted option")),
           no_trusted_option: fields.no_trusted_option === true || recommended === null,
+          narrative: typeof fields.narrative === "string" ? fields.narrative : null,
         }
         if (next.recommendation.no_trusted_option) next.stage = "no_trusted_option"
       }

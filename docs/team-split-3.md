@@ -106,8 +106,8 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 7:30–9:00 PM — persistence
 
-- [ ] Task 27: `InMemoryRepository` + `MongoRepository`, TTL indexes, `transition_checkout` via `find_one_and_update`.
-- [ ] Verify the app still runs with `MONGODB_URI` unset.
+- [x] Task 27: `InMemoryRepository` + `MongoRepository`, TTL indexes, `transition_checkout` via `find_one_and_update`.
+- [x] Verify the app still runs with `MONGODB_URI` unset.
 
 ### 9:00–10:30 PM — integration and Devpost draft
 

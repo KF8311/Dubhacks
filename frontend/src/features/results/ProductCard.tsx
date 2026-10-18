@@ -64,7 +64,7 @@ export function ProductCard({ listing, checks, score, isBest }: Props) {
           if (!found) {
             return <Skeleton key={meta.id} className="my-2 h-10 w-full" />
           }
-          return <CheckRow key={meta.id} check={found} />
+          return <CheckRow key={meta.id} check={found} listingId={listing.id} />
         })}
       </CardContent>
     </Card>

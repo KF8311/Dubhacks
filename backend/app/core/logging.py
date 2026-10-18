@@ -9,8 +9,8 @@ CARD_RE = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
 
 
 def redact(text: str) -> str:
-    text = EMAIL_RE.sub("[redacted-email]", text)
-    text = PHONE_RE.sub("[redacted-phone]", text)
+    text = EMAIL_RE.sub("[redacted]", text)
+    text = PHONE_RE.sub("[redacted]", text)
     return CARD_RE.sub("[redacted-card]", text)
 
 

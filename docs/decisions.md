@@ -140,3 +140,19 @@ Format:
 - **Why:** The allowlist rule scores a merchant 0 while declaring it `trusted`, because the score measures suspicion, not safety. Downstream logic that reads only the number sees "0" and treats a curated merchant as unpayable. With 8 of the catalog's listings allowlisted, the old eligibility rule would have excluded every safe option and made the demo end in `no_trusted_option`. The flag makes the exemption explicit instead of inferring it from a score that cannot express it.
 - **Alternatives considered:** Score allowlisted merchants 100 instead of 0 (loses the "no evidence needed" signal and diverges from the spec's scoring table); let `recommend()` re-read the allowlist file (duplicates a rule that belongs to scoring, and the caller may use a different allowlist); treat `verdict == trusted` alone as sufficient (also admits trusted listings under the 70 floor when coverage is thin).
 - **Consequences:** A listing can be eligible at score 0, so any UI that sorts or badges by score must consult `allowlisted` too. `ScoreResult` is a contract type — A should acknowledge the added field. Golden tests are unchanged; the scoring math is untouched.
+
+## D-016 — Gemini explains and asks; it never decides
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Wire Gemini 2.5 Flash into clarifying questions, optional recommendation narration, and on-demand check explanations. Templates remain the fallback. Scoring, checks, payability, and checkout stay Python-only.
+- **Why:** The plan already scoped the LLM to those three surfaces. Session create must not fail if the key is missing, the call exceeds 2.5s, or the JSON is invalid.
+- **Alternatives considered:** Per-check explanations on the SSE stream (rejected: 8×5 calls would blow quota and the demo); LLM scoring (rejected: D-005).
+- **Consequences:** `recommendation.ready` may include `narrative`. `POST /api/sessions/{id}/explain` is additive. `test_no_llm_path.py` allows `llm.py` to read `gemini_api_key`; trust and payment modules still cannot.
+
+## D-017 — Gemini model is `gemini-3.8-flash` for new API keys
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Default `GEMINI_MODEL` is `gemini-3.8-flash`. New Gemini API keys receive 404 on `gemini-2.5-flash`.
+- **Why:** Google's generateContent API returns NOT_FOUND for `models/gemini-2.5-flash` for new users and points at `models/gemini-3.8-flash`.
+- **Alternatives considered:** Keep 2.5 (broken for this key); Interactions API (rejected: extra client surface mid-demo).
+- **Consequences:** `.env.example` and Settings default follow 3.8. Override with `GEMINI_MODEL` if a key still has 2.5 access.

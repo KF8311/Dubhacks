@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.core.errors import AppError
-from app.payments.memory import store
+from app.services.repository import get_repository
 
 router = APIRouter()
 SANDBOX = "Sandbox — simulated Visa Intelligent Commerce flow."
@@ -14,16 +14,16 @@ def _dump(receipt) -> dict:
 
 
 @router.get("/api/receipts/{receipt_id}")
-def get_receipt(receipt_id: str) -> dict:
-    receipt = store.receipts.get(receipt_id)
+async def get_receipt(receipt_id: str) -> dict:
+    receipt = await get_repository().get_receipt(receipt_id)
     if receipt is None:
         raise AppError("RECEIPT_NOT_FOUND", "Receipt not found.", status_code=404)
     return _dump(receipt)
 
 
 @router.get("/api/public/receipts/{share_id}")
-def get_public_receipt(share_id: str) -> dict:
-    receipt_id = store.by_share.get(share_id)
-    if receipt_id is None:
+async def get_public_receipt(share_id: str) -> dict:
+    receipt = await get_repository().get_receipt_by_share_id(share_id)
+    if receipt is None:
         raise AppError("RECEIPT_NOT_FOUND", "Receipt not found.", status_code=404)
-    return _dump(store.receipts[receipt_id])
+    return _dump(receipt)

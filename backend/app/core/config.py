@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     mongodb_uri: str | None = None
     mongodb_db: str = "sniff"
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
     serpapi_key: str | None = None
     google_safe_browsing_key: str | None = None
     receipt_signing_secret: str = "dev-only-change-me"

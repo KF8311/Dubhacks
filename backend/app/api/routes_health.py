@@ -6,6 +6,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.payments.memory import store as payment_store
 from app.payments.mock_vic import reset as reset_vic
+from app.services.repository import get_db_status, reset_repository
 from app.sessions.events import bus
 from app.sessions.store import registry
 
@@ -26,7 +27,7 @@ def root() -> dict:
 @router.get("/api/health")
 def health() -> dict:
     settings = get_settings()
-    db = "ok" if settings.mongodb_uri else "unavailable"
+    db = get_db_status()
     status = "ok" if db == "ok" else "degraded"
     return {
         "status": status,
@@ -38,7 +39,7 @@ def health() -> dict:
 
 
 @router.post("/api/demo/reset")
-def demo_reset() -> dict:
+async def demo_reset() -> dict:
     settings = get_settings()
     if not settings.demo_mode:
         raise AppError(
@@ -50,4 +51,5 @@ def demo_reset() -> dict:
     bus.reset()
     payment_store.clear()
     reset_vic()
+    await reset_repository()
     return {"ok": True, "cleared": ["sessions", "investigations", "checkouts", "receipts"]}

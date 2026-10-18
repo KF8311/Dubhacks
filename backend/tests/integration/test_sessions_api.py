@@ -24,6 +24,16 @@ def test_answers_advance_stage():
     assert r.json()["events_url"].endswith("/events")
 
 
+def test_explain_without_an_investigation_is_404():
+    client = TestClient(create_app())
+    s = client.post("/api/sessions", json={"query": "headphones", "client_id": "c1"}).json()
+    r = client.post(
+        f"/api/sessions/{s['session_id']}/explain",
+        json={"listing_id": "lst_missing", "check_id": "ssl_cert"},
+    )
+    assert r.status_code == 404
+
+
 def test_snapshot_includes_last_seq():
     client = TestClient(create_app())
     s = client.post("/api/sessions", json={"query": "headphones", "client_id": "c1"}).json()
