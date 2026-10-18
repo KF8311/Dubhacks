@@ -9,7 +9,18 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **234 passed**, frontend **49 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **234 passed**, frontend **54 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+
+**Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
+
+| Gate | Result |
+|---|---|
+| `.venv\Scripts\python.exe -m pytest -q` | 234 passed, 19.6s |
+| `npx vitest run` | 54 passed (15 files) — the docs said 49, they were stale |
+| `npm run build` | clean after `npm install`; the first run failed on a missing `@fontsource-variable/bricolage-grotesque` because this checkout's `node_modules` predated the restyle |
+| `scripts/replay_offline.py` | exit 0, 9 listings / 8 trusted / 1 danger / median $374.49 / savings $194.50 |
+
+**Finding to carry forward:** a machine that has not run `npm install` since [`index.css:4`](../frontend/src/index.css#L4) gained the Bricolage import builds the app fine in dev but fails `npm run build`. Anyone picking this up on a fresh clone needs `cd frontend; npm install` first. Add it to [`RUN.md`](RUN.md).
 
 **Run it:** `.\scripts\dev.cmd` → open **http://localhost:5173/**. Offline: `.\scripts\dev.cmd offline`. Details: [`RUN.md`](RUN.md).
 
@@ -58,7 +69,16 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 **Why:** the model writes the explanations, but a judge cannot tell where it wrote one and where the template did. The chip makes the Gemini integration visible in the demo instead of a line on Devpost.
 
-**Files:** `backend/app/services/llm.py`, `backend/app/api/routes_sessions.py`, `backend/tests/unit/test_llm.py`, `frontend/src/lib/api.ts`, `frontend/src/features/results/CheckRow.tsx`, `frontend/src/features/results/CheckRow.test.tsx`, `docs/contracts.md`
+**Files:**
+[`llm.py:220`](../backend/app/services/llm.py#L220) ·
+[`routes_sessions.py:87`](../backend/app/api/routes_sessions.py#L87) ·
+[`test_llm.py`](../backend/tests/unit/test_llm.py) ·
+[`api.ts:133`](../frontend/src/lib/api.ts#L133) ·
+[`CheckRow.tsx:30`](../frontend/src/features/results/CheckRow.tsx#L30) ·
+[`CheckRow.test.tsx`](../frontend/src/features/results/CheckRow.test.tsx) ·
+[`contracts.md`](contracts.md)
+
+**Read first:** the explain route currently hides which path answered — [`routes_sessions.py:95-101`](../backend/app/api/routes_sessions.py#L95-L101) imports `explain_check` and returns only `explanation`.
 
 - [ ] Write two failing tests: no model → `("…summary…", "template")`; fake completion → `("The certificate is valid for the domain.", "gemini")`
 - [ ] Run `cd backend; .\.venv\Scripts\python.exe -m pytest tests/unit/test_llm.py -q` and confirm they fail on the missing name
@@ -73,7 +93,9 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 #### T2 — Photon text loop (sponsored slot 3, conditional)
 
-**What the number is:** the dashboard binds your phone as a *Spectrum user* — the line only replies to numbers that have texted it first. You need a number you can receive messages on; a teammate's phone is best, a Photon-assigned (shared) number if the dashboard offers one, TextNow/Twilio as fallbacks. **No personal number required, and no slot if none works.**
+**What the number is:** the dashboard binds your phone as a *Spectrum user* — the line only replies to numbers that have texted it first. **Using your own phone is fine and is the simplest path**; the only cost is that the agent can message that number while the line exists. Alternatives if that changes: a teammate's phone, a Photon-assigned (shared) number if the dashboard offers one, TextNow or a Twilio trial number.
+
+**Read first:** [Spectrum quickstart](https://photon.codes/docs/spectrum-ts/introduction) · [iMessage provider](https://photon.codes/docs/spectrum-ts/providers/imessage) · [create-user / shared numbers](https://photon.codes/docs/api-reference/users/create-user) · dashboard at [photon.co/beta](https://photon.co/beta)
 
 - [ ] Avatar menu → attach a number; confirm the project leaves `account_phone_missing`
 - [ ] `bun create spectrum-project@latest dub --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --providers imessage --yes`
@@ -86,8 +108,8 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 #### T3 — DEV Writing Challenge
 
-- [ ] Draft `docs/devpost-article.md`, 1,200–1,800 words: the problem (agents can pay anyone) → the decision (deterministic scoring, the LLM has no vote) → the honest failure (D-025) → the two bugs only a real database found (naive datetimes, empty idempotency key) → what we would build next
-- [ ] Every number traced to `docs/status.md`; no invented feature
+- [ ] Draft [`devpost-article.md`](devpost-article.md) (new), 1,200–1,800 words: the problem (agents can pay anyone) → the decision (deterministic scoring, the LLM has no vote) → the honest failure ([D-025](decisions.md#L216)) → the two bugs only a real database found ([D-026](decisions.md#L224): naive datetimes, empty idempotency key) → what we would build next
+- [ ] Every number traced to [`status.md`](status.md); no invented feature
 - [ ] Publish on DEV, tags `hackathon` `ai` `python` `mongodb`
 - [ ] Add the URL to `docs/devpost-form.md` and the Devpost links field
 
@@ -95,7 +117,16 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 #### T4 — Make the payment path survive a restart (Atlas)
 
-**Files:** `backend/app/services/repository.py`, `backend/app/sessions/orchestrator.py`, `backend/app/api/routes_checkout.py`, `backend/tests/integration/{test_repositories,test_orchestrator,test_checkout_api}.py`
+**Files:**
+[`repository.py:73`](../backend/app/services/repository.py#L73) (protocol, then both adapters at [:135](../backend/app/services/repository.py#L135) and [:229](../backend/app/services/repository.py#L229)) ·
+[`orchestrator.py:147`](../backend/app/sessions/orchestrator.py#L147) (`replace_listings`) ·
+[`orchestrator.py:303`](../backend/app/sessions/orchestrator.py#L303) (`attach_investigation`) ·
+[`routes_checkout.py:53`](../backend/app/api/routes_checkout.py#L53) (`_get_listing`, `_get_investigation`; call sites at [:131](../backend/app/api/routes_checkout.py#L131), [:134](../backend/app/api/routes_checkout.py#L134), [:232](../backend/app/api/routes_checkout.py#L232), [:233](../backend/app/api/routes_checkout.py#L233)) ·
+[`test_repositories.py`](../backend/tests/integration/test_repositories.py) ·
+[`test_orchestrator.py`](../backend/tests/integration/test_orchestrator.py) ·
+[`test_checkout_api.py`](../backend/tests/integration/test_checkout_api.py)
+
+**Read first:** [`status.md:21`](status.md#L21) — sessions, listings and investigations are still registry-only. That sentence is what this task deletes.
 
 - [ ] Failing test: `MongoRepository` round-trips a listing through `get_listing`
 - [ ] Add `get_listing` to the protocol and both adapters
@@ -110,9 +141,9 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 #### T5 — Slate, startup paragraph, project number
 
-- [ ] Append D-027: title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
+- [ ] Append D-027 to [`decisions.md`](decisions.md#L224) (after D-026): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
 - [ ] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT)
-- [ ] Read the Gemini **project number** from the AI Studio project selector (public id, not the key) and paste it into the Devpost field
+- [ ] Read the Gemini **project number** from the [AI Studio project selector](https://aistudio.google.com/apikey) (public id, not the key) and paste it into the Devpost field at [`devpost-form.md:132`](devpost-form.md#L132)
 - [ ] Tick the sponsored and non-sponsored checkboxes in [`devpost-form.md`](devpost-form.md); VEYZL stays unticked
 
 **Done when:** the slate is recorded, the form's category boxes match it, and no claim in the form lacks evidence in the repo.
