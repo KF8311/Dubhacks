@@ -19,19 +19,103 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 
 ## Tracks — one title, three sponsored, unlimited non-sponsored
 
-Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](superpowers/plans/2026-10-18-track-submissions.md).
+Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](superpowers/plans/2026-10-18-track-submissions.md). This section is the working copy — tick a box only when its check actually passes.
+
+### The slate
 
 | Slot | Track | State |
 |---|---|---|
 | **Title** | Visa: Reimagine Shopping | Locked. The build is the pitch. |
-| Sponsored 1 | **SideShift — Best Startup Idea** | Enter. No build requirement, any stack, $1,500 first. Write the "who pays and how it spreads" paragraph. |
-| Sponsored 2 | **Cloudforce** | Enter. Every entry is a raffle ticket; Most Interesting is a judges' pick. The public receipt share link is the viral hook. |
-| Sponsored 3 | **Photon 2.0** — project `1afb123e` exists; blocked on `account_phone_missing` | Attach a phone in the dashboard's avatar menu, then text the line. Only claim it once a real message round-trips through our backend. **VEYZL** stays unselected. |
-| Non-sponsored | **MLH: Best Use of Gemini API** | Task 1 (provenance chip) + the project number — a public ~12-digit project id, not the key. |
-| Non-sponsored | **MLH: Best Use of MongoDB Atlas** | Proven (D-026). Task 2 makes it load-bearing. |
-| Non-sponsored | **MLH: DEV Writing Challenge** | Task 3 — publish, then link it on Devpost. |
+| Sponsored 1 | **SideShift — Best Startup Idea** | Enter. No build requirement, any stack, $1,500 first. |
+| Sponsored 2 | **Cloudforce** | Enter. Every entry is a raffle ticket; Most Interesting is a judges' pick. |
+| Sponsored 3 | **Photon 2.0** — project `1afb123e` exists, blocked on `account_phone_missing` | Conditional. Claim only after a real text round-trips through our backend. **VEYZL** stays unselected. |
+| Non-sponsored | **MLH: Best Use of Gemini API** | T1 + the public project number. |
+| Non-sponsored | **MLH: Best Use of MongoDB Atlas** | Proven (D-026); T4 makes it load-bearing. |
+| Non-sponsored | **MLH: DEV Writing Challenge** | T3 — publish, then link it. |
 | Non-sponsored | **DubHacks NEXT**, **MLH Commit Fellowship** | Free entries; the startup paragraph doubles as the NEXT pitch. |
-| Not selected | T-Mobile, SpaceXAI, Perceptron | T-Mobile's track is wireless commerce and this build is headphones; SpaceXAI needs Cursor + Grok; Perceptron's arm workshop closed. |
+| Not selected | T-Mobile, SpaceXAI, Perceptron | Wireless-commerce mismatch; Cursor + Grok required; workshop closed. |
+
+### Execution order
+
+| # | Task | Time box | Status | Cut rule |
+|---|---|---|---|---|
+| **T0** | **Video + three screenshots** | must exist by 08:30 PT | not started | **never cut** — the only artifact that blocks submission outright |
+| T1 | Gemini provenance chip | 60 min | not started | none — smallest visible win |
+| T2 | Photon text loop | 75 min | blocked on a number | no reply within 10 min of setup → leave slot 3 empty |
+| T3 | DEV article | 60 min | not started | trim to 1,200 words; never describe a feature we do not have |
+| T4 | Atlas payment-path durability | 90 min | not started | abandon at 90 min — the Atlas claim already stands on D-026 |
+| T5 | Slate, SideShift paragraph, project number | 30 min | partly done | none |
+
+#### T0 — Artifacts (blocks the submission)
+
+- [ ] Walk the demo path in a browser (C section below) and capture the three screenshots
+- [ ] Record one full run, under 3 minutes, showing: 9 cards → villain red with reasons → purge → pay → receipt
+- [ ] Confirm the recording shows the sandbox banner and the `4242` token line
+
+**Done when:** three PNGs in `docs/screenshots/` and one video file handed to B. Nothing else is submission-blocking.
+
+#### T1 — Gemini provenance chip (MLH Gemini)
+
+**Why:** the model writes the explanations, but a judge cannot tell where it wrote one and where the template did. The chip makes the Gemini integration visible in the demo instead of a line on Devpost.
+
+**Files:** `backend/app/services/llm.py`, `backend/app/api/routes_sessions.py`, `backend/tests/unit/test_llm.py`, `frontend/src/lib/api.ts`, `frontend/src/features/results/CheckRow.tsx`, `frontend/src/features/results/CheckRow.test.tsx`, `docs/contracts.md`
+
+- [ ] Write two failing tests: no model → `("…summary…", "template")`; fake completion → `("The certificate is valid for the domain.", "gemini")`
+- [ ] Run `cd backend; .\.venv\Scripts\python.exe -m pytest tests/unit/test_llm.py -q` and confirm they fail on the missing name
+- [ ] Add `async def explain_check_with_source(check, *, complete=None) -> tuple[str, str]`; keep `explain_check` as a one-line wrapper
+- [ ] Return `"source"` from `POST /api/sessions/{id}/explain`
+- [ ] Frontend test first: `source: "gemini"` renders `AI-generated`, `source: "template"` renders `From evidence`
+- [ ] `api.ts` returns `{ text, source }`; mock mode returns `source: "template"`
+- [ ] Add the `text-xs` chip to `CheckRow`
+- [ ] Add the field to `docs/contracts.md`
+
+**Done when:** with no API key the chip reads `From evidence`, with a key it reads `AI-generated`, and both suites pass.
+
+#### T2 — Photon text loop (sponsored slot 3, conditional)
+
+**What the number is:** the dashboard binds your phone as a *Spectrum user* — the line only replies to numbers that have texted it first. You need a number you can receive messages on; a teammate's phone is best, a Photon-assigned (shared) number if the dashboard offers one, TextNow/Twilio as fallbacks. **No personal number required, and no slot if none works.**
+
+- [ ] Avatar menu → attach a number; confirm the project leaves `account_phone_missing`
+- [ ] `bun create spectrum-project@latest dub --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --providers imessage --yes`
+- [ ] `SPECTRUM_PROJECT_SECRET` lives only in the scaffold's gitignored `.env` — never in this repo or chat
+- [ ] `bun start`, text the line, confirm the `echo:` reply — **this is the go/no-go**
+- [ ] Replace the echo: text → `POST /api/sessions` → answers → results → reply with the top trusted pick and its one-line reason
+- [ ] Capture one real round trip for the video
+
+**Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-027, and stop.
+
+#### T3 — DEV Writing Challenge
+
+- [ ] Draft `docs/devpost-article.md`, 1,200–1,800 words: the problem (agents can pay anyone) → the decision (deterministic scoring, the LLM has no vote) → the honest failure (D-025) → the two bugs only a real database found (naive datetimes, empty idempotency key) → what we would build next
+- [ ] Every number traced to `docs/status.md`; no invented feature
+- [ ] Publish on DEV, tags `hackathon` `ai` `python` `mongodb`
+- [ ] Add the URL to `docs/devpost-form.md` and the Devpost links field
+
+**Done when:** the post is public and linked from the submission.
+
+#### T4 — Make the payment path survive a restart (Atlas)
+
+**Files:** `backend/app/services/repository.py`, `backend/app/sessions/orchestrator.py`, `backend/app/api/routes_checkout.py`, `backend/tests/integration/{test_repositories,test_orchestrator,test_checkout_api}.py`
+
+- [ ] Failing test: `MongoRepository` round-trips a listing through `get_listing`
+- [ ] Add `get_listing` to the protocol and both adapters
+- [ ] Failing test: the orchestrator leaves a listing and an investigation in the repository
+- [ ] Write through after `replace_listings` and `attach_investigation`
+- [ ] Add `get_investigation_for(session_id, listing_id)` to both adapters, with its test
+- [ ] Make `_get_listing` / `_get_investigation` async with registry → repository → catalog, and update the four call sites
+- [ ] Restart-survival test: clear the registry, confirm the checkout, expect a `rcp_` receipt
+- [ ] Prove it over HTTP against Atlas and record the ids in `docs/status.md`
+
+**Done when:** a checkout created before a backend restart still confirms after it. **Cut at 90 minutes.**
+
+#### T5 — Slate, startup paragraph, project number
+
+- [ ] Append D-027: title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
+- [ ] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT)
+- [ ] Read the Gemini **project number** from the AI Studio project selector (public id, not the key) and paste it into the Devpost field
+- [ ] Tick the sponsored and non-sponsored checkboxes in [`devpost-form.md`](devpost-form.md); VEYZL stays unticked
+
+**Done when:** the slate is recorded, the form's category boxes match it, and no claim in the form lacks evidence in the repo.
 
 ---
 
