@@ -93,7 +93,7 @@ Mostly judge-facing.
 **Sponsor / Special Prizes** — checkboxes. Our selections:
 
 - [ ] **Visa: Reimagine Shopping**
-- [ ] **[MLH] Best Use of MongoDB Atlas** — only if the Mongo swap actually lands in Block 6
+- [x] **[MLH] Best Use of MongoDB Atlas** — Atlas is connected and proven (D-026)
 
 Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do not look for it here.
 
@@ -108,7 +108,7 @@ Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do
 
 **Non-Sponsored Side Tracks** — unlimited.
 
-- [ ] **MLH: Best Use of MongoDB Atlas** — only if Block 6 lands
+- [x] **MLH: Best Use of MongoDB Atlas** — Atlas persists the payment path; health reports `db: ok`
 - [ ] DubHacks Next — only if eligible
 
 **\* Team Member 1–4 Discord usernames** — double-check spelling and capitalization. Fill from the team, not from memory.
@@ -129,14 +129,14 @@ Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do
 
 > Yes. Gemini 3.5 Flash Lite writes the clarifying questions, the one-line recommendation narration, and on-demand explanations of each trust check. Every call is capped at 2.5 seconds and falls back to a deterministic template, so the demo works with no key and no network. The model never scores, never selects checks, and never touches payability or checkout — those are Python-only, and a build test fails if a trust, check, or payment module imports the LLM. We kept the model out of the decision path deliberately: a trust score you cannot re-derive from evidence is not a trust score.
 
-**Gemini Project Number** — only for the Best Use of Gemini API category. We are not entering it. Leave blank.
+**Gemini Project Number** — required once we tick Best Use of Gemini API. It is the project's **public** identifier (a ~12-digit number), not the API key: MLH uses it to confirm the traffic that hit Gemini this weekend came from this project. The key's owner reads it at `aistudio.google.com/apikey` from the project selector — no rotation needed, and `GEMINI_API_KEY` itself never goes into Devpost, chat, or the repo.
 
 ---
 
 ## 4. Submit
 
 - [ ] Preview the public page and read the elevator pitch out loud
-- [ ] Confirm the Visa track and VEYZL side track are both selected
+- [ ] Confirm the Visa title track and the MLH Atlas track are selected, and **VEYZL is not**
 - [ ] Confirm the tax/eligibility fields if Devpost asks
 - [ ] Submit
 
@@ -158,6 +158,6 @@ The form is last because every remaining field waits on an artifact:
 | Gallery images | C's click-through |
 | Video | the team's recording |
 | VEYZL selection + audit evidence | the audit and the fix |
-| MongoDB selection | Block 6 |
+| MongoDB selection | done — Atlas connected and proven (D-026) |
 
 Fill the text first (it is all drafted), attach artifacts as they land, and submit once — not incrementally.

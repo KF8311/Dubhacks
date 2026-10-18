@@ -217,11 +217,16 @@ async def narrate(
     return sentence or fallback
 
 
-async def explain_check(
+async def explain_check_with_source(
     check: TrustCheckResult,
     *,
     complete: CompleteFn | None = None,
-) -> str:
+) -> tuple[str, str]:
+    """Return the explanation and who wrote it: "gemini" or "template".
+
+    The UI shows a provenance chip, so a template answer must never be
+    labelled as model output.
+    """
     fallback = check.summary
     evidence = [
         {"label": sanitize(item.label, 80), "value": sanitize(item.value, 240)}
@@ -242,13 +247,22 @@ async def explain_check(
     )
     raw = await _call(prompt, complete)
     if raw is None:
-        return fallback
+        return fallback, "template"
     try:
         data = _parse_json(raw)
     except (json.JSONDecodeError, TypeError, ValueError):
-        return fallback
+        return fallback, "template"
     text = data.get("explanation") if isinstance(data, dict) else None
     if not isinstance(text, str):
-        return fallback
+        return fallback, "template"
     text = sanitize(text.strip(), 400)
-    return text or fallback
+    return (text, "gemini") if text else (fallback, "template")
+
+
+async def explain_check(
+    check: TrustCheckResult,
+    *,
+    complete: CompleteFn | None = None,
+) -> str:
+    text, _source = await explain_check_with_source(check, complete=complete)
+    return text

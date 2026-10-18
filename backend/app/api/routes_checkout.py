@@ -167,7 +167,7 @@ async def create_checkout(request: Request):
         amount_cents=listing.price_cents,
         currency=listing.currency,
         stage=CheckoutStage.AWAITING_PASSKEY,
-        idempotency_key="",
+        idempotency_key=None,
         created_at=now,
         expires_at=now + timedelta(minutes=5),
     )

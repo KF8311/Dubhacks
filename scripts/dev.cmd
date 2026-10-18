@@ -17,6 +17,7 @@ popd
 
 set "PY=%ROOT%\backend\.venv\Scripts\python.exe"
 set "HEALTH=http://localhost:8000/api/health"
+set "FRONT=http://localhost:5173/"
 set "MODE=%~1"
 if "%MODE%"=="" set "MODE=live"
 if /I "%MODE%"=="off" set "MODE=offline"
@@ -73,14 +74,24 @@ echo [dev] A backend is already answering on http://localhost:8000 - reusing it.
 goto frontend
 
 :frontend
+call :probe_frontend
+if not errorlevel 1 (
+  echo [dev] A frontend is already answering on http://localhost:5173/ - reusing it.
+  echo [dev] Open http://localhost:5173/ . Close that Vite window to stop it.
+  exit /b 0
+)
 echo [dev] Frontend: http://localhost:5173/ - this is the URL to open.
-echo [dev] Port 5173 is pinned. If Vite says it is busy, close the other Vite window;
-echo [dev] this script never falls back to 5174.
 cd /d "%ROOT%\frontend"
 call npm run dev -- --port 5173 --strictPort
 exit /b 0
 
 :mock
+call :probe_frontend
+if not errorlevel 1 (
+  echo [dev] A frontend is already answering on http://localhost:5173/ - reusing it.
+  echo [dev] Open http://localhost:5173/?mock=1 . Close that Vite window to stop it.
+  exit /b 0
+)
 echo [dev] Frontend only, mock data, no backend needed.
 echo [dev] Open http://localhost:5173/?mock=1 once Vite is up.
 cd /d "%ROOT%\frontend"
@@ -105,12 +116,22 @@ if errorlevel 1 (
 ) else (
   echo [ok]         backend answering on :8000
 )
+call :probe_frontend
+if errorlevel 1 (
+  echo [--]         no frontend on :5173
+) else (
+  echo [ok]         frontend answering on :5173
+)
 echo.
 echo Modes: scripts\dev.cmd [live^|offline^|mock^|check]
 exit /b 0
 
 :probe_backend
 curl -s -o nul --max-time 2 "%HEALTH%" >nul 2>&1
+exit /b %errorlevel%
+
+:probe_frontend
+curl -s -o nul --max-time 2 "%FRONT%" >nul 2>&1
 exit /b %errorlevel%
 
 :wait_backend

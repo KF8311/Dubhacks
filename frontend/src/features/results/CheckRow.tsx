@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { explainCheck } from "@/lib/api.ts"
+import { explainCheck, type ExplainSource } from "@/lib/api.ts"
 import { useSessionStore } from "@/store/sessionStore.ts"
 import type { TrustCheckResult, TrustStatus } from "@/lib/types.ts"
 
@@ -24,7 +24,7 @@ const statusColor: Record<TrustStatus, string> = {
 
 export function CheckRow({ check, listingId }: Props) {
   const sessionId = useSessionStore((state) => state.sessionId)
-  const [explanation, setExplanation] = useState<string | null>(null)
+  const [explanation, setExplanation] = useState<{ text: string; source: ExplainSource } | null>(null)
   const [busy, setBusy] = useState(false)
 
   async function onExplain() {
@@ -33,7 +33,7 @@ export function CheckRow({ check, listingId }: Props) {
     try {
       setExplanation(await explainCheck({ sessionId, listingId, checkId: check.id }))
     } catch {
-      setExplanation(check.summary)
+      setExplanation({ text: check.summary, source: "template" })
     } finally {
       setBusy(false)
     }
@@ -44,7 +44,14 @@ export function CheckRow({ check, listingId }: Props) {
       <div>
         <p className="font-medium">{check.name}</p>
         <p className="text-muted-foreground">{check.summary}</p>
-        {explanation ? <p className="mt-1 text-foreground">{explanation}</p> : null}
+        {explanation ? (
+          <p className="mt-1 text-foreground">
+            {explanation.text}{" "}
+            <span className="ml-1 rounded-full border px-2 py-0.5 align-middle text-xs text-muted-foreground">
+              {explanation.source === "gemini" ? "AI-generated" : "From evidence"}
+            </span>
+          </p>
+        ) : null}
         <button
           type="button"
           className="mt-1 text-xs font-medium text-accent underline"

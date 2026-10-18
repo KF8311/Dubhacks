@@ -6,7 +6,13 @@ import pytest
 from app.core.config import Settings
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, Recommendation, TrustCheckResult
-from app.services.llm import _gemini_complete, explain_check, generate_questions, narrate
+from app.services.llm import (
+    _gemini_complete,
+    explain_check,
+    explain_check_with_source,
+    generate_questions,
+    narrate,
+)
 from app.sessions.questions import QUESTIONS, templates_for
 
 
@@ -240,6 +246,49 @@ async def test_explain_strips_html_from_the_prompt(monkeypatch):
     assert captured
     assert "<script>" not in captured[0]
     assert "steal()" not in captured[0]
+
+
+def _passed_check() -> TrustCheckResult:
+    return TrustCheckResult(
+        id=CheckId.SSL,
+        name="SSL certificate",
+        status=TrustStatus.PASSED,
+        severity=0,
+        summary="ok",
+        source="live",
+    )
+
+
+@pytest.mark.asyncio
+async def test_explain_check_reports_template_source_when_no_model(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings(gemini_api_key=None))
+    text, source = await explain_check_with_source(_passed_check())
+    assert source == "template"
+    assert text == "ok"
+
+
+@pytest.mark.asyncio
+async def test_explain_check_reports_gemini_source_when_the_model_answers(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings())
+
+    async def fake(_prompt: str) -> str:
+        return '{"explanation": "The certificate is valid for the domain."}'
+
+    text, source = await explain_check_with_source(_passed_check(), complete=fake)
+    assert source == "gemini"
+    assert text == "The certificate is valid for the domain."
+
+
+@pytest.mark.asyncio
+async def test_explain_check_reports_template_when_the_answer_is_unusable(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings())
+
+    async def bad(_prompt: str) -> str:
+        return "not json at all"
+
+    text, source = await explain_check_with_source(_passed_check(), complete=bad)
+    assert source == "template"
+    assert text == "ok"
 
 
 @pytest.mark.asyncio

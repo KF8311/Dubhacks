@@ -62,11 +62,11 @@ def test_answers_advance_stage():
 
 
 def test_explain_route_uses_llm(monkeypatch):
-    async def fake_explain(check):
+    async def fake_explain(check, **_kwargs):
         assert check.id == CheckId.SSL
-        return "LLM: the certificate is valid."
+        return "LLM: the certificate is valid.", "gemini"
 
-    monkeypatch.setattr("app.services.llm.explain_check", fake_explain)
+    monkeypatch.setattr("app.services.llm.explain_check_with_source", fake_explain)
     client = TestClient(create_app())
     session = client.post("/api/sessions", json={"query": "headphones", "client_id": "c1"}).json()
     check = TrustCheckResult(
@@ -96,6 +96,7 @@ def test_explain_route_uses_llm(monkeypatch):
     )
     assert response.status_code == 200
     assert response.json()["explanation"] == "LLM: the certificate is valid."
+    assert response.json()["source"] == "gemini"
 
 
 def test_explain_without_an_investigation_is_404():
