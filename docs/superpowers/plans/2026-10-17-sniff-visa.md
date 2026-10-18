@@ -3145,7 +3145,7 @@ Frontend: `VITE_API_BASE_URL` only.
 
 ## Appendix D — Glossary
 
-See `project-a-sniff-visa.md` §14.
+See the Terms section in `docs/devpost-form.md` and the decision log in `docs/decisions.md`; the standalone glossary was removed on 2026-10-18.
 
 ## Appendix E — Database Alternatives
 
