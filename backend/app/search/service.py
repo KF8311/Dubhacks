@@ -75,6 +75,8 @@ async def search(
     if not allow_catalog_fallback:
         return [], "unavailable"
 
+    # The curated file is the headphone demo. Do not answer a live query for
+    # some other product with it; that is what made every search look like XM5s.
     if not catalog_covers(spec.query):
         return [], "serpapi"
 

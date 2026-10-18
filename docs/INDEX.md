@@ -12,13 +12,13 @@ One project, one repository, one source of truth. If a fact is not written here 
 
 | If you are… | Read, in order |
 |---|---|
-| **New to the project** | This page → `project-a-sniff-visa.md` → plan §1–§4 |
+| **New to the project** | This page → plan §1–§4 |
 | **Building a task** | `docs/status.md` → `docs/team-split-3.md` → the task in the plan |
 | **Running it locally** | `docs/RUN.md` — one command, live/offline/mock modes, troubleshooting |
 | **Claude / an agent** | `CLAUDE.md` → this page → `docs/status.md` → the plan |
 | **On Cursor** | `AGENTS.md` → `.cursor/rules/project.mdc` → `docs/status.md` |
 | **Reviewing a decision** | `docs/decisions.md` |
-| **Writing the Devpost or video** | `docs/devpost-form.md` (field-by-field) → `docs/devpost-technical-claims.md` (the claims) → `docs/devpost.md` (copy) → `project-a-sniff-visa.md` §10–§11 |
+| **Writing the Devpost or video** | `docs/devpost-form.md` (field-by-field) → `docs/devpost-technical-claims.md` (the claims) → `docs/devpost.md` (copy) |
 | **Debugging the demo** | Plan §9 (fallbacks), §16 (risk register), `docs/status.md` |
 
 ## The document set
@@ -28,10 +28,9 @@ One project, one repository, one source of truth. If a fact is not written here 
 | `AGENTS.md` | Cross-tool brief: read order, non-negotiables, skills. Cursor reads this automatically | Current |
 | `CLAUDE.md` | Agent context and hard constraints for Claude Code | Current |
 | `.cursor/rules/project.mdc` | Always-applied guardrails for Cursor | Current |
-| `project-a-sniff-visa.md` | Product spec: problem, checks, scoring, Visa flow, video, Devpost | Stable |
 | `docs/superpowers/plans/2026-10-17-sniff-visa.md` | Engineering plan: architecture, API, data model, 30 TDD tasks, schedule, risks | Current |
 | `docs/team-split-3.md` | Three-person ownership map, time-boxed checklists, gates, cuts | Current |
-| `docs/checklist.md` | **Shared team checklist** — universal rules plus one block per person, with completed items ticked | **Work from this** |
+| `docs/checklist.md` | **Live checklist** — open items only, split A / B / C | **Work from this** |
 | `docs/status.md` | The only file that claims to be current: gate, owners, blockers | **Update every 90 min** |
 | `docs/RUN.md` | Every way to run the product locally, including `scripts\dev.cmd` | Current |
 | `docs/decisions.md` | Append-only decision log with rationale and alternatives | Append-only |

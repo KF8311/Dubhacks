@@ -58,6 +58,7 @@ class SessionOrchestrator:
         A longer wait is better than unrelated products in the grid: two attempts
         at the live provider, then an honest failure the user can retry.
         """
+        empty = False
         for _attempt in range(2):
             try:
                 listings, source = await asyncio.wait_for(
@@ -66,10 +67,14 @@ class SessionOrchestrator:
                 )
             except Exception:  # noqa: BLE001 — retry once, then fail
                 continue
+            # An empty live result is worth one retry; a provider still running
+            # after the budget is not worth a second wait.
+            if source == "serpapi" and listings:
+                return listings, source
             if source == "serpapi":
-                if listings:
-                    return listings, source
-                continue
+                empty = True
+        if empty:
+            return [], "serpapi"
         self.bus.publish(
             session_id,
             "session.error",

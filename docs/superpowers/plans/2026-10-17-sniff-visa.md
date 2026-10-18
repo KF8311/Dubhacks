@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python 3.12, FastAPI, Pydantic v2, sse-starlette, httpx, motor, React 19, Vite, TypeScript, Tailwind, shadcn/ui, Framer Motion, Zustand, Gemini 2.5 Flash, SerpAPI Google Shopping, pytest, Vitest, Playwright.
 
-**Spec:** `project-a-sniff-visa.md`
+**Spec:** the standalone product spec was removed on 2026-10-18; this plan is the spec of record.
 
 ---
 
@@ -2969,7 +2969,7 @@ git commit -m "docs: add veyzl audit and runbook"
 **Deliverable:** A 3-minute video, a complete Devpost, a deployed URL, and a passing QA checklist.
 
 - [ ] **Step 1: Record the 3-minute video using the beats in §17.1.**
-- [ ] **Step 2: Fill `docs/devpost.md` from the template in `project-a-sniff-visa.md` §11.**
+- [ ] **Step 2: Fill `docs/devpost-form.md`, then `docs/devpost.md`.**
 - [ ] **Step 3: Run the QA checklist: session, questions, listings, checks, purge, best pick, checkout, passkey, receipt, share, 1024px width, keyboard nav.**
 - [ ] **Step 4: Submit the Devpost draft by 10:30 PM Saturday; final by 10:00 AM Sunday.**
 - [ ] **Step 5: Commit**
@@ -3145,7 +3145,7 @@ Frontend: `VITE_API_BASE_URL` only.
 
 ## Appendix D — Glossary
 
-See `project-a-sniff-visa.md` §14.
+The standalone glossary was removed with the product spec on 2026-10-18; use `docs/decisions.md` for the terms that are actually enforced.
 
 ## Appendix E — Database Alternatives
 
