@@ -13,11 +13,11 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 17:35 PT
+## Where we are now — 18:05 PT
 
 | Thing | State |
 |---|---|
-| `main` | `fa6c2a7` — **everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, and the live frontend. **123 backend / 9 frontend tests pass**, build clean. |
+| `main` | `16aa403` — **everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, the live frontend, and the offline replay. **130 backend / 9 frontend tests pass**, build clean. |
 | Follow-on branch | **None. `main` is the source of truth** — branch from it for the next block. |
 | Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. Checkout/confirm (Task 23) not built yet. |
 | Frontend | Live by default. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI from `data/mock-session.json`. |
@@ -41,7 +41,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **122 passed** on `main` (**123** with `merge/agent-backend`); `npx vitest run` → 4 passed. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **130 passed**; `npx vitest run` → 9 passed. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -142,7 +142,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Person | Do |
 |---|---|
 | **A** | Mongo repository behind the existing protocol **only if** everything above is green. Otherwise skip — the in-memory adapter is the cut-order survivor. |
-| **B** | `scripts/replay_offline.py` with `OFFLINE=1`, deterministic output. Verify every fixture path works with the network off. |
+| **B** | ✅ **Done** — `scripts/replay_offline.py` runs a full session in-process with no server and no network: 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`. Exits 1 if those numbers drift. Domain age and SSL now honour `OFFLINE=1` (fixtures still load, nothing opens a socket). |
 | **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path. |
 
 **Proof:** offline replay produces the same numbers as live; plane-mode demo works.
@@ -180,6 +180,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] Hookup fix: allowlisted merchants rendered as `0 · Trusted`. `listing.scored` now carries `allowlisted` and the badge reads `Verified · Trusted` (D-015 display consequence).
 - [x] CORS verified for `http://localhost:5173` on both the JSON routes and the SSE stream
 - [x] **All merges landed** — PRs #9, #10, #11 into `main`; `main` is `fa6c2a7` and green
+- [x] B: **Task 28** — `app/demo/replay.py` + `scripts/replay_offline.py`. Reports `9 / 8 / 0 / 1`, villain `lst_vln_xm5`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`, identical to the live HTTP run; exits 1 on drift. `SessionOrchestrator` takes an optional `Settings` and domain age + SSL short-circuit on `offline`. 7 new tests (130 total).
 
 ## 6. Gate board
 
@@ -217,7 +218,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 **First 15 minutes of the block, every person:**
 
 1. `git checkout main && git pull`
-2. Run your baseline: backend `pytest -q` → **123 passed**; frontend `npx vitest run` → **9 passed**.
+2. Run your baseline: backend `pytest -q` → **130 passed**; frontend `npx vitest run` → **9 passed**.
 3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
 
 ### A — checkout backend (G4's critical path)
@@ -243,7 +244,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 ### B — determinism and the Devpost
 
 1. Deferred integration golden test: the villain through all five real checks → `danger` → excluded from `recommend()`; the hero → `trusted` → picked. It was blocked until the checks and the orchestrator lived in one tree; they do now.
-2. **Task 28** `scripts/replay_offline.py` with `OFFLINE=1` producing the same numbers as the live run.
+2. ✅ **Task 28 done** — `scripts/replay_offline.py` from repo root: `backend/.venv/Scripts/python.exe scripts/replay_offline.py`. Prints the live demo numbers and exits 1 if they drift. Run it before every rehearsal.
 3. Task 29 VEYZL audit + `README.md` (setup, env vars, demo script, sandbox disclosure).
 4. Devpost technical section: five checks, scoring formula with these real numbers, payability rule, sandbox label.
 
