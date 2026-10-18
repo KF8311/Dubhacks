@@ -56,6 +56,8 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 | T3 | DEV article | 60 min | ✅ drafted; publish pending a DEV account | trim to 1,200 words; never describe a feature we do not have |
 | T4 | Atlas payment-path durability | 90 min | ✅ done 05:30 | abandon at 90 min — the Atlas claim already stands on D-026 |
 | T5 | Slate, SideShift paragraph, project number | 30 min | ✅ 05:25 — D-028 + paragraph done; project number still needs the AI Studio owner | none |
+| T6 | **Fly deploy** (backend + frontend) | 45 min | blocked on `flyctl` + `fly auth login` | if Fly will not deploy by 08:15, use T7 and say "personal Vercel" on stage |
+| T7 | **Personal Vercel deploy** (fallback) | 30 min | not started | frontend-only if the services build fails; point it at the Fly or local backend |
 
 #### T0 — Artifacts (blocks the submission)
 
@@ -149,23 +151,48 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 **Done when:** the slate is recorded, the form's category boxes match it, and no claim in the form lacks evidence in the repo.
 
+#### T6 — Fly deploy (the real demo URL)
+
+- [ ] Install the CLI and log in — **interactive; the user runs these in their own terminal**:
+  ```powershell
+  iwr https://fly.io/install.ps1 -useb | iex
+  fly auth login
+  ```
+- [ ] Set the secrets (values come from `backend/.env`; never paste them into chat or the repo):
+  ```powershell
+  fly secrets set MONGODB_URI="<atlas uri>" SERPAPI_KEY="<key>" GEMINI_API_KEY="<key>"
+  ```
+- [ ] `fly deploy` from the repo root, then warm it:
+  `backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://sniff-visa-dubhacks.fly.dev`
+- [ ] Confirm `GET /api/health` reports `{"status":"ok","db":"ok"}` and one live query reports `source: "serpapi"`.
+
+**Done when:** the public URL serves this build and `smoke_http.py` passes against it.
+
+#### T7 — Personal Vercel deploy (fallback, frontend + `/api` in one project)
+
+The repo already carries a [`vercel.json`](../vercel.json) with two services — `frontend` (Vite) and `backend` (FastAPI) — and a `/api/(.*)` rewrite to the backend. It targets **Vercel Services**, which is the part most likely to fail; treat this as a fallback, not the demo URL.
+
+- [ ] Log in with the user's own account: `npx vercel login` (or import `KF8311/Dubhacks` in the Vercel dashboard).
+- [ ] Deploy from the **repo root**, not `frontend/`: `npx vercel --prod`
+- [ ] Add the env vars in the project settings for **Production and Preview**: `MONGODB_URI`, `SERPAPI_KEY`, `GEMINI_API_KEY`.
+- [ ] Open the deployment and check `https://<deploy>/api/health` → `db: "ok"`.
+- [ ] If the services build fails: deploy **frontend only** (`npx vercel --prod frontend`), set `VITE_API_BASE_URL` to the Fly backend, and rebuild.
+- [ ] Walk the full path on the deployed URL: query → grid → villain → pick → checkout → receipt.
+
+**Done when:** either the combined deployment serves `/api/health` with `db: "ok"`, or the frontend-only deployment works against a reachable backend — and `docs/status.md` says which one is live.
+
+**Known risks:** Vercel Services is a newer config shape and may reject this file; the FastAPI function has a 60 s cap and SSE over serverless can buffer, so the search stream may arrive in one burst; cold starts add seconds the demo cannot afford. None of this blocks T6.
+
 ---
 
 ## A — deploy only
 
-Everything else on A's plate is done (see "Already done"). One item remains:
+Everything else on A's plate is done (see "Already done"). Two items remain:
 
-- [ ] **Deploy to Fly.** The CLI is not installed and there are no credentials on this machine, so this needs an interactive login first:
-  ```powershell
-  iwr https://fly.io/install.ps1 -useb | iex
-  fly auth login
-  fly secrets set MONGODB_URI="<the same Atlas URI as backend/.env>" SERPAPI_KEY="<...>" GEMINI_API_KEY="<...>"
-  fly deploy
-  backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://sniff-visa-dubhacks.fly.dev
-  ```
-  Then warm the app (health + one session) and confirm `search.completed` reports `source: "serpapi"`. The Docker image already builds and serves the whole path locally, so this is a packaging/auth step, not a code step.
+- [ ] **Deploy to Fly — full steps in [T6](#t6--fly-deploy-the-real-demo-url).** The CLI is not installed and there are no credentials on this machine, so this needs an interactive login first. The Docker image already builds and serves the whole path locally, so this is a packaging/auth step, not a code step.
+- [ ] **Personal Vercel deploy — full steps in [T7](#t7--personal-vercel-deploy-fallback-frontend--api-in-one-project).** Only if Fly slips; `vercel.json` is already in the repo and the frontend falls back to same-origin `/api`.
 
-**Done when:** the public URL serves this build and `smoke_http.py` passes against it.
+**Done when:** the public URL serves this build and `smoke_http.py` passes against it (or T7's Vercel URL does).
 
 ## B — docs, claims, Devpost
 
