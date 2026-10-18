@@ -21,10 +21,10 @@ This is the only file that claims to be current.
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
 | Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
-| Branches | **`main` carries everything** locally (`c7c94f1`), plus the docs commit `fe6f902`; `origin/main` is 5 commits behind. **Push to `main` is rejected**: branch protection requires a `VEYZL Audit` check that nothing reports. The work is on [`integration/c-web-and-docs`](https://github.com/KF8311/Dubhacks/tree/integration/c-web-and-docs) as **[PR #20](https://github.com/KF8311/Dubhacks/pull/20)**, mergeable but `BLOCKED` on that check. Every other remote head is contained in `main`. |
+| Branches | **`main` carries everything and is pushed** ([`2bfed13`](https://github.com/KF8311/Dubhacks/commit/2bfed13), rebase-merged as [PR #20](https://github.com/KF8311/Dubhacks/pull/20); the working branch was deleted after its diff against `main` came back empty). Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 20:10 PT
+Last updated: 2026-10-17 20:25 PT
 
 ## Gate board
 
@@ -99,9 +99,9 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 
 ## Next three actions
 
-1. **A unblocks `main`.** Branch protection requires a `VEYZL Audit` check and nothing reports it, so pushes are rejected and PR #20 is `BLOCKED`. Install/run the VEYZL app so the check reports — or drop the requirement. Nothing else can merge until this is fixed.
-2. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
-3. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
+1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
+2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
+3. A installs the VEYZL GitHub App on the repo and runs the audit on a PR (D-020); only then re-add `VEYZL Audit` as a required status check.
 
 ## Demo trap to avoid
 
@@ -113,7 +113,7 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 |---|---|---|
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
 | Fly serves the pre-merge build | **yes** | Redeploy from `main` in Block 5 |
-| **`main` is protected by a required check nothing reports** | **yes** | `git push origin main` is rejected (`Required status check "VEYZL Audit" is expected`) and PR #20 is `BLOCKED` with zero checks. A local VEYZL run cannot post a check run; only the installed GitHub App can. A installs the app (or the owner drops the rule). **No merge can land until this is resolved** — the demo, Fly deploy, and test suites are unaffected because they run from the local tree. |
+| ~~`main` protected by a required check nothing reports~~ | **was yes — resolved 20:22** | The `VEYZL Audit` requirement was dropped from the repo ruleset, PR #20 was rebase-merged, and the branch deleted. **Do not re-add the check until the VEYZL GitHub App is installed** — a local run posts nothing, and re-adding it early blocks every merge again. |
 | SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | An empty budget filter falls back to the full catalog | yes | D-022: an over-budget listing can be recommended and paid. Say "closest match" on stage; do not call the budget a hard cap |
