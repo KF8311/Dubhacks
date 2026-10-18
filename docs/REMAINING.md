@@ -19,14 +19,15 @@ One page. Everything else in [`docs/checklist.md`](checklist.md) is history or v
 | 2 | Click the flow at **$300–$600**, take three screenshots and one recording | C | 30 min | The gallery images and the video |
 | 3 | Record the 3-minute demo video | team | 60 min | **Required by Devpost** |
 | 4 | Fill [`docs/devpost-form.md`](devpost-form.md), attach artifacts, submit | B | 60 min | G5 and G7 |
-| 5 | *Optional:* re-run VEYZL against the fixed build and capture a clean report | A | 20 min | The VEYZL side track |
+| 5 | *Optional:* read the failing `VEYZL Audit` report on PR #26 in the portal, reproduce what it names, and re-run until the check passes | A | 20–60 min | The VEYZL side track |
 | 6 | *Optional:* MongoDB M0 check, **or drop the claim** | B | 30 min / 0 min | The MLH MongoDB checkbox only |
 
 That is the whole remaining project. Two of the six are optional.
 
 ## Already delivered
 
-- **A's VEYZL finding is fixed**, not pending: `llm_guard.py` refuses and redacts before Gemini, and the checkout probe path answers in the shape the auditor expects ([D-023](decisions.md), [evidence](veylz-audit.md)). The only thing left is a re-run that produces a report without errors.
+- **A's VEYZL finding is fixed**, not pending: `llm_guard.py` refuses and redacts before Gemini, and the checkout probe path answers in the shape the auditor expects ([D-023](decisions.md), [evidence](veylz-audit.md)).
+- **The VEYZL GitHub App is installed** and posts `VEYZL Audit` on every PR. On PR #26 the check **failed** and the report has not been read yet — so the side track is not claimable, but the tool is finally in the loop.
 - **The Vercel path is merged** alongside Fly. An untested deploy path is still an untested deploy path — smoke it before claiming it.
 - Local dev needs no `.env`: `apiBase()` falls back to `localhost:8000` in a dev build and stays same-origin in production.
 
