@@ -21,10 +21,10 @@ This is the only file that claims to be current.
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
 | Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
-| Branches | **`main` carries everything and is pushed** ([`2bfed13`](https://github.com/KF8311/Dubhacks/commit/2bfed13), rebase-merged as [PR #20](https://github.com/KF8311/Dubhacks/pull/20); the working branch was deleted after its diff against `main` came back empty). Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
+| Branches | **`main` carries everything and is pushed** ([`3e349b8`](https://github.com/KF8311/Dubhacks/commit/3e349b8), rebase-merged as [PR #20](https://github.com/KF8311/Dubhacks/pull/20) and [PR #21](https://github.com/KF8311/Dubhacks/pull/21); both working branches were deleted after their diffs against `main` came back empty). Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 20:25 PT
+Last updated: 2026-10-17 20:30 PT
 
 ## Gate board
 
@@ -60,7 +60,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
 | A | Fly redeploy; smoke the public URL; **VEYZL audit + fix PR (D-020)** | 18:25 | 22:30 | ✅ Merged at 19:40 — `source`→domain search (D-021), budget parsing, session-guarded checkout. ⬜ Public URL is the last G4/G5 blocker; VEYZL needs the app installed on `KF8311/Dubhacks` |
-| C | Browser screenshots — results grid, danger detail, receipt — plus one recording | 18:25 | 22:30 | ✅ Block 6 UI merged (`c569d0d`, `c9057cc`): 390px reflow (overflow 0), `api_key` redaction, immersive merchant resolution, offline catalog pinning. ⬜ Screenshots and video are the last G5 items |
+| C | Browser screenshots — results grid, danger detail, receipt — plus one recording | 18:25 | 22:30 | ✅ Block 6 UI merged (`cf24bdb`, `3ceffbc`): 390px reflow (overflow 0), `api_key` redaction, immersive merchant resolution, offline catalog pinning. ⬜ Screenshots and video are the last G5 items |
 | B | Devpost, final numbers, audit review | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, technical-claims handoff, audit scope + `/api/demo/reset` reproduction, repository review first pass (`8c89260`); ⬜ fill the form as A and C land artifacts |
 
 ## Done since last update
@@ -93,8 +93,8 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] B: **Repository review, first pass (`8c89260`)** — protocol covers all 17 methods; `get_repository()` typed with the protocol; `idempotency_key` partial index replaces `sparse`, so keyless checkouts no longer collide on `null`
 - [x] B: persistence claim narrowed — Mongo carries the payment path only; sessions, listings, and investigations stay in-process, and mock VIC tokens never leave the process
 - [x] A merged (`8687203`) — Google `source`→domain (D-021, supersedes D-011), `under_150` budget parsing, upper-case `SERPAPI_KEY`, catalog fallback on an empty budget filter (D-022), session-guarded checkout. Three conflicts resolved by hand; A's `D-019` renumbered to `D-021`
-- [x] C merged (`c569d0d`, `c10584a`, `c9057cc`, fast-forwarded) — phone-width reflow at 390px with zero horizontal overflow, `api_key`/`x-goog-api-key` redaction in `redact()`, unknown merchants resolved through Google Shopping's immersive `stores` with a 4-lookup/2 s cap, and `OFFLINE=1` pinned to the curated catalog so replay numbers cannot drift
-- [x] B restored the receipt score assertion C's wrap fix dropped; the test now covers `Score 92` and `break-words` (`c7c94f1`)
+- [x] C merged (`cf24bdb`, `3ceffbc`, fast-forwarded; rebase-merged as PR #20 rewrote the SHAs and dropped her merge commit) — phone-width reflow at 390px with zero horizontal overflow, `api_key`/`x-goog-api-key` redaction in `redact()`, unknown merchants resolved through Google Shopping's immersive `stores` with a 4-lookup/2 s cap, and `OFFLINE=1` pinned to the curated catalog so replay numbers cannot drift
+- [x] B restored the receipt score assertion C's wrap fix dropped; the test now covers `Score 92` and `break-words` (`f0014c0`)
 - [x] Verified after the merge: **187 backend / 34 frontend**, build clean, replay exit 0, and the live HTTP run for **$300–$600** matches the replay exactly
 
 ## Next three actions
@@ -118,7 +118,7 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | An empty budget filter falls back to the full catalog | yes | D-022: an over-budget listing can be recommended and paid. Say "closest match" on stage; do not call the budget a hard cap |
 | The demo budget answer changes the card count | **yes** | Measured: Under $150 → 1, $150–$300 → 3, $300–$600 → 9. The script uses $300–$600. Under `OFFLINE=1` the filter is skipped entirely |
-| Receipt score coverage silently dropped | was yes | C's wrap fix replaced the score assertion; restored alongside it (`c7c94f1`) |
+| Receipt score coverage silently dropped | was yes | C's wrap fix replaced the score assertion; restored alongside it (`f0014c0`) |
 | Browser never exercised the live flow | **yes** | Wiring is merged; C must click through it once |
 | Devpost overstates the role of the model | **was yes** | Corrected after A's Gemini merge: the model writes copy, never a verdict; the generative-AI answer is **Yes** |
 | Public health reads `degraded` with Mongo off | **yes, by design** | With `MONGODB_URI` unset the API is fully functional but answers `{"status":"degraded","db":"unavailable"}` — the contract in `docs/contracts.md`. Fly has no Mongo, so the public URL will always say this. Read it as "optional store off", not "broken"; say so before a judge asks. |
