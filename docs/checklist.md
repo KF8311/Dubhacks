@@ -11,7 +11,7 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 
 **Blocker (2026-10-18): the SerpAPI key has 0 searches left** (Free Plan, 250 used this month). Live search fails in ~0.2 s with the new `SEARCH_QUOTA_EXHAUSTED` message for any query SerpAPI has not cached. **Get a fresh key before a live rehearsal** — put it in `backend/.env` as `SERPAPI_KEY` (never commit it, never paste it into chat) and restart the backend. Cached queries such as `TUL pens at Office Depot` still resolve; use **Skip questions** so the query stays exact.
 
-**Current state:** `a/atlas-durable` carries the kept build (`96cf47f`), D-025, the `c/web` fixes, the embedded data bundle, and D-034–D-043 (real merchant links, one marigold edge, phone pay, quota error, skippable questions, Send to phone, a two-column results screen with item cards that flip to safety and carry Visit and Send, an automatic pay-link text through the local bridge, five checks on every listing including allowlisted merchants, and smooth hover scale on the landing and question buttons). Backend **263 passed**, frontend **78 passed** (18 files), `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; the live pens demo is proven over HTTP, nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `a/atlas-durable` carries the kept build (`96cf47f`), D-025, the `c/web` fixes, the embedded data bundle, and D-034–D-043, with the latest tip at **`f82cd1f`** (real merchant links, one marigold edge, phone pay, quota error, skippable questions, Send to phone, a two-column results screen with item cards that flip to safety and carry Visit and Send, an automatic pay-link text through the local bridge, five checks on every listing including allowlisted merchants, and smooth hover scale on the landing and question buttons). Backend **263 passed**, frontend **78 passed** (18 files), `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; the live pens demo is proven over HTTP, nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
 
@@ -27,6 +27,28 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 **Run it:** `.\scripts\dev.cmd` → open **http://localhost:5173/**. Offline: `.\scripts\dev.cmd offline`. Details: [`RUN.md`](RUN.md).
 
 **Rules that still apply:** one owner per file (`models.py`, `types.ts`, and `contracts.md` belong to A; docs and Devpost to B; frontend source to C). Tests pass before a task is ticked, and every commit carries your name only.
+
+---
+
+## Next block — scheduled for A and B (08:15–10:15 PT, 2026-10-18)
+
+C is on the visual pass. These two lanes are unblocked without C; neither waits for the other.
+
+### A — check evidence and deploy
+
+- [ ] **A1 · Regression test for D-043** (45 min). In [`test_orchestrator.py`](../backend/tests/integration/test_orchestrator.py), add a test that runs the orchestrator against an allowlisted merchant and asserts all five `check.started`/`check.completed` pairs are emitted, the investigation holds five results, and the score still reports `allowlisted`. Done when the test would fail if the old allowlist short-circuit came back, and `pytest -q` is green.
+- [ ] **A2 · Triage the `page_flags` skip** (30 min). Reproduce the live `ReadTimeout` against `https://www.officedepot.com/`; decide whether `FETCH_TIMEOUT_S`, the user agent, or redirect handling needs a bounded change. If the site refuses this network, keep `skipped` and record it in [`status.md`](status.md) — an unread page must never become a pass.
+- [ ] **A3 · Fly deploy** (blocked on `fly auth login`). Follow [T6](#t6--fly-deploy-the-real-demo-url). Set `MONGODB_URI`, `SERPAPI_KEY`, and `GEMINI_API_KEY` as Fly secrets (never commit them). Done when public `/api/health` reports `db: "ok"` and `scripts/smoke_http.py` passes against the URL.
+- [ ] **A4 · Vercel fallback** (only if A3 is still blocked at 09:30). Follow [T7](#t7--personal-vercel-deploy-fallback-frontend--api-in-one-project); a frontend-only deploy is acceptable if it points at a reachable backend.
+
+### B — docs truth and Devpost
+
+- [ ] **B1 · Claim scrub for D-043 and the design pass** (45 min). Check every claim in `README.md`, [`devpost.md`](devpost.md), [`devpost-form.md`](devpost-form.md), and [`status.md`](status.md): five checks run on every listing; allowlisted cards read **Verified**; flip faces carry their own tint; landing and question buttons scale on hover. Remove any statement that checks are skipped for allowlisted merchants.
+- [ ] **B2 · Pre-fill the Devpost and tracks** (45 min). Fill every field that does not need the URL, screenshots, or video. Mark VEYZL **not selected**; Photon stays conditional until a real text round-trips. The sandbox disclosure stays exact.
+- [ ] **B3 · DEV Writing Challenge** (30 min). Publish T3 if a DEV account exists; otherwise trim to 1,200 words and hand the draft to C for screenshots.
+- [ ] **B4 · Gemini project number** (15 min). Get the public AI Studio project number and add it to the form. If it cannot be found before submission, leave the Gemini slot out rather than claiming it.
+
+**Sync at 10:15 PT:** A reports test and deploy state; B reports scrubbed claims and form completeness; C reports design deltas and artifacts.
 
 ---
 
@@ -188,9 +210,9 @@ The repo already carries a [`vercel.json`](../vercel.json) with two services —
 
 ---
 
-## A — deploy only
+## A — check evidence and deploy
 
-Everything else on A's plate is done (see "Already done"). Two items remain:
+The near-term lane is scheduled in [Next block](#next-block--scheduled-for-a-and-b-08151015-pt-2026-10-18). The two deploy items remain:
 
 - [ ] **Deploy to Fly — full steps in [T6](#t6--fly-deploy-the-real-demo-url).** The CLI is not installed and there are no credentials on this machine, so this needs an interactive login first. The Docker image already builds and serves the whole path locally, so this is a packaging/auth step, not a code step.
 - [ ] **Personal Vercel deploy — full steps in [T7](#t7--personal-vercel-deploy-fallback-frontend--api-in-one-project).** Only if Fly slips; `vercel.json` is already in the repo and the frontend falls back to same-origin `/api`.
