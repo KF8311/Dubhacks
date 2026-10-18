@@ -1,6 +1,6 @@
 # Three-Person Work Split — Sniff + Visa
 
-> **This is the reference map, not the live checklist.** Use it for ownership ("who owns Task 23?") and the cut order. For "what do I do in this block?", use **`docs/checklist.md` §9** — it tracks the actual gate state and carries the current assignments. `docs/status.md` still wins over both.
+> **This is the reference map, not the live checklist.** Use it for ownership ("who owns Task 23?") and the cut order. For "what do I do now?", use **`docs/checklist.md`** — it lists only the open items, split by owner. `docs/status.md` still wins over both.
 
 **Read with:** `docs/superpowers/plans/2026-10-17-sniff-visa.md` (task numbers below refer to §14 of that plan).
 

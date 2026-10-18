@@ -12,7 +12,6 @@ A trust-gated shopping agent for the Visa "Reimagine Shopping" track at DubHacks
 2. `docs/INDEX.md` — the document map
 3. `docs/superpowers/plans/2026-10-17-sniff-visa.md` — architecture, contracts, and the 30-task list
 4. `docs/team-split-3.md` — who owns what
-5. `project-a-sniff-visa.md` — the product spec
 
 ## Non-negotiables
 
