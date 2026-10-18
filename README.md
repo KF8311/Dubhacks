@@ -124,7 +124,7 @@ Full shapes: [`docs/contracts.md`](docs/contracts.md).
 | Step | Action | Expected |
 |---|---|---|
 | 1 | Ask "noise cancelling headphones" | Three questions appear |
-| 2 | Answer **$150–$300**, Travel, Noise cancelling | 8 trusted + 1 danger |
+| 2 | Answer **$300–$600**, Travel, Noise cancelling | 9 listings: 8 trusted + 1 danger |
 | 3 | Watch the stream | 45 checks fill in; the villain turns red |
 | 4 | Read the villain reason | Denylisted, 12-day domain, scam reports, urgency copy |
 | 5 | Point at the pick | $179.99, saving $194.50 against a $374.49 median |
@@ -132,12 +132,12 @@ Full shapes: [`docs/contracts.md`](docs/contracts.md).
 | 7 | Check out | Sandbox banner → mandate → passkey → receipt |
 | 8 | Optional | Try the villain; the server refuses with a code |
 
-Do **not** answer "Under $150" on the happy path: it leaves only the villain and ends in `no_trusted_option`. That is a legitimate second demo.
+Only **$300–$600** contains all nine listings — the catalog runs to $549.99 — so the other answers are thinner: **$150–$300** returns 3 cards, and **Under $150** leaves only the villain and ends in `no_trusted_option`. That last one is a legitimate second demo, not the happy path.
 
 ## Tests
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q          # 184 passed
+cd backend && .venv/Scripts/python.exe -m pytest -q          # 187 passed
 cd frontend && npx vitest run && npm run build               # 34 passed, build clean
 ```
 
