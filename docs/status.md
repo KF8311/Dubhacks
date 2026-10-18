@@ -27,7 +27,7 @@ This is the only file that claims to be current.
 | Blockers | Fly deploy needs the CLI and login; C has not clicked the kept build through in a browser; B corrects the remaining claims and fills the Devpost. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-18 04:35 PT
+Last updated: 2026-10-18 05:25 PT
 
 ## Gate board
 

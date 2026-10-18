@@ -55,7 +55,7 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 | T2 | Photon text loop | 75 min | blocked on a number | no reply within 10 min of setup → leave slot 3 empty |
 | T3 | DEV article | 60 min | ✅ drafted; publish pending a DEV account | trim to 1,200 words; never describe a feature we do not have |
 | T4 | Atlas payment-path durability | 90 min | ✅ done 05:30 | abandon at 90 min — the Atlas claim already stands on D-026 |
-| T5 | Slate, SideShift paragraph, project number | 30 min | partly done | none |
+| T5 | Slate, SideShift paragraph, project number | 30 min | ✅ 05:25 — D-028 + paragraph done; project number still needs the AI Studio owner | none |
 
 #### T0 — Artifacts (blocks the submission)
 
@@ -142,8 +142,8 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 #### T5 — Slate, startup paragraph, project number
 
-- [ ] Append D-028 to [`decisions.md`](decisions.md) (after D-027): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
-- [ ] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT)
+- [x] Append D-028 to [`decisions.md`](decisions.md) (after D-027): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
+- [x] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT). Canonical copy: [`devpost.md`](devpost.md#who-pays)
 - [ ] Read the Gemini **project number** from the [AI Studio project selector](https://aistudio.google.com/apikey) (public id, not the key) and paste it into the Devpost field at [`devpost-form.md:132`](devpost-form.md#L132)
 - [ ] Tick the sponsored and non-sponsored checkboxes in [`devpost-form.md`](devpost-form.md); VEYZL stays unticked
 
