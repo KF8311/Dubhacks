@@ -1,4 +1,5 @@
 import mockFile from "../data/mock-session.json"
+import { apiBase } from "@/lib/apiBase.ts"
 import { isMockMode } from "@/lib/mockMode.ts"
 import type {
   Answer,
@@ -37,7 +38,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"
+  const base = apiBase()
   const response = await fetch(`${base}${path}`, {
     ...init,
     headers: {
