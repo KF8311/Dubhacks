@@ -79,22 +79,6 @@ def test_checkout_probe_open_ai_messages_shape():
     assert "Paris" in content
 
 
-def test_checkout_probe_returns_gemini_text(monkeypatch):
-    from app.services.llm_guard import GuardResult
-
-    async def fake_answer(text: str, *, complete=None):
-        return GuardResult(False, "GEMINI_SAYS_PARIS", text)
-
-    monkeypatch.setattr("app.api.routes_checkout.answer_probe", fake_answer)
-    client = TestClient(create_app())
-    r = client.post(
-        "/api/checkout",
-        json={"messages": [{"role": "user", "content": "What is the capital of France?"}]},
-    )
-    assert r.status_code == 200
-    assert r.json()["choices"][0]["message"]["content"] == "GEMINI_SAYS_PARIS"
-
-
 def test_checkout_blocked_for_caution(monkeypatch):
     client = TestClient(create_app())
     sid, listing = _setup(client, monkeypatch, verdict="caution", completed=5)

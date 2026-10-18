@@ -40,7 +40,7 @@ async def search(
     except Exception:  # noqa: BLE001 — any provider fault must reach the fallback
         results = []
 
-    if len(results) >= min(3, limit):
+    if results:
         listings, source = list(results), "serpapi"
     else:
         listings = catalog if catalog is not None else load_catalog()

@@ -8,8 +8,7 @@
       "buildCommand": "python scripts/bundle_data.py",
       "functions": {
         "app/main.py": {
-          "maxDuration": 60,
-          "includeFiles": ["data/**"]
+          "maxDuration": 60
         }
       }
     },
