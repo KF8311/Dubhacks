@@ -110,6 +110,7 @@ function Shop() {
                     verdict={scores[best.id].verdict}
                     score={scores[best.id].score}
                     confidence={scores[best.id].confidence}
+                    allowlisted={scores[best.id].allowlisted === true}
                     sessionId={sessionId ?? "ses_mock"}
                     onComplete={setReceipt}
                   />

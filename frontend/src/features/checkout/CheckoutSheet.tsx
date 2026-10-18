@@ -20,6 +20,7 @@ type Props = {
   score: number
   confidence: number
   sessionId?: string
+  allowlisted?: boolean
   onComplete: (receipt: Receipt) => void
 }
 
@@ -29,9 +30,12 @@ export function CheckoutSheet({
   score,
   confidence,
   sessionId = "ses_mock",
+  allowlisted = false,
   onComplete,
 }: Props) {
-  const payable = verdict === "trusted" && score >= 70 && confidence >= 0.6
+  // Allowlisted merchants are trusted at score 0; the server waives the 70-point floor for them.
+  const payable =
+    verdict === "trusted" && (allowlisted || (score >= 70 && confidence >= 0.6))
   const [phase, setPhase] = useState<"review" | "mandate" | "passkey" | "processing">("review")
   const [checkout, setCheckout] = useState<Checkout | null>(null)
   const [receipt, setReceipt] = useState<Receipt | null>(null)
