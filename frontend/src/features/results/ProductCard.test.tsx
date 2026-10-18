@@ -13,6 +13,13 @@ const listing = {
   source: "catalog" as const,
 }
 
+test("a listing above the stated budget is labelled", () => {
+  render(
+    <ProductCard listing={listing} checks={[]} score={undefined} isBest={false} budgetMaxCents={15000} />,
+  )
+  expect(screen.getByText("Above your budget")).toBeInTheDocument()
+})
+
 test("a missing check stays a skeleton row", () => {
   render(<ProductCard listing={listing} checks={[]} isBest={false} />)
   expect(screen.getAllByRole("generic").length).toBeGreaterThan(0)

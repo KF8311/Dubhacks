@@ -4,11 +4,13 @@ import type { Listing, Recommendation } from "@/lib/types.ts"
 type Props = {
   recommendation: Recommendation
   listings: Listing[]
+  budgetMaxCents?: number | null
 }
 
-export function BestPick({ recommendation, listings }: Props) {
+export function BestPick({ recommendation, listings, budgetMaxCents = null }: Props) {
   const listing = listings.find((item) => item.id === recommendation.recommended_listing_id)
   if (!listing || recommendation.savings_cents === null) return null
+  const overBudget = budgetMaxCents != null && listing.price_cents > budgetMaxCents
 
   return (
     <section className="rounded-xl border-2 border-stone-900 bg-stone-50 p-5">
@@ -20,6 +22,12 @@ export function BestPick({ recommendation, listings }: Props) {
       <p className="mt-3 text-lg">
         You save {formatCents(recommendation.savings_cents)} compared with the typical trusted price.
       </p>
+      {overBudget ? (
+        <p className="mt-2 text-sm text-stone-700">
+          Your ceiling did not match a trusted listing, so this is the closest trusted match above that
+          budget.
+        </p>
+      ) : null}
       {recommendation.narrative ? <p className="mt-2 text-stone-700">{recommendation.narrative}</p> : null}
     </section>
   )

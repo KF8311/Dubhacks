@@ -23,6 +23,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const [freeText, setFreeText] = useState("")
   const [answers, setAnswers] = useState<Answer[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [asking, setAsking] = useState(false)
 
   const question = questions[index]
 
@@ -31,6 +32,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
     if (!trimmed) return
     setQuery(trimmed)
     setError(null)
+    setAsking(true)
     try {
       const created = await createSession({ query: trimmed, client_id: "demo" })
       setSessionId(created.session_id)
@@ -42,6 +44,8 @@ export function DiscoveryFlow({ onStarted }: Props) {
       setPhase("questions")
     } catch {
       setError("The search could not reach the server. Leave this page open and try again.")
+    } finally {
+      setAsking(false)
     }
   }
 
@@ -71,7 +75,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
         skip_remaining: false,
       })
       const snapshot = await getSnapshot(submitted.session_id)
-      startSession(snapshot)
+      startSession(snapshot, { budgetMaxCents: submitted.search_spec?.budget_max_cents ?? null })
       onStarted(snapshot.session_id)
     } catch (caught) {
       setPhase("questions")
@@ -102,14 +106,18 @@ export function DiscoveryFlow({ onStarted }: Props) {
         <label className="block text-lg font-medium" htmlFor="query">
           What do you want to buy?
         </label>
+        <p className="text-sm text-stone-600">
+          Search real listings, then only offer to pay a merchant the checks can verify.
+        </p>
         <Input
           id="query"
           value={query}
           placeholder="What are you looking for?"
           onChange={(event) => setLocalQuery(event.target.value)}
+          disabled={asking}
         />
-        <Button type="submit" disabled={query.trim().length === 0}>
-          Find products
+        <Button type="submit" disabled={asking || query.trim().length === 0}>
+          {asking ? "Asking a few questions…" : "Find products"}
         </Button>
         {error ? (
           <p className="text-sm text-red-800" role="alert">

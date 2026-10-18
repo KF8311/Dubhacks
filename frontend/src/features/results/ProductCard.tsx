@@ -19,9 +19,10 @@ type Props = {
   checks: TrustCheckResult[]
   score?: ScoreResult
   isBest: boolean
+  budgetMaxCents?: number | null
 }
 
-export function ProductCard({ listing, checks, score, isBest }: Props) {
+export function ProductCard({ listing, checks, score, isBest, budgetMaxCents = null }: Props) {
   const [imageFailed, setImageFailed] = useState(listing.image_url.length === 0)
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
 
@@ -52,6 +53,9 @@ export function ProductCard({ listing, checks, score, isBest }: Props) {
           <span className="text-stone-600"> · {listing.merchant_domain}</span>
         </p>
         <p className="text-xl font-semibold">{formatCents(listing.price_cents, listing.currency)}</p>
+        {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
+          <p className="text-xs font-medium text-stone-700">Above your budget</p>
+        ) : null}
         <TrustBadge
           score={score?.score}
           verdict={score?.verdict}

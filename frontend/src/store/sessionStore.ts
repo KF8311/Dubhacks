@@ -26,9 +26,10 @@ type SessionState = {
   lastSeq: number
   error: string | null
   purgedIds: string[]
+  budgetMaxCents: number | null
   setQuery: (query: string) => void
   showQuestions: (questions: Question[]) => void
-  startSession: (snapshot: SessionSnapshot) => void
+  startSession: (snapshot: SessionSnapshot, extras?: { budgetMaxCents?: number | null }) => void
   applyEvent: (event: StreamEvent) => boolean
   applySnapshot: (snapshot: SessionSnapshot) => void
   dismissError: () => void
@@ -48,6 +49,7 @@ const empty = {
   lastSeq: 0,
   error: null as string | null,
   purgedIds: [] as string[],
+  budgetMaxCents: null as number | null,
 }
 
 function eventFields(event: StreamEvent): Record<string, unknown> {
@@ -72,7 +74,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   ...empty,
   setQuery: (query) => set({ query }),
   showQuestions: (questions) => set({ questions, stage: "clarifying" }),
-  startSession: (snapshot) => {
+  startSession: (snapshot, extras) => {
+    const budgetMaxCents = extras?.budgetMaxCents ?? null
     const finished =
       snapshot.listings.length > 0 ||
       snapshot.stage === "ready" ||
@@ -88,6 +91,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         scores: snapshot.scores,
         recommendation: snapshot.recommendation,
         lastSeq: snapshot.last_seq,
+        budgetMaxCents,
       })
       return
     }
@@ -96,6 +100,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       sessionId: snapshot.session_id,
       stage: "searching",
       query: snapshot.query,
+      budgetMaxCents,
     })
   },
   applyEvent: (event) => {

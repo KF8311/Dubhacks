@@ -26,7 +26,10 @@ export default function App() {
     return (
       <div className="min-h-screen bg-white text-left text-stone-900">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 sm:px-6">
-          <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
+            <p className="text-xs text-stone-600">Investigates first. Pays only what it can verify.</p>
+          </div>
           <Badge variant="outline" className="h-auto max-w-full shrink whitespace-normal py-1 text-left">
             {SANDBOX_LABEL}
           </Badge>
@@ -50,6 +53,7 @@ function Shop() {
   const recommendation = useSessionStore((state) => state.recommendation)
   const error = useSessionStore((state) => state.error)
   const purgedIds = useSessionStore((state) => state.purgedIds)
+  const budgetMaxCents = useSessionStore((state) => state.budgetMaxCents)
   const dismissError = useSessionStore((state) => state.dismissError)
   const reset = useSessionStore((state) => state.reset)
   const [purging, setPurging] = useState(false)
@@ -68,7 +72,10 @@ function Shop() {
   return (
     <div className="min-h-screen bg-white text-left text-stone-900">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-4 sm:px-6">
-        <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight">Sniff</h1>
+          <p className="text-xs text-stone-600">Investigates first. Pays only what it can verify.</p>
+        </div>
         <Badge variant="outline" className="h-auto max-w-full shrink whitespace-normal py-1 text-left">
           {SANDBOX_LABEL}
         </Badge>
@@ -94,13 +101,20 @@ function Shop() {
               <EmptyState message={recommendation.reason} onStartOver={reset} />
             ) : (
               <>
-                {recommendation && best ? <BestPick recommendation={recommendation} listings={visible} /> : null}
+                {recommendation && best ? (
+                  <BestPick
+                    recommendation={recommendation}
+                    listings={visible}
+                    budgetMaxCents={budgetMaxCents}
+                  />
+                ) : null}
                 {listings.length === 0 ? <p>Checking listings…</p> : null}
                 <ResultsGrid
                   listings={visible}
                   checks={checks}
                   scores={scores}
                   recommendation={recommendation}
+                  budgetMaxCents={budgetMaxCents}
                 />
                 {receipt ? (
                   <ReceiptView receipt={receipt} />

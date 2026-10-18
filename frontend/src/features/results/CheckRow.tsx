@@ -12,7 +12,14 @@ const statusLabel: Record<TrustStatus, string> = {
   passed: "Passed",
   warning: "Warning",
   failed: "Failed",
-  skipped: "Skipped",
+  skipped: "Could not verify",
+}
+
+const statusColor: Record<TrustStatus, string> = {
+  passed: "text-[color:var(--trust-trusted)]",
+  warning: "text-[color:var(--trust-caution)]",
+  failed: "text-[color:var(--trust-danger)]",
+  skipped: "text-stone-600",
 }
 
 export function CheckRow({ check, listingId }: Props) {
@@ -47,7 +54,7 @@ export function CheckRow({ check, listingId }: Props) {
           {busy ? "Explaining…" : "Explain"}
         </button>
       </div>
-      <p className="shrink-0 font-medium">{statusLabel[check.status]}</p>
+      <p className={`shrink-0 font-medium ${statusColor[check.status]}`}>{statusLabel[check.status]}</p>
     </div>
   )
 }

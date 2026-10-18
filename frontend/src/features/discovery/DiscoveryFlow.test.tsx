@@ -36,6 +36,31 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+test("says it is asking questions while the session is created", async () => {
+  let finish: ((value: Response) => void) | undefined
+  vi.spyOn(globalThis, "fetch").mockImplementation(
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve
+      }),
+  )
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "running shoes" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  expect(await screen.findByText(/asking a few questions/i)).toBeInTheDocument()
+  finish?.(
+    jsonResponse({
+      session_id: "ses_real",
+      stage: "clarifying",
+      questions,
+      expires_at: "2026-10-17T22:00:00Z",
+    }),
+  )
+})
+
 test("shows an alert and stays on the search when the API is unreachable", async () => {
   vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"))
 
