@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from app.domain.models import Answer, SearchSpec
+from app.search.catalog import catalog_covers
 
 QUESTIONS: list[dict] = [
     {
@@ -40,12 +41,54 @@ QUESTIONS: list[dict] = [
     },
 ]
 
+GENERIC_QUESTIONS: list[dict] = [
+    {
+        "id": "q_budget",
+        "prompt": "What's your ceiling?",
+        "kind": "single_select",
+        "options": [
+            {"id": "150", "label": "Under $150"},
+            {"id": "300", "label": "$150–$300"},
+            {"id": "600", "label": "$300–$600"},
+        ],
+        "allow_free_text": True,
+    },
+    {
+        "id": "q_use",
+        "prompt": "Where will you use it?",
+        "kind": "single_select",
+        "options": [
+            {"id": "home", "label": "Home"},
+            {"id": "work", "label": "Work"},
+            {"id": "travel", "label": "Travel"},
+        ],
+        "allow_free_text": True,
+    },
+    {
+        "id": "q_priority",
+        "prompt": "What matters most?",
+        "kind": "single_select",
+        "options": [
+            {"id": "quality", "label": "Quality"},
+            {"id": "brand", "label": "A brand I know"},
+            {"id": "price", "label": "Lowest price"},
+        ],
+        "allow_free_text": True,
+    },
+]
+
+
+def templates_for(query: str) -> list[dict]:
+    if catalog_covers(query):
+        return list(QUESTIONS)
+    return list(GENERIC_QUESTIONS)
+
 
 async def generate_questions(query: str) -> list[dict]:
     """Gemini when a key is present; templates on timeout, offline, or bad JSON."""
     from app.services.llm import generate_questions as llm_questions
 
-    return await llm_questions(query, fallback=QUESTIONS)
+    return await llm_questions(query, fallback=templates_for(query))
 
 
 def _dollar_amounts(raw: str) -> list[int]:
