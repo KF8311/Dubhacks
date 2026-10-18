@@ -251,6 +251,7 @@ class SessionOrchestrator:
                 "verdict": score.verdict.value,
                 "confidence": score.confidence,
                 "top_reason": score.top_reason,
+                "allowlisted": score.allowlisted,
                 "penalties": [p.model_dump(mode="json") for p in score.penalties],
             },
         )
