@@ -112,9 +112,9 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 9:00–10:30 PM — integration and Devpost draft
 
-- [ ] Sit with C and wire the real checkout into the real UI.
-- [ ] Fix the first three integration bugs; do not start new features.
-- [ ] Give B the technical claims for the Devpost by 10:00.
+- [x] Sit with C and wire the real checkout into the real UI.
+- [x] Fix the first three integration bugs; do not start new features.
+- [x] Give B the technical claims for the Devpost by 10:00.
 
 ### 10:30 PM–2:00 AM — hardening
 

@@ -27,7 +27,10 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("GEMINI_API_KEY", "gemini_api_key"),
     )
     gemini_model: str = "gemini-3.5-flash-lite"
-    serpapi_key: str | None = None
+    serpapi_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SERPAPI_KEY", "serpapi_key"),
+    )
     google_safe_browsing_key: str | None = None
     receipt_signing_secret: str = "dev-only-change-me"
     version: str = "0.9.0"

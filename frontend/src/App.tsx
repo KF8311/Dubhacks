@@ -111,7 +111,7 @@ function Shop() {
                     score={scores[best.id].score}
                     confidence={scores[best.id].confidence}
                     allowlisted={scores[best.id].allowlisted === true}
-                    sessionId={sessionId ?? "ses_mock"}
+                    sessionId={sessionId ?? undefined}
                     onComplete={setReceipt}
                   />
                 ) : null}

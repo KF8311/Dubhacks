@@ -17,7 +17,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 | **Claude / an agent** | `CLAUDE.md` → this page → `docs/status.md` → the plan |
 | **On Cursor** | `AGENTS.md` → `.cursor/rules/project.mdc` → `docs/status.md` |
 | **Reviewing a decision** | `docs/decisions.md` |
-| **Writing the Devpost or video** | `docs/devpost-form.md` (field-by-field) → `docs/devpost.md` (copy) → `project-a-sniff-visa.md` §10–§11 |
+| **Writing the Devpost or video** | `docs/devpost-form.md` (field-by-field) → `docs/devpost-technical-claims.md` (the claims) → `docs/devpost.md` (copy) → `project-a-sniff-visa.md` §10–§11 |
 | **Debugging the demo** | Plan §9 (fallbacks), §16 (risk register), `docs/status.md` |
 
 ## The document set
@@ -35,6 +35,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 | `docs/decisions.md` | Append-only decision log with rationale and alternatives | Append-only |
 | `docs/devpost.md` | Devpost draft: title, copy, tech claims, sandbox disclosure, fill-in list | Draft |
 | `docs/devpost-form.md` | The five Devpost steps mapped field by field: limits, required fields, exact copy, which tracks to select | Draft |
+| `docs/devpost-technical-claims.md` | The technical claims A handed to B, each mapped to the file and test that backs it | Draft |
 | `docs/veylz-audit.md` | VEYZL audit: scope, candidate controls, method, and the finding/fix evidence | Awaiting run |
 | `docs/open-questions.md` | Unresolved questions for mentors, judges, or the team | Living |
 | `docs/SKILLS.md` | Committed skills and agents, when each fires, who should use it | Current |

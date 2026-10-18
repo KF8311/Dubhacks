@@ -12,7 +12,10 @@ from app.search.serpapi import SerpAPIProvider
 def _within_budget(listings: list[Listing], spec: SearchSpec) -> list[Listing]:
     if spec.budget_max_cents is None:
         return listings
-    return [item for item in listings if item.price_cents <= spec.budget_max_cents]
+    affordable = [item for item in listings if item.price_cents <= spec.budget_max_cents]
+    # Gemini budget options can be grocery-scale; the demo catalog is headphones.
+    # An empty grid is worse than ignoring a cap that matches nothing.
+    return affordable if affordable else listings
 
 
 async def search(

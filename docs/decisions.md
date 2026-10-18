@@ -103,9 +103,9 @@ Format:
 - **Consequences:** About $2.19 per 30 days billed per second — roughly $0.15 for the event. The free trial is only 2 machine hours, so a card is required. Fly has no hard spend cap, so destroy the machines after judging. `fly launch` generates the Dockerfile. Uvicorn runs `--workers 1` with no global gzip so SSE streams.
 ## D-011 — SerpAPI stays catalog-only until a key proves merchant domains
 - **Date:** 2026-10-17
-- **Status:** accepted
+- **Status:** superseded by D-021
 - **Decision:** Ship search on the curated catalog. Re-run `python scripts/serpapi_spike.py` when `SERPAPI_KEY` exists, and only switch to live search if the results carry merchant domains.
-- **Why:** The spike could not call SerpAPI because the key is unset. The plan already specifies a catalog fallback, so nothing is blocked.
+- **Why:** The spike could not call SerpAPI because the key was unset. The plan already specifies a catalog fallback, so nothing is blocked.
 - **Alternatives considered:** Blocking on the key (rejected: the catalog covers the demo query).
 - **Consequences:** The demo is deterministic and offline-safe. Search quality is unchanged until a key appears.
 
@@ -180,3 +180,20 @@ Format:
 - **Why:** VEYZL is a GitHub App that must be installed on `KF8311/Dubhacks` and linked to a project in the vendor portal. That requires repo-admin rights, which A has and B does not. An audit task owned by someone who cannot install the app stalls at step one.
 - **Alternatives considered:** B installs the app on a fork (the side track asks for the project repo; a fork weakens the evidence); keep it with B and have A act as installer only (splits one task across two people and leaves the fix PR ownerless).
 - **Consequences:** A now owns the audit run, the fix PR, and `docs/veylz-audit.md`. B reviews the final finding and keeps the Devpost. No block or gate moves: the audit still fits Block 5/6, and the Devpost is still B's.
+
+## D-021 — Google Shopping `source` can supply the merchant domain
+- **Date:** 2026-10-17
+- **Status:** accepted; supersedes D-011
+- **Decision:** If the SerpAPI `product_link` is a Google host, map a known `source` (Target, Walmart, eBay, …) to that retailer's domain and keep the listing.
+- **Why:** Live Google Shopping results for this key only return `google.com` product links. Dropping them sent every query, including spaced ones like "apple juice", back to the headphone catalog.
+- **Alternatives considered:** Keep the D-011 drop-if-Google rule (catalog-only forever); extra SerpAPI product API round-trips (too slow for the 5 s search budget).
+- **Consequences:** Unknown sellers are still dropped, and trust checks run on the inferred retailer domain, not on Google. Renumbered from D-019 on merge — that number already belonged to the Gemini model entry.
+- **Follow-up:** Re-run `scripts/serpapi_spike.py` with a key and confirm the inferred domains match the retailer's real site before claiming live search in the Devpost. `SERPAPI_KEY` now reads the upper-case env name (also added in this merge).
+
+## D-022 — A budget that matches nothing falls back to the full catalog
+- **Date:** 2026-10-17
+- **Status:** accepted with a caveat
+- **Decision:** `_within_budget()` returns the unfiltered results when the budget filter matches nothing, instead of an empty grid.
+- **Why:** Gemini's budget options can be grocery-scale while the demo catalog is headphones; an empty grid is a worse demo than a labelled over-budget listing.
+- **Alternatives considered:** Keep the strict filter and show an empty state (honest, but the demo dead-ends on a plausible answer); raise the catalog prices (breaks the fixture numbers).
+- **Consequences:** A listing above the stated budget can be recommended and paid, because the payability cap is the listing price, not the user's answer. Say "closest match" on stage, or add an over-budget badge before the demo. Do not describe the budget as a hard cap.
