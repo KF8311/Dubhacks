@@ -11,18 +11,18 @@ from __future__ import annotations
 import re
 import time
 from html.parser import HTMLParser
-from pathlib import Path
 from urllib.parse import urljoin, urlsplit
 
 import httpx
 
 from app.checks.base import CheckContext, CheckTarget
 from app.core.config import get_settings
+from app.core.paths import data_dir
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, TrustCheckResult
 from app.services.url_safety import validate_public_url
 
-FIXTURE_DIR = Path(__file__).resolve().parents[3] / "data" / "fixtures"
+FIXTURE_DIR = data_dir() / "fixtures"
 FIXTURES = {"premium-audio-deals.shop": "villain_page.html"}
 MAX_BYTES = 1_000_000
 FETCH_TIMEOUT_S = 6.0

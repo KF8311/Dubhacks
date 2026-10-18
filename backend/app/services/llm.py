@@ -19,6 +19,7 @@ import httpx
 from app.core.config import get_settings
 from app.core.timeouts import LLM_S
 from app.domain.models import Recommendation, TrustCheckResult
+from app.services.llm_guard import guard_user_text
 
 log = logging.getLogger(__name__)
 
@@ -164,6 +165,10 @@ async def generate_questions(
     fallback: list[dict] | None = None,
 ) -> list[dict]:
     templates = list(fallback) if fallback is not None else _templates()
+    guarded = guard_user_text(query)
+    if guarded.refused:
+        return templates
+    query = guarded.redacted_input
     prompt = _wrap_data(
         "Write 2 or 3 clarifying questions for a sandbox shopping demo. "
         'Return JSON {"questions":[{"id","prompt","kind":"single_select",'

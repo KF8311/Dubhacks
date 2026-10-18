@@ -9,16 +9,16 @@ from __future__ import annotations
 import json
 import re
 import time
-from pathlib import Path
 
 import httpx
 
 from app.checks.base import CheckContext, CheckTarget
 from app.core.config import get_settings
+from app.core.paths import data_dir
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, TrustCheckResult
 
-FIXTURE_DIR = Path(__file__).resolve().parents[3] / "data" / "fixtures"
+FIXTURE_DIR = data_dir() / "fixtures"
 FIXTURES = {"premium-audio-deals.shop": "villain_reddit.json"}
 SEARCH_URL = "https://www.reddit.com/search.json"
 SEARCH_TIMEOUT_S = 4.0

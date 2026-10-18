@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     demo_mode: bool = True
     demo_pacing: bool = False
     offline: bool = False
-    allowed_origins: str = "http://localhost:5173"
+    allowed_origins: str = "http://localhost:5173,http://localhost:5174"
     mongodb_uri: str | None = None
     mongodb_db: str = "sniff"
     gemini_api_key: str | None = Field(

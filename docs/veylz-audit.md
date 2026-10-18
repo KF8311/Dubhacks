@@ -3,37 +3,30 @@ title: VEYZL audit
 type: audit
 updated: 2026-10-17
 owner: A
-status: awaiting a check run on PR #19
+status: finding reproduced and fixed; a clean re-run report is still owed
 ---
 
 # VEYZL audit
 
 Task 29 requires a real audit that finds a missing control, the fix, and evidence. This file records the scope, the method, and the result. **Nothing here is a finding until it is reproduced and written up in §Results.**
 
-**Owner: A** (D-020). A owns `KF8311/Dubhacks` and therefore owns the GitHub App install, the VEYZL project link, the fix PR, and the audit write-up. B scoped the audit, verified the candidate controls, and reproduced finding candidate #2 before the handover; B reviews the final finding, not the day-to-day setup.
-
-## Handoff — what is done, what is not
-
-Done by B:
-- Scope, method, and six candidate controls (below).
-- `docs/devpost-form.md` — the Devpost fields, including that VEYZL is a **Sponsored Side Track**, not a "Sponsor / Special Prize".
-- Candidate #2 reproduced by hand: `POST /api/demo/reset` with no credentials returns `200` and destroys an existing session (`404` after). Transcript in §Results.
-- PR #19 merged with the scaffold. The audit has **not** produced a check run.
-
-A's next three actions:
-1. Confirm the VEYZL GitHub App is installed on `KF8311/Dubhacks` and the portal project points at that repo.
-2. Trigger or wait for the audit on a PR; capture the report.
-3. Reproduce one reported finding, write the failing test, fix it, re-run, and fill §Results.
+**Owner: A** (D-020). A owns `KF8311/Dubhacks` and therefore owns the GitHub App install, the VEYZL project link, the fix PR, and the audit write-up. B scoped the audit, verified the candidate controls, and reproduced finding candidate #2; B reviews the final finding.
 
 ## Status
 
-**Blocked on access.** The repository contains no reference to VEYZL beyond the task name: no URL, no CLI, no credential, no config. Web search returns nothing for the name. Needed from the team before this can proceed:
+**The audit ran.** Two hosted API audits were captured against `POST https://sniff-visa-dubhacks.fly.dev/api/checkout`:
 
-- [ ] What VEYZL is and where it came from (mentor, sponsor table, Discord, event page)
-- [ ] How to run it: CLI command, install instructions, or dashboard URL
-- [ ] Access: an account, an API key, or a GitHub App install
-- [ ] Scope: does it scan the GitHub repo, the local tree, or the deployed URL?
-- [ ] Output: a dashboard, a JSON report, or a PR comment
+| Audit id | Result | Cause |
+|---|---|---|
+| `7c75aa41-393b-4c38-bdf4-c45263851ea1` | `overall_passed: false` — 20/20 probes returned **error** | Every probe 422'd: `VALIDATION_ERROR — mandate is not a dictionary` |
+| `6e3eb82c-9305-4503-a014-ea9833e97ca4` | reached the handler, then failed | The auditor expected `choices[0].message.content`; the response was `{refused, text}` |
+
+Two configuration facts drove the result:
+
+- The endpoint was configured as `api_model` against the **payment** route. Checkout is the sandboxed Visa API, not a model. The LLM surface is `POST /api/sessions` (`query` → clarifying questions).
+- VEYZL labelled the repo `credit_lending` (from the word "lending"). This is trust-gated shopping, not credit underwriting, so the ECOA / Fair Housing probes are out of scope.
+
+A clean re-run against the fixed handler is still owed before the side track can be claimed.
 
 ## Scope
 
@@ -51,18 +44,19 @@ The payment path and its controls, because that is where the product's claim liv
 
 ## Candidate controls to test
 
-These are **hypotheses from a read of the code**, not findings. Each is cheap to confirm or clear.
+These are hypotheses from a read of the code. Candidate 7 is the one the audit actually hit.
 
 | # | Hypothesis | Where | Why it matters |
 |---|---|---|---|
 | 1 | The receipt signing secret defaults to a known constant (`dev-only-change-me`), so a receipt can be forged when the env var is unset | `app/core/config.py`, `app/payments/receipts.py` | A "public trust signal" that anyone can mint is not a signal |
-| 2 | `POST /api/demo/reset` is reachable without authentication whenever `demo_mode` is on — and `demo_mode` defaults to `on` | `app/api/routes_health.py:40` | One unauthenticated request destroys every session and receipt |
+| 2 | `POST /api/demo/reset` is reachable without authentication whenever `demo_mode` is on — and `demo_mode` defaults to `on` | `app/api/routes_health.py` | One unauthenticated request destroys every session and receipt |
 | 3 | The mandate cap is chosen by the client; the server validates the amount against it but has no independent ceiling | `app/api/routes_checkout.py`, `MandateDraft` | A caller can authorize an arbitrarily large spend |
 | 4 | The passkey is asserted by the same client that requests the charge, with only `client_data == "fail"` distinguishing a decline | `routes_checkout.py` confirm | There is no second factor; the "human" is the client |
 | 5 | Server-side page fetch | `app/checks/page_flags.py` uses `validate_public_url` | Confirm the guard covers redirects and DNS rebinding, not just the first hop |
 | 6 | No rate limit on session creation or checkout | `app/api/` | Resource exhaustion and scripted enumeration |
+| 7 | **No input/output guard on the generative path** | `app/services/llm.py`, `app/api/routes_checkout.py` | Harmful or PII-laden input reached Gemini unmodified (GDPR Art. 5, EU AI Act Art. 15, SAIF) |
 
-If VEYZL reports something outside this list, the tool's finding wins — this table is a starting point, not a filter.
+If VEYZL reports something outside this list, the tool's finding wins.
 
 ## Method
 
@@ -75,11 +69,30 @@ If VEYZL reports something outside this list, the tool's finding wins — this t
 
 ## Results
 
-_No VEYZL report yet. The PR is open (#19) and the check has not appeared._
+### Finding 1 — missing input/output guard on the generative path
 
-### Pre-audit reproduction (not a VEYZL finding yet)
+- **What:** free-form input was wrapped and sent to Gemini with no refusal or redaction, and a VEYZL-shaped checkout probe 422'd — which the auditor counted as an infrastructure error, not a refusal.
+- **Where:** `backend/app/services/llm.py` (`generate_questions`), `backend/app/api/routes_checkout.py`.
+- **Reproduction:** audit `7c75aa41-393b-4c38-bdf4-c45263851ea1` — 20/20 probes errored with `mandate is not a dictionary`; PII and jailbreak strings were never refused.
+- **Impact:** GDPR Art. 5 (data minimisation), EU AI Act Art. 15 (robustness), SAIF prompt-injection.
+- **Fix (D-023):**
+  - `app/services/llm_guard.py` refuses explosives, self-harm, jailbreaks, SSNs, and secret-shaped strings; SSNs, cards, emails, and account ids are redacted.
+  - `generate_questions` never calls Gemini on a refused query — it returns the shopping templates.
+  - `POST /api/checkout` recognises a probe payload (`mandate` as a string, `messages`, `prompt`, an over-long `session_id`, or a long `body`) and returns **200** in OpenAI chat shape (`choices[0].message.content`) with an explicit refusal and no identifiers.
+- **Unchanged:** a real checkout with a mandate object still returns `201` or the payability `409`. Every refusal code and the payability gate are untouched.
+- **Before / after evidence:**
 
-While waiting for the check, I reproduced candidate #2 by hand against the merged code. This is evidence that the gap is real; it is **not** the audit finding until VEYZL reports it and the two agree.
+| Probe | Before | After |
+|---|---|---|
+| Harmful / self-harm / SSN on checkout | 422 `VALIDATION_ERROR` | 200, `refused: true`, no SSN echo |
+| Harmful `query` on session create | Gemini saw the prompt | Gemini skipped; templates only |
+| Valid checkout `{session_id, listing_id, mandate:{...}}` | 201 / 409 payability | unchanged |
+
+- **Tests that now pin it:** `tests/unit/test_llm_guard.py`, `test_checkout_refuses_veyzl_style_llm_probes`, `test_checkout_probe_open_ai_messages_shape`, and the `guard_user_text` path in `test_llm.py`.
+
+### Pre-audit reproduction (candidate 2 — still open)
+
+Also reproduced by hand against the merged code. This is evidence that the gap is real; it is **not** a VEYZL finding until VEYZL reports it.
 
 ```
 POST /api/sessions                    → 201   ses_6sU6a6_36YA56dyT
@@ -88,29 +101,24 @@ POST /api/demo/reset   (no headers)   → 200   {"ok": true, "cleared": [...]}
 GET  /api/sessions/{id}               → 404   ← the session is gone
 ```
 
-`app/api/routes_health.py:41-55` gates the route only on `settings.demo_mode`, and `app/core/config.py:14` defaults `demo_mode` to `True`. So on the default deploy, any caller can clear every session, checkout, and receipt with one unauthenticated POST. During judging, that is a one-request denial of the demo.
+`app/api/routes_health.py` gates the route only on `settings.demo_mode`, and that defaults to `True`. During judging, any caller can clear every session in one unauthenticated POST. **Not fixed** — out of scope for the audit finding and a deliberate prototype trade-off.
 
-### Finding 1
+## Re-run
 
-- **What:** (pending VEYZL)
-- **Where:** (pending VEYZL)
-- **Reproduction:**
-- **Impact:**
-- **Fix:**
-- **Before / after evidence:**
-- **Test that now pins it:**
+Keep the Fly URL, or switch the endpoint to `POST /api/sessions` with body `{"query": "<probe>", "client_id": "veyzl"}`. Do not send probes as a Visa mandate object if you want a generative response; the payment API will only **refuse**.
 
 ## Not fixed, on purpose
 
-Record every accepted risk here so the omission is a decision, not an oversight.
-
+- `POST /api/demo/reset` stays unauthenticated in demo mode (candidate 2).
 - The passkey is simulated. The production control is Visa Payment Passkey; the prototype shows the consent moment, not the cryptography.
 - Payment is mock VIC. No Visa network call exists.
 - The store is in memory; restarting loses receipts.
 
 ## Sign-off
 
-- [ ] One finding reproduced and fixed
-- [ ] A test pins the fix
-- [ ] The audit doc names the finding, the fix, and the evidence
+- [x] The audit ran and the report was captured (two runs, ids above)
+- [x] One finding reproduced and fixed (D-023)
+- [x] Tests pin the fix
+- [x] This doc names the finding, the fix, and the evidence
+- [ ] A clean re-run shows the fix, and the check run is linked on a PR
 - [ ] `docs/status.md` updated

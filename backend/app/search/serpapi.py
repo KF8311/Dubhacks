@@ -24,21 +24,32 @@ GOOGLE_HOSTS = frozenset(
 # Google Shopping often omits a store URL and only names the seller in `source`.
 KNOWN_SOURCES = {
     "amazon": "amazon.com",
+    "asos": "asos.com",
     "best buy": "bestbuy.com",
     "bestbuy": "bestbuy.com",
     "costco": "costco.com",
+    "custom ink": "customink.com",
     "cvs": "cvs.com",
     "ebay": "ebay.com",
+    "gap": "gap.com",
+    "h&m": "hm.com",
     "hy-vee": "hy-vee.com",
     "hyvee": "hy-vee.com",
     "instacart": "instacart.com",
     "kroger": "kroger.com",
+    "macys": "macys.com",
+    "macy's": "macys.com",
+    "nike": "nike.com",
+    "nordstrom": "nordstrom.com",
+    "old navy": "oldnavy.gap.com",
     "sams club": "samsclub.com",
     "sam's club": "samsclub.com",
     "target": "target.com",
+    "uniqlo": "uniqlo.com",
     "walgreens": "walgreens.com",
     "walmart": "walmart.com",
     "whole foods": "wholefoodsmarket.com",
+    "zara": "zara.com",
 }
 
 
@@ -64,6 +75,10 @@ def domain_from_source(source: str) -> str:
     raw = (source or "").strip().lower()
     if not raw:
         return ""
+    if " " not in raw and "." in raw:
+        host = merchant_host(f"https://{raw}")
+        if host and host not in GOOGLE_HOSTS:
+            return host
     head = raw.split("-", 1)[0].strip()
     if head in KNOWN_SOURCES:
         return KNOWN_SOURCES[head]
@@ -186,7 +201,7 @@ def _with_api_key(url: str, api_key: str) -> str:
 class SerpAPIProvider:
     name = "serpapi"
 
-    def __init__(self, api_key: str | None = None, timeout_s: float = SEARCH_S) -> None:
+    def __init__(self, api_key: str | None = None, timeout_s: float = SEARCH_S - 1.0) -> None:
         self.api_key = api_key if api_key is not None else get_settings().serpapi_key
         self.timeout_s = timeout_s
 

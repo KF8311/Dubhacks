@@ -74,6 +74,8 @@ cp .env.example .env
 
 `--workers 1` is mandatory: SSE streams and the in-memory store assume one process.
 
+**Deploy:** Fly.io from the repo root (`fly.toml`), or Vercel via [`vercel.json`](vercel.json) — the backend build runs `python scripts/bundle_data.py` so the fixtures ship inside the function. The frontend reads `VITE_API_BASE_URL`; when it is unset it calls same-origin `/api`, which is what the Vercel service rewrite expects. Local dev defaults to `http://localhost:8000`.
+
 **Frontend:**
 
 ```bash
@@ -175,4 +177,4 @@ docs/           status, contracts, decisions, plans
 
 ## Docs
 
-Start at [`docs/INDEX.md`](docs/INDEX.md). The live state is [`docs/status.md`](docs/status.md); decisions are append-only in [`docs/decisions.md`](docs/decisions.md).
+Start at [`docs/INDEX.md`](docs/INDEX.md). The live state is [`docs/status.md`](docs/status.md); decisions are append-only in [`docs/decisions.md`](docs/decisions.md); the VEYZL finding and fix are in [`docs/veylz-audit.md`](docs/veylz-audit.md).
