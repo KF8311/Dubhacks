@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal, InvalidOperation
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 import httpx
 
@@ -81,16 +81,21 @@ def _product_url(item: dict) -> str:
 
 
 def _google_product_url(item: dict) -> str:
-    """A Google Shopping product link is a real page, so keep it as a fallback.
+    """Point a Google-hosted result at its Google Shopping results page.
 
     Google's shopping engine often returns only `google.com/search?ibp=oshop…`
-    links, with the retailer named in `source`. That link lands on the product
-    (and from there on the store), which is useful; an invented
-    `https://<retailer>/item/<id>` is not — it 404s.
+    links, with the retailer named in `source`. The `prds` catalog token in
+    those links can resolve to a different listing than the one we priced, so
+    drop it and keep the query: the page opens on the top result, which the
+    card's price identifies. An invented `https://<retailer>/item/<id>` is not
+    acceptable — it 404s.
     """
     for key in ("product_link", "link"):
         value = _clean_url(str(item.get(key) or ""))
         if value and merchant_host(value) in GOOGLE_HOSTS:
+            query = parse_qs(urlparse(value).query).get("q", [""])[0].strip()
+            if query:
+                return f"https://www.google.com/search?ibp=oshop&q={quote(query)}"
             return value
     return ""
 
@@ -130,7 +135,7 @@ def listing_from_shopping_result(item: dict) -> Listing | None:
         domain = domain_from_source(str(item.get("source") or ""))
         if not domain:
             return None
-        # Never invent a merchant path: keep the real Google Shopping link.
+        # Never invent a merchant path: link to the Google Shopping results page.
         product_url = _google_product_url(item)
     price_cents = _price_cents(item)
     if price_cents is None:
@@ -139,8 +144,9 @@ def listing_from_shopping_result(item: dict) -> Listing | None:
     merchant_name = str(item.get("source") or domain).strip() or domain
     thumbs = item.get("serpapi_thumbnails") or []
     image_url = str(item.get("thumbnail") or (thumbs[0] if thumbs else "") or "")
-    # An empty product_url must not collapse every listing onto one id.
-    identity = product_url or f"{domain}:{item.get('product_id') or title}"
+    # A shared (or empty) product_url must not collapse listings onto one id:
+    # every Google result for a query now points at the same results page.
+    identity = f"{product_url}|{domain}|{item.get('product_id') or title}"
     return Listing(
         id=listing_id(identity),
         title=title,

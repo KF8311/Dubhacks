@@ -329,7 +329,7 @@ async def test_serpapi_client_uses_the_provider_timeout(monkeypatch):
     assert captured["timeout"] == 4.0
 
 
-def test_google_product_link_is_kept_instead_of_invented():
+def test_google_links_route_to_the_results_page_instead_of_a_catalog_token():
     payload = {
         "shopping_results": [
             {
@@ -345,7 +345,8 @@ def test_google_product_link_is_kept_instead_of_invented():
     assert len(listings) == 1
     listing = listings[0]
     assert listing.merchant_domain == "bestbuy.com"
-    assert listing.product_url.startswith("https://www.google.com/")
+    assert listing.product_url == "https://www.google.com/search?ibp=oshop&q=xm5"
+    assert "prds" not in listing.product_url
     assert "/item/" not in listing.product_url
 
 
@@ -376,3 +377,30 @@ def test_product_urls_never_contain_literal_spaces():
     listing = listings_from_payload(payload, spec=SearchSpec(query="x"), limit=8)[0]
     assert " " not in listing.product_url
     assert "noise%20cancelling%20headphones" in listing.product_url
+
+
+def test_google_results_sharing_a_url_keep_distinct_ids():
+    payload = {
+        "shopping_results": [
+            {
+                "title": "Headphones A",
+                "product_link": "https://www.google.com/search?ibp=oshop&q=headphones&prds=productid:1",
+                "source": "Best Buy",
+                "extracted_price": 199.0,
+                "product_id": "1",
+            },
+            {
+                "title": "Headphones B",
+                "product_link": "https://www.google.com/search?ibp=oshop&q=headphones&prds=productid:2",
+                "source": "Target",
+                "extracted_price": 219.0,
+                "product_id": "2",
+            },
+        ]
+    }
+    listings = listings_from_payload(payload, spec=SearchSpec(query="headphones"), limit=8)
+    assert len(listings) == 2
+    assert {item.product_url for item in listings} == {
+        "https://www.google.com/search?ibp=oshop&q=headphones"
+    }
+    assert len({item.id for item in listings}) == 2
