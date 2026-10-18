@@ -86,16 +86,16 @@ def _google_product_url(item: dict) -> str:
     Google's shopping engine often returns only `google.com/search?ibp=oshop…`
     links, with the retailer named in `source`. The `prds` catalog token in
     those links can resolve to a different listing than the one we priced, so
-    drop it and keep the query: the page opens on the top result, which the
-    card's price identifies. An invented `https://<retailer>/item/<id>` is not
-    acceptable — it 404s.
+    drop it and keep the query. `ibp=oshop` is the legacy form and now opens an
+    empty page; `udm=28` is the shopping vertical Google redirects to. An
+    invented `https://<retailer>/item/<id>` is not acceptable — it 404s.
     """
     for key in ("product_link", "link"):
         value = _clean_url(str(item.get(key) or ""))
         if value and merchant_host(value) in GOOGLE_HOSTS:
             query = parse_qs(urlparse(value).query).get("q", [""])[0].strip()
             if query:
-                return f"https://www.google.com/search?ibp=oshop&q={quote(query)}"
+                return f"https://www.google.com/search?udm=28&q={quote(query)}"
             return value
     return ""
 

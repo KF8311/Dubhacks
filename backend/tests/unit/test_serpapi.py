@@ -398,7 +398,7 @@ def test_google_links_route_to_the_results_page_instead_of_a_catalog_token():
     assert len(listings) == 1
     listing = listings[0]
     assert listing.merchant_domain == "bestbuy.com"
-    assert listing.product_url == "https://www.google.com/search?ibp=oshop&q=xm5"
+    assert listing.product_url == "https://www.google.com/search?udm=28&q=xm5"
     assert "prds" not in listing.product_url
     assert "/item/" not in listing.product_url
 
@@ -454,6 +454,6 @@ def test_google_results_sharing_a_url_keep_distinct_ids():
     listings = listings_from_payload(payload, spec=SearchSpec(query="headphones"), limit=8)
     assert len(listings) == 2
     assert {item.product_url for item in listings} == {
-        "https://www.google.com/search?ibp=oshop&q=headphones"
+        "https://www.google.com/search?udm=28&q=headphones"
     }
     assert len({item.id for item in listings}) == 2

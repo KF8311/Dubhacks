@@ -268,3 +268,19 @@ Format:
 - **Why:** Google Shopping prices and availability vary by market; a demo in Seattle that searches the default (often East Coast) market can show products nobody local can buy at that price. The user asked for a Seattle ZIP area.
 - **Alternatives considered:** Append "Seattle" to the query string (changes what Google matches, not where it looks — worse results); use a raw ZIP (`uule` encoded) for street-level accuracy (precise location is not useful for shopping results and cannot be verified on stage).
 - **Consequences:** Results now reflect Seattle-area stock and pricing. `location` is a SerpAPI parameter on `google_shopping`, verified live (`HTTP 200`, 9 listings, ready in 10.9 s). A slow or unavailable location lookup degrades into the existing honest `SEARCH_UNAVAILABLE`, not the catalog.
+
+## D-032 — Google-hosted links use `udm=28`, not the legacy `ibp=oshop`
+- **Date:** 2026-10-18
+- **Status:** accepted
+- **Decision:** `_google_product_url` builds `https://www.google.com/search?udm=28&q=<query>`. The legacy `?ibp=oshop&q=…` form is no longer emitted.
+- **Why:** The user reported the links "don't even load" in a browser. `ibp=oshop` is the parameter SerpAPI returns, but Google's shopping vertical is `udm=28` (a `tbm=shop` request redirects to it). Both answer `HTTP 200`, but only `udm=28` renders the results page.
+- **Alternatives considered:** Keep `ibp=oshop` (blank page); use `tbm=shop` (Google immediately redirects it to `udm=28`, so it is the same destination with an extra hop); link straight to the retailer's search page (Walmart and Target bot-block requests we cannot verify, and per-merchant URL patterns are guesses).
+- **Consequences:** Every Google-hosted result opens the current Shopping results page for the query, which lands on the top result for that listing's price. The `prds` token stays out of the URL. Verified live after a backend restart; the SerpAPI tests assert the new shape.
+
+## D-033 — The texting agent answers with a pick first, then a refinement menu
+- **Date:** 2026-10-18
+- **Status:** accepted
+- **Decision:** In `dub-spectrum/src/index.ts` a text is a search: it is cleaned of polite framing, the session is created, answers are submitted empty (`skip_remaining: true`), and the reply is the top trusted pick plus a menu — 1 cheaper, 2 better quality, 3 something else, or `new: <product>`. Later texts refine the previous query unless they start with `new:`.
+- **Why:** The first live text was a sentence ("hey can you find me …"), and the budget-first flow put that whole sentence into the Google query, so the results were unrelated. A shopper texting a line wants an answer, not a questionnaire; questions belong after a bad answer.
+- **Alternatives considered:** Keep the clarifying question first (the user rejected it; it also doubles the round trips); run Gemini to extract a query (extra latency and a new failure mode for a job a regex does); treat every later text as a new search (loses the natural "cheaper" follow-up).
+- **Consequences:** One text now produces a useful reply in ~10–15 s. A greeting ("hi", "test") is answered with "What are you shopping for?" instead of being searched. Refinements are appended to the query (`… cheaper`), so they stay inside the SerpAPI budget-in-query behavior that already works. 15 unit tests cover cleaning, greetings, and reply shapes.

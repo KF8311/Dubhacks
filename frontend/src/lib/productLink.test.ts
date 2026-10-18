@@ -12,11 +12,11 @@ test("a merchant URL is labelled with the merchant domain", () => {
 test("a Google Shopping URL says where it really goes", () => {
   expect(
     productLink({
-      product_url: "https://www.google.com/search?ibp=oshop&q=xm5",
+      product_url: "https://www.google.com/search?udm=28&q=xm5",
       merchant_domain: "bestbuy.com",
     }),
   ).toEqual({
-    href: "https://www.google.com/search?ibp=oshop&q=xm5",
+    href: "https://www.google.com/search?udm=28&q=xm5",
     label: "View on Google Shopping",
   })
 })
