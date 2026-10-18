@@ -50,7 +50,7 @@
 | 24 | A | Receipt service + routes | C |
 | 25 | C | Checkout UI: mandate, passkey, processing | C |
 | 26 | C | Receipt UI + share page | C |
-| 27 | A | Mongo repositories, caches, audit, redaction | A |
+| 27 | B | Mongo repositories, caches, audit, redaction (D-016) | A |
 | 28 | B | Demo mode, fixtures, offline replay | All |
 | 29 | B | VEYZL audit + docs | All |
 | 30 | C | Video, screenshots, Devpost visuals | All |
@@ -104,10 +104,10 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 **Done when:** create → confirm twice returns the same receipt; decline path returns 402.
 
-### 7:30–9:00 PM — persistence
+### 7:30–9:00 PM — persistence (moved to B)
 
-- [ ] Task 27: `InMemoryRepository` + `MongoRepository`, TTL indexes, `transition_checkout` via `find_one_and_update`.
-- [ ] Verify the app still runs with `MONGODB_URI` unset.
+- Task 27 belongs to B as of D-016. A's job here is limited to reviewing the `Repository` interface and confirming the app still runs with `MONGODB_URI` unset.
+- [ ] Review B's `Repository` protocol before it merges; it must not leak Mongo types into `app/`.
 
 ### 9:00–10:30 PM — integration and Devpost draft
 
@@ -174,11 +174,12 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 - [ ] State plainly: sandbox payment, synthetic data, no production Visa integration.
 - [ ] Submit the draft. Screenshots can be replaced later.
 
-### 10:30 PM–2:00 AM — VEYZL and docs
+### 10:30 PM–2:00 AM — VEYZL, docs, and persistence (Block 6)
 
 - [ ] Task 29: connect the repo to VEYZL, pick one real finding, fix it, write `docs/veylz-audit.md`.
 - [ ] `README.md`: setup, env vars, demo script, mock disclosure.
-- [ ] Task 27 support: TTL indexes, cache collections, PII redaction.
+- [ ] **Task 27 (owned by B as of D-016):** `InMemoryRepository` + `MongoRepository` behind the same protocol, TTL indexes, cache collections, PII redaction, `transition_checkout` via `find_one_and_update`.
+- [ ] Verify the app still runs with `MONGODB_URI` unset — the in-memory adapter is the default and the cut-order survivor.
 
 ### 2:00–4:00 AM — freeze
 
