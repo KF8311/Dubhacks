@@ -1,9 +1,29 @@
 import pytest
 
-from app.domain.models import Listing, SearchSpec
+from app.domain.enums import CheckId, TrustStatus
+from app.domain.models import Listing, SearchSpec, TrustCheckResult
 from app.sessions.events import EventBus
 from app.sessions.orchestrator import SessionOrchestrator
 from app.sessions.store import SessionRegistry
+
+
+class _PassingCheck:
+    def __init__(self, check_id: CheckId) -> None:
+        self.id = check_id
+        self.display_name = check_id.value
+        self.timeout_s = 1.0
+        self.calls = 0
+
+    async def run(self, _target, _ctx):
+        self.calls += 1
+        return TrustCheckResult(
+            id=self.id,
+            name=self.display_name,
+            status=TrustStatus.PASSED,
+            severity=0.0,
+            summary="No red flags.",
+            source="live",
+        )
 
 
 @pytest.mark.asyncio
@@ -33,6 +53,45 @@ async def test_orchestrator_start_finishes_before_return_on_vercel(monkeypatch):
     await orch.start(session)
     assert store.get(session.id).stage.value in {"ready", "no_trusted_option"}
     assert [item.title for item in store.listings(session.id)] == ["Pixel 9"]
+
+
+@pytest.mark.asyncio
+async def test_allowlisted_listing_still_runs_every_check():
+    """The allowlist exempts the score floor, not the inspection (D-043)."""
+    bestbuy = Listing(
+        id="lst_bose",
+        title="Bose QuietComfort",
+        price_cents=27900,
+        currency="USD",
+        merchant_name="Best Buy",
+        merchant_domain="bestbuy.com",
+        image_url="",
+        product_url="https://www.bestbuy.com/site/bose",
+        source="serpapi",
+    )
+    checks = [_PassingCheck(check_id) for check_id in CheckId]
+
+    async def search(_spec, _limit, **_kwargs):
+        return [bestbuy], "serpapi"
+
+    store, bus = SessionRegistry(), EventBus()
+    orch = SessionOrchestrator(store, bus, checks=checks, search=search)
+    session = store.create("c1", "headphones")
+    session.search_spec = SearchSpec(query="headphones")
+    store.update(session)
+    await orch._run(session.id)
+
+    assert all(check.calls == 1 for check in checks)
+    investigation = store.investigation_for(session.id, bestbuy.id)
+    assert investigation is not None
+    assert investigation.allowlisted is True
+    assert len(investigation.checks) == len(CheckId)
+    assert investigation.score.allowlisted is True
+    assert investigation.score.score == 0
+
+    events = [event async for event in bus.subscribe(session.id)]
+    completed = [event for event in events if event.type == "check.completed"]
+    assert len(completed) == len(CheckId)
 
 
 @pytest.mark.asyncio

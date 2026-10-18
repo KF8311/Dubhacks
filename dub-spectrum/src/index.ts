@@ -10,6 +10,12 @@ import {
   toQuery,
   waitForResults,
 } from "./agent";
+import {
+  ConsentStore,
+  isStopReply,
+  normalizePhone,
+  parseConsentReply,
+} from "./consent";
 
 // Spectrum bridges a single agent loop to many messaging interfaces.
 // Docs: https://photon.codes/docs/spectrum-ts
@@ -39,7 +45,9 @@ const chats = new Map<string, Chat>();
 // has to be typed into the site. The state file keeps that memory across a
 // bridge restart.
 const STATE_FILE = `${import.meta.dir}/../.last-space.json`;
+const CONSENT_FILE = `${import.meta.dir}/../.phone-consent.json`;
 const MY_PHONE = (process.env.MY_PHONE ?? "").trim();
+const consents = new ConsentStore(CONSENT_FILE);
 let lastSpaceId = "";
 
 try {
@@ -67,11 +75,41 @@ async function phoneSpace() {
   );
 }
 
+/**
+ * A number that replied Y to the opt-in text wins over the local setting.
+ * `mail.space.get` needs only the chat id, so the bridge never stores a phone.
+ */
+async function notificationSpace() {
+  const consent = consents.newestConfirmed();
+  if (consent) {
+    try {
+      return await mail.space.get(consent.spaceId);
+    } catch {
+      // The chat may be gone after a platform reset; fall back rather than
+      // trapping every send.
+    }
+  }
+  return phoneSpace();
+}
+
+const OPT_IN_TEXT =
+  "Sykes here. Want me to text you the best trusted deals as I find them? " +
+  "Reply Y to opt in, or N to skip.";
+const OPT_IN_CONFIRMED =
+  "Deal alerts on. I'll text the best trusted picks. Reply STOP to opt out.";
+const OPT_IN_DECLINED = "No problem. I won't send deal alerts.";
+const OPT_IN_RETRY = "Reply Y to get deal alerts, or N to skip.";
+const OPT_OUT_CONFIRMED = "Deal alerts off. Text a product any time to keep shopping.";
+
 const CORS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "POST, OPTIONS",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
   "access-control-allow-headers": "content-type",
 };
+
+function json(body: unknown, status = 200): Response {
+  return Response.json(body, { status, headers: CORS });
+}
 
 // A local-only endpoint the checkout sheet calls to text the pay link. It only
 // ever sends to MY_PHONE or the space that texted this bridge — the request
@@ -85,27 +123,85 @@ const bridge = Bun.serve({
       return new Response(null, { status: 204, headers: CORS });
     }
     if (url.pathname === "/health") {
-      return Response.json(
-        { ok: true, target: MY_PHONE ? "my-phone" : lastSpaceId ? "last-text" : "none" },
-        { headers: CORS },
-      );
+      return json({
+        ok: true,
+        target: consents.newestConfirmed()
+          ? "opted-in"
+          : MY_PHONE
+            ? "my-phone"
+            : lastSpaceId
+              ? "last-text"
+              : "none",
+      });
     }
+
+    // Start a consent request: text the number and wait for a Y/N reply.
+    if (url.pathname === "/opt-in" && request.method === "POST") {
+      const body = (await request.json().catch(() => null)) as { phone?: string } | null;
+      const phone = normalizePhone(body?.phone ?? "");
+      if (!phone) {
+        return json(
+          { error: "Enter a phone number with its country code, e.g. +14155550123." },
+          400,
+        );
+      }
+      try {
+        const space = await mail.space.create(phone);
+        const consent = consents.start(space.id);
+        await space.send(OPT_IN_TEXT);
+        return json({ request_id: consent.id, status: consent.status });
+      } catch {
+        // Never echo the number or the SDK error: it may contain the number.
+        return json({ error: "Could not text that number. Check it and try again." }, 502);
+      }
+    }
+
+    const optIn = url.pathname.match(/^\/opt-in\/([\w-]+)$/);
+    if (optIn && request.method === "GET") {
+      const consent = consents.get(optIn[1] ?? "");
+      if (!consent) return json({ error: "not found" }, 404);
+      return json({ request_id: consent.id, status: consent.status });
+    }
+
+    // Only a consent that replied Y may be notified.
+    const notify = url.pathname.match(/^\/notify\/([\w-]+)$/);
+    if (notify && request.method === "POST") {
+      const consent = consents.get(notify[1] ?? "");
+      if (!consent) return json({ error: "not found" }, 404);
+      if (consent.status !== "confirmed") {
+        return json(
+          { error: "Deal alerts are not confirmed. Reply Y to the opt-in text first." },
+          409,
+        );
+      }
+      const body = (await request.json().catch(() => null)) as { text?: string } | null;
+      const text = (body?.text ?? "").trim();
+      if (!text) return json({ error: "text is required" }, 400);
+      try {
+        const space = await mail.space.get(consent.spaceId);
+        await space.send(text);
+        return json({ ok: true });
+      } catch {
+        return json({ error: "Could not text the confirmed number." }, 502);
+      }
+    }
+
     if (url.pathname !== "/send" || request.method !== "POST") {
-      return Response.json({ error: "not found" }, { status: 404, headers: CORS });
+      return json({ error: "not found" }, 404);
     }
     const body = (await request.json().catch(() => null)) as { text?: string } | null;
     const text = (body?.text ?? "").trim();
     if (!text) {
-      return Response.json({ error: "text is required" }, { status: 400, headers: CORS });
+      return json({ error: "text is required" }, 400);
     }
     try {
-      const space = await phoneSpace();
+      const space = await notificationSpace();
       await space.send(text);
-      return Response.json({ ok: true }, { headers: CORS });
+      return json({ ok: true });
     } catch (error) {
-      return Response.json(
+      return json(
         { error: error instanceof Error ? error.message : "send failed" },
-        { status: 502, headers: CORS },
+        502,
       );
     }
   },
@@ -140,6 +236,32 @@ for await (const [space, message] of app.messages) {
   rememberSpace(key);
 
   try {
+    // A pending opt-in owns the next reply: Y confirms, N declines, anything
+    // else gets the question again instead of being read as a product search.
+    const pending = consents.pendingFor(key);
+    if (pending) {
+      const answer = parseConsentReply(text);
+      if (answer === "yes") {
+        consents.confirm(pending.id);
+        await space.send(OPT_IN_CONFIRMED);
+        continue;
+      }
+      if (answer === "no") {
+        consents.decline(pending.id);
+        await space.send(OPT_IN_DECLINED);
+        continue;
+      }
+      await space.send(OPT_IN_RETRY);
+      continue;
+    }
+
+    const confirmed = consents.confirmedFor(key);
+    if (confirmed && isStopReply(text)) {
+      consents.decline(confirmed.id);
+      await space.send(OPT_OUT_CONFIRMED);
+      continue;
+    }
+
     const chat = chats.get(key);
 
     if (!chat) {

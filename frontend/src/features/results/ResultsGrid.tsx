@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { DealAlerts } from "@/features/results/DealAlerts.tsx"
 import { ProductCard } from "@/features/results/ProductCard.tsx"
 import type { Listing, Recommendation, ScoreResult, TrustCheckResult } from "@/lib/types.ts"
 
@@ -51,6 +52,7 @@ export function ResultsGrid({
           budgetMaxCents={budgetMaxCents}
           budgetMinCents={budgetMinCents}
         />
+        <DealAlerts />
       </aside>
       <section className="order-1 min-w-0 lg:order-none" aria-label="Listings found">
         <ul className="grid min-w-0 gap-4 sm:grid-cols-2">
