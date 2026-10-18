@@ -5,7 +5,7 @@ from __future__ import annotations
 from app.core.timeouts import MAX_LISTINGS
 from app.domain.models import Listing, SearchSpec
 from app.search.catalog import catalog_covers, load_catalog
-from app.search.provider import SearchProvider
+from app.search.provider import SearchProvider, SearchQuotaExhausted
 from app.search.serpapi import SerpAPIProvider
 
 
@@ -55,6 +55,10 @@ async def search(
     failed = False
     try:
         results = await active.search(spec, limit)
+    except SearchQuotaExhausted:
+        # An empty plan is not a timeout; the caller reports it separately
+        # instead of silently falling back to the catalog (D-025).
+        raise
     except Exception:  # noqa: BLE001 — any provider fault is handled below
         results = []
         failed = True

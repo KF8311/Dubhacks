@@ -74,23 +74,14 @@ export function DiscoveryFlow({ onStarted }: Props) {
     return null
   }
 
-  async function onNext() {
-    const answer = currentAnswer()
-    if (!question || !answer || !sessionId) return
-    const nextAnswers = [...answers, answer]
-    setAnswers(nextAnswers)
-    setPicked(null)
-    setFreeText("")
-    if (index < questions.length - 1) {
-      setIndex(index + 1)
-      return
-    }
+  async function submit(finalAnswers: Answer[], skipRemaining: boolean) {
+    if (!sessionId) return
     setPhase("submitting")
     setError(null)
     try {
       const submitted = await submitAnswers(sessionId, {
-        answers: nextAnswers,
-        skip_remaining: false,
+        answers: finalAnswers,
+        skip_remaining: skipRemaining,
       })
       const snapshot = await getSnapshot(submitted.session_id)
       startSession(snapshot, {
@@ -102,6 +93,20 @@ export function DiscoveryFlow({ onStarted }: Props) {
       setPhase("questions")
       setError(caught instanceof Error ? caught.message : "Something went wrong")
     }
+  }
+
+  async function onNext() {
+    const answer = currentAnswer()
+    if (!question || !answer || !sessionId) return
+    const nextAnswers = [...answers, answer]
+    setAnswers(nextAnswers)
+    setPicked(null)
+    setFreeText("")
+    if (index < questions.length - 1) {
+      setIndex(index + 1)
+      return
+    }
+    await submit(nextAnswers, false)
   }
 
   if (phase === "submitting") {
@@ -248,9 +253,20 @@ export function DiscoveryFlow({ onStarted }: Props) {
           {error}
         </p>
       ) : null}
-      <Button type="button" disabled={!ready} className="h-11 rounded-md px-5 font-semibold" onClick={() => void onNext()}>
-        {last ? "See results" : "Next"}
-      </Button>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button type="button" disabled={!ready} className="h-11 rounded-md px-5 font-semibold" onClick={() => void onNext()}>
+          {last ? "See results" : "Next"}
+        </Button>
+        {phase === "questions" ? (
+          <button
+            type="button"
+            className="text-sm font-medium text-muted-foreground underline underline-offset-4"
+            onClick={() => void submit(answers, true)}
+          >
+            Skip questions
+          </button>
+        ) : null}
+      </div>
     </div>
   )
 }

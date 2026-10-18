@@ -206,3 +206,13 @@ async def test_live_mode_keeps_a_typed_range_empty_result():
 async def test_rejects_non_positive_limit(limit: int):
     with pytest.raises(ValueError):
         await search(SPEC, limit=limit, provider=StubProvider(), catalog=load_catalog())
+
+
+@pytest.mark.asyncio
+async def test_quota_exhaustion_is_not_swallowed_by_the_catalog_fallback():
+    """The orchestrator needs to tell "out of searches" apart from a timeout."""
+    from app.search.provider import SearchQuotaExhausted
+
+    provider = StubProvider(error=SearchQuotaExhausted("Your account has run out of searches."))
+    with pytest.raises(SearchQuotaExhausted):
+        await search(SPEC, provider=provider)

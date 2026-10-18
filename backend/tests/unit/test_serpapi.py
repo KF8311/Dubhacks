@@ -689,3 +689,154 @@ def test_google_results_sharing_a_url_keep_distinct_ids():
         "https://www.google.com/search?udm=28&q=headphones"
     }
     assert len({item.id for item in listings}) == 2
+
+
+def test_an_exhausted_key_raises_a_quota_error(monkeypatch):
+    """429 + "run out of searches" is not a transient fault; retrying cannot help."""
+    import asyncio
+
+    import httpx
+    import pytest
+
+    from app.search.provider import SearchQuotaExhausted
+    from app.search.serpapi import SerpAPIProvider
+
+    class FakeResponse:
+        status_code = 429
+
+        def json(self) -> dict:
+            return {"error": "Your account has run out of searches."}
+
+        def raise_for_status(self) -> None:
+            raise AssertionError("quota must not be reported as a generic HTTP error")
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, params, timeout
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    with pytest.raises(SearchQuotaExhausted):
+        asyncio.run(SerpAPIProvider(api_key="test-key").search(SearchSpec(query="pens")))
+
+
+def test_a_rate_limited_response_stays_retryable(monkeypatch):
+    """A 429 that is not about the plan is a transient fault; retry it."""
+    import asyncio
+
+    import httpx
+    import pytest
+
+    from app.search.serpapi import SerpAPIProvider
+
+    class FakeResponse:
+        status_code = 429
+
+        def json(self) -> dict:
+            return {"error": "Too many requests per second."}
+
+        def raise_for_status(self) -> None:
+            raise httpx.HTTPStatusError("429", request=None, response=None)  # type: ignore[arg-type]
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, params, timeout
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    with pytest.raises(httpx.HTTPStatusError):
+        asyncio.run(SerpAPIProvider(api_key="test-key").search(SearchSpec(query="pens")))
+
+
+def test_a_repeated_listing_reuses_its_store_url_without_another_lookup(monkeypatch):
+    """One immersive lookup is one SerpAPI search; a demo re-run must not pay twice."""
+    import asyncio
+
+    import httpx
+
+    from app.search.serpapi import SerpAPIProvider
+
+    calls = {"shopping": 0, "immersive": 0}
+
+    class FakeResponse:
+        status_code = 200
+
+        def __init__(self, body: dict) -> None:
+            self._body = body
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return self._body
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del timeout
+            if "engine=google_shopping" in url or (params or {}).get("engine") == "google_shopping":
+                calls["shopping"] += 1
+                return FakeResponse(
+                    {
+                        "shopping_results": [
+                            {
+                                "title": "TUL BP Series Retractable Ballpoint Pens",
+                                "product_link": "https://www.google.com/search?q=TUL+pens",
+                                "source": "Office Depot",
+                                "extracted_price": 12.49,
+                                "product_id": "1310454",
+                                "serpapi_immersive_product_api": "https://serpapi.com/search.json?engine=google_immersive_product&page_token=t1",
+                            }
+                        ]
+                    }
+                )
+            calls["immersive"] += 1
+            return FakeResponse(
+                {
+                    "product_results": {
+                        "stores": [
+                            {
+                                "name": "Office Depot",
+                                "link": "https://www.officedepot.com/a/products/1310454/TUL-pens/",
+                                "extracted_price": 12.49,
+                            }
+                        ]
+                    }
+                }
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    provider = SerpAPIProvider(api_key="test-key")
+    first = asyncio.run(provider.search(SearchSpec(query="TUL pens at Office Depot")))
+    second = asyncio.run(provider.search(SearchSpec(query="TUL pens at Office Depot")))
+
+    assert first[0].product_url == "https://www.officedepot.com/a/products/1310454/TUL-pens/"
+    assert second[0].product_url == first[0].product_url
+    assert calls["shopping"] == 2
+    assert calls["immersive"] == 1

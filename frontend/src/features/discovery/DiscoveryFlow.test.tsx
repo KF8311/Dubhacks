@@ -168,3 +168,36 @@ test("submits answers against the session id the server returned", async () => {
   })
   expect(calls.some((url) => url.includes("ses_mock"))).toBe(false)
 })
+
+test("lets the shopper skip the questions and search the query alone", async () => {
+  const bodies: Array<Record<string, unknown>> = []
+  vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+    const url = String(input)
+    if (url.endsWith("/api/sessions")) {
+      return jsonResponse({
+        session_id: "ses_real",
+        stage: "clarifying",
+        questions,
+        expires_at: "2026-10-17T22:00:00Z",
+      })
+    }
+    if (url.endsWith("/api/sessions/ses_real/answers")) {
+      bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>)
+      return jsonResponse(
+        { session_id: "ses_real", stage: "searching", events_url: "/x", search_spec: {} },
+        202,
+      )
+    }
+    return jsonResponse(snapshot)
+  })
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "TUL pens at Office Depot" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  fireEvent.click(await screen.findByRole("button", { name: /skip questions/i }))
+
+  await waitFor(() => expect(bodies).toHaveLength(1))
+  expect(bodies[0]).toMatchObject({ answers: [], skip_remaining: true })
+})

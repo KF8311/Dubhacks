@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.ids import listing_id
 from app.core.timeouts import IMMERSIVE_STORE_S, MAX_LISTINGS, SEARCH_S
 from app.domain.models import Listing, SearchSpec
+from app.search.provider import SearchQuotaExhausted
 
 SERPAPI_URL = "https://serpapi.com/search.json"
 GOOGLE_HOSTS = frozenset(
@@ -266,6 +267,42 @@ def store_url_for_listing(payload: dict, listing: Listing) -> str:
     return ""
 
 
+# Every immersive lookup is a SerpAPI search. A listing that already resolved
+# keeps its merchant page for the life of the process, so re-running the demo
+# query costs one search instead of ten. Misses are not cached: a later lookup
+# may still find the store.
+_STORE_URL_CACHE: dict[str, str] = {}
+_STORE_URL_CACHE_MAX = 1024
+
+
+def _remember_store_url(listing_id_value: str, url: str) -> None:
+    if not url:
+        return
+    if len(_STORE_URL_CACHE) >= _STORE_URL_CACHE_MAX:
+        _STORE_URL_CACHE.clear()
+    _STORE_URL_CACHE[listing_id_value] = url
+
+
+QUOTA_MARKERS = ("out of searches", "quota", "no searches left")
+
+
+def _is_quota_exhausted(response: httpx.Response) -> bool:
+    """SerpAPI answers an empty plan with 429 and a plain error string.
+
+    A 429 can also mean a rate limit, which is worth retrying; only the plan
+    message is permanent. The body is read defensively because a proxy or a
+    test double may not return JSON.
+    """
+    if getattr(response, "status_code", 200) != 429:
+        return False
+    try:
+        message = str((response.json() or {}).get("error") or "")
+    except Exception:  # noqa: BLE001 — an unreadable body is not a quota signal
+        message = str(getattr(response, "text", "") or "")
+    lowered = message.lower()
+    return any(marker in lowered for marker in QUOTA_MARKERS)
+
+
 def _with_api_key(url: str, api_key: str) -> str:
     """Append the key. Re-encoding the existing query drops the page token."""
     joiner = "&" if urlparse(url).query else "?"
@@ -314,6 +351,8 @@ class SerpAPIProvider:
         params["hl"] = self.hl
         async with httpx.AsyncClient(timeout=self.timeout_s) as client:
             response = await client.get(SERPAPI_URL, params=params)
+            if _is_quota_exhausted(response):
+                raise SearchQuotaExhausted("Your account has run out of searches.")
             response.raise_for_status()
             payload = response.json()
             pairs = listing_pairs_from_payload(payload, limit=limit)
@@ -337,6 +376,9 @@ class SerpAPIProvider:
         """
 
         async def one(listing: Listing, item: dict) -> str:
+            cached = _STORE_URL_CACHE.get(listing.id)
+            if cached:
+                return cached
             url = str(item.get("serpapi_immersive_product_api") or "")
             if not url:
                 return ""
@@ -346,7 +388,9 @@ class SerpAPIProvider:
                 payload = response.json()
             except Exception:  # noqa: BLE001 — a lost lookup is not a lost listing
                 return ""
-            return store_url_for_listing(payload, listing)
+            found = store_url_for_listing(payload, listing)
+            _remember_store_url(listing.id, found)
+            return found
 
         tasks = {
             listing.id: asyncio.create_task(one(listing, item))

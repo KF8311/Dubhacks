@@ -15,6 +15,7 @@ from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LIS
 from app.domain.enums import SessionStage, TrustStatus, Verdict
 from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
 from app.search.catalog import load_catalog
+from app.search.provider import SearchQuotaExhausted
 from app.search.service import search as default_search
 from app.services.llm import narrate
 from app.services.repository import get_repository
@@ -69,6 +70,22 @@ class SessionOrchestrator:
                     self.search(spec, MAX_LISTINGS, allow_catalog_fallback=False),
                     timeout=self._search_timeout(),
                 )
+            except SearchQuotaExhausted:
+                # The plan has no searches left. Retrying cannot help, and
+                # "taking too long" would hide the one cause the user can fix.
+                self.bus.publish(
+                    session_id,
+                    "session.error",
+                    {
+                        "code": "SEARCH_QUOTA_EXHAUSTED",
+                        "message": (
+                            "Live search quota is used up. Add a fresh search key, "
+                            "then start over."
+                        ),
+                        "recoverable": False,
+                    },
+                )
+                return None
             except Exception:  # noqa: BLE001 — retry once, then fail
                 continue
             # An empty live result is worth one retry; a provider still running

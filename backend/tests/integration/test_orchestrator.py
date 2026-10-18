@@ -240,3 +240,31 @@ async def test_orchestrator_uses_llm_narrative(monkeypatch):
     ready = [event for event in [e async for e in bus.subscribe(session.id)] if event.type == "recommendation.ready"]
     assert ready
     assert ready[0].payload["narrative"] == "LLM pick story"
+
+
+@pytest.mark.asyncio
+async def test_an_exhausted_search_quota_fails_once_with_its_own_code():
+    """A 429 quota is permanent for the key: retrying only hides the real cause."""
+    from app.search.provider import SearchQuotaExhausted
+
+    calls = {"n": 0}
+
+    async def exhausted(_spec, _limit, **_kwargs):
+        calls["n"] += 1
+        raise SearchQuotaExhausted("Your account has run out of searches.")
+
+    store, bus = SessionRegistry(), EventBus()
+    orch = SessionOrchestrator(store, bus, checks=[], search=exhausted)
+    session = store.create("c1", "TUL pens at Office Depot")
+    session.search_spec = SearchSpec(query="TUL pens at Office Depot")
+    store.update(session)
+    await orch._run(session.id)
+
+    events = [event async for event in bus.subscribe(session.id)]
+    assert calls["n"] == 1
+    error = [event for event in events if event.type == "session.error"][0]
+    assert error.payload["code"] == "SEARCH_QUOTA_EXHAUSTED"
+    assert "quota" in error.payload["message"].lower()
+    assert error.payload["recoverable"] is False
+    assert store.get(session.id).stage.value == "failed"
+    assert store.listings(session.id) == []
