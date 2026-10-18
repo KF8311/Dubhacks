@@ -121,6 +121,7 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 | Receipt score coverage silently dropped | was yes | C's wrap fix replaced the score assertion; restored alongside it (`c7c94f1`) |
 | Browser never exercised the live flow | **yes** | Wiring is merged; C must click through it once |
 | Devpost overstates the role of the model | **was yes** | Corrected after A's Gemini merge: the model writes copy, never a verdict; the generative-AI answer is **Yes** |
+| Public health reads `degraded` with Mongo off | **yes, by design** | With `MONGODB_URI` unset the API is fully functional but answers `{"status":"degraded","db":"unavailable"}` — the contract in `docs/contracts.md`. Fly has no Mongo, so the public URL will always say this. Read it as "optional store off", not "broken"; say so before a judge asks. |
 | `GEMINI_API_KEY` unset on Fly | likely | Templates are the fallback, so the demo still runs; set the key only if the template copy reads worse on stage |
 | Local venv lacks `motor` | **yes** | `pip install motor`; one repository test otherwise fails to import |
 
