@@ -46,7 +46,7 @@ Stopping:
 
 Environment is read from `backend/.env`. The current file has `SERPAPI_KEY` and a Gemini key set, so the default is live.
 
-**Known live-mode quirk:** SerpAPI has a 2.5 s client timeout (`backend/app/search/serpapi.py:217`) inside a 5 s search budget. A slow query silently falls back to the catalog, so you may see headphones instead of what you typed. Short queries (`mechanical keyboard`, `airpods pro`) work; "X under $150" style queries are the flaky ones. The <3-result guard that softens this is parked as idea **B** in `ideas-after-96cf47f.md`.
+**Live-search timeout:** the SerpAPI client gets `SEARCH_S - 1.0` = **4.0 s** (`backend/app/search/serpapi.py`), inside a 5 s search budget. If a query is slower than that, the search silently falls back to the curated catalog, so you may see headphones instead of what you typed. The fallback is a demo safety net, not an error. If you want to confirm you are getting live results, query something distinctive (`mechanical keyboard`, `airpods pro`) and check the response's `search.completed` event for `source: "serpapi"`.
 
 `DEMO_MODE=1` does **not** force the catalog. Despite the README table, only `OFFLINE` changes search behaviour; `DEMO_MODE` gates `/api/demo/reset` and some page flags.
 
@@ -102,7 +102,7 @@ Runs the real orchestrator end-to-end against the curated catalog and prints the
 ## Tests and build
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q   # 204 pass
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q   # 215 pass
 cd frontend; npx vitest run                            # 39 pass
 cd frontend; npm run build                             # tsc -b + vite build, must be clean
 ```

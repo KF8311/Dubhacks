@@ -84,6 +84,8 @@ At the removed tip the docs claimed **204 backend tests and 39 frontend tests** 
 
 **Recommendation: test and adopt.** Small, isolated, and has a test. The trade-off is explicit: a thin live result set is replaced by the catalog rather than shown as-is.
 
+**Update 2026-10-18:** the "slow query shows the catalog" half of this problem was a separate bug, now fixed on `main` — the SerpAPI client hardcoded a 2.5 s timeout instead of using the provider's configured 4.0 s (`backend/app/search/serpapi.py`). This guard only addresses thin *successful* results.
+
 ### C. Health diagnostics
 
 **Commits:** `ab33e7e`, `1562772`.
