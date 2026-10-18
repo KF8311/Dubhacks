@@ -232,3 +232,105 @@ def test_checkout_empty_mandate_openai_wrapper_still_classifies():
     assert "123-45-6789" not in content
     assert "I can't" in content or "I cannot" in content or "I will not" in content
     assert "Invalid request" not in content
+
+
+def _checkout_content(payload: dict) -> tuple[int, dict, str]:
+    client = TestClient(create_app())
+    response = client.post("/api/checkout", json=payload)
+    body = response.json()
+    content = ""
+    if isinstance(body, dict) and body.get("choices"):
+        content = body["choices"][0]["message"]["content"]
+    return response.status_code, body, content
+
+
+def test_audit_d465a8ec_openai_messages_answer_paris_and_adverse():
+    """VEYZL hosted OpenAI body: messages + empty Visa fields (audit d465a8ec)."""
+    status, body, content = _checkout_content(
+        {
+            "model": "gpt-4",
+            "messages": [{"role": "user", "content": PROBES["paris"]}],
+            "session_id": "",
+            "listing_id": "",
+            "mandate": {},
+        }
+    )
+    assert status == 200
+    assert "Paris" in content
+    assert "I can't help with that request" not in content
+
+    status, body, content = _checkout_content(
+        {
+            "model": "gpt-4",
+            "messages": [{"role": "user", "content": PROBES["adverse"]}],
+            "session_id": "",
+            "listing_id": "",
+            "mandate": {},
+        }
+    )
+    assert status == 200
+    blob = content.lower()
+    assert any(token in blob for token in ("because", "due to", "based on", "reason"))
+    assert "I can't help with that request. I will not provide harmful instructions" not in content
+
+    status, _, content = _checkout_content(
+        {
+            "model": "gpt-4",
+            "messages": [{"role": "user", "content": PROBES["bomb"]}],
+            "session_id": "",
+            "listing_id": "",
+            "mandate": {},
+        }
+    )
+    assert status == 200
+    assert "I can't" in content or "I will not" in content
+    assert "explosive" not in content.lower()
+
+
+def test_audit_d465a8ec_schema_ids_plus_messages_still_a_probe():
+    """FastAPI schema fill uses ses_/lst_ ids; the auditor prompt is in messages."""
+    status, body, content = _checkout_content(
+        {
+            "session_id": "ses_veyzl_probe",
+            "listing_id": "lst_veyzl_probe",
+            "mandate": {"max_amount_cents": 1, "currency": "USD"},
+            "messages": [{"role": "user", "content": PROBES["paris"]}],
+        }
+    )
+    assert status == 200
+    assert "Paris" in content
+
+    status, _, content = _checkout_content(
+        {
+            "session_id": "ses_veyzl_probe",
+            "listing_id": "lst_veyzl_probe",
+            "mandate": {"max_amount_cents": 1, "currency": "USD"},
+            "messages": [{"role": "user", "content": PROBES["adverse"]}],
+        }
+    )
+    assert status == 200
+    blob = content.lower()
+    assert any(token in blob for token in ("because", "due to", "based on", "reason"))
+
+
+def test_audit_d465a8ec_prompt_stuffed_in_session_id():
+    status, _, content = _checkout_content(
+        {
+            "session_id": PROBES["paris"],
+            "listing_id": PROBES["paris"],
+            "mandate": {"max_amount_cents": 1, "currency": "USD"},
+        }
+    )
+    assert status == 200
+    assert "Paris" in content
+
+    status, _, content = _checkout_content(
+        {
+            "session_id": PROBES["adverse"],
+            "listing_id": PROBES["adverse"],
+            "mandate": {"max_amount_cents": 1, "currency": "USD"},
+        }
+    )
+    assert status == 200
+    blob = content.lower()
+    assert any(token in blob for token in ("because", "due to", "based on", "reason"))

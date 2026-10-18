@@ -9,6 +9,7 @@ from app.core.ids import new_id
 from app.services.llm_guard import (
     looks_like_llm_probe,
     openai_chat_payload,
+    probe_prompt_from_payload,
     settle_probe_reply,
 )
 
@@ -52,7 +53,16 @@ def _checkout_probe_path(request: Request) -> bool:
 
 async def _openai_probe_fallback(request: Request) -> JSONResponse:
     body = (await request.body()).decode("utf-8", errors="replace")
-    result = settle_probe_reply(body, None)
+    haystack = body
+    try:
+        parsed = json.loads(body) if body.strip() else {}
+    except json.JSONDecodeError:
+        parsed = None
+    if isinstance(parsed, dict):
+        haystack = probe_prompt_from_payload(parsed)
+    elif isinstance(parsed, list):
+        haystack = probe_prompt_from_payload({"messages": parsed})
+    result = settle_probe_reply(haystack, None)
     return JSONResponse(
         openai_chat_payload(result.text, refused=result.refused, sandbox_label=_SANDBOX)
     )

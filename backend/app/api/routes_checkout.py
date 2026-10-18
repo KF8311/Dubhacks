@@ -127,7 +127,12 @@ async def _request_payload(request: Request) -> object:
 async def create_checkout(request: Request):
     raw = await _request_payload(request)
     if looks_like_llm_probe(raw):
-        haystack = probe_prompt_from_payload(raw) if isinstance(raw, dict) else str(raw)
+        if isinstance(raw, dict):
+            haystack = probe_prompt_from_payload(raw)
+        elif isinstance(raw, list):
+            haystack = probe_prompt_from_payload({"messages": raw})
+        else:
+            haystack = str(raw)
         guarded = await answer_probe(haystack)
         return JSONResponse(
             openai_chat_payload(guarded.text, refused=guarded.refused, sandbox_label=SANDBOX)

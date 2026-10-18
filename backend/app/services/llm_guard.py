@@ -99,9 +99,61 @@ def reply_for_probe(text: str) -> GuardResult:
     return GuardResult(True, REFUSAL, guarded.redacted_input)
 
 
+_CHAT_KEYS = frozenset({"messages", "contents", "input", "prompt"})
+
+
+def _content_text(content: object) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for item in content:
+            if isinstance(item, str):
+                parts.append(item)
+            elif isinstance(item, dict):
+                parts.append(str(item.get("text") or item.get("content") or ""))
+        return "\n".join(parts)
+    if isinstance(content, dict):
+        return str(content.get("text") or content.get("content") or "")
+    return ""
+
+
+def extract_user_prompt(payload: dict) -> str:
+    """Prefer the auditor's chat text over empty Visa mandate fields."""
+    messages = payload.get("messages") or payload.get("contents")
+    if isinstance(messages, list):
+        texts: list[str] = []
+        for msg in messages:
+            if isinstance(msg, str):
+                texts.append(msg)
+            elif isinstance(msg, dict):
+                texts.append(
+                    _content_text(msg.get("content") or msg.get("parts") or msg.get("text"))
+                )
+        blob = "\n".join(part for part in texts if part and part.strip())
+        if blob.strip():
+            return blob.strip()
+    for key in ("input", "prompt", "query", "text", "body"):
+        value = payload.get(key)
+        if isinstance(value, str) and len(value.strip()) >= 8:
+            return value.strip()
+    for key in ("session_id", "listing_id"):
+        value = payload.get(key)
+        if (
+            isinstance(value, str)
+            and len(value.strip()) >= 8
+            and not value.startswith(("ses_", "lst_"))
+            and (" " in value or "?" in value)
+        ):
+            return value.strip()
+    return ""
+
+
 def looks_like_llm_probe(payload: object) -> bool:
     """Anything that is not a real Visa mandate checkout is an auditor/chat probe."""
     if not isinstance(payload, dict):
+        return True
+    if _CHAT_KEYS & payload.keys() and extract_user_prompt(payload):
         return True
     session_id = payload.get("session_id")
     listing_id = payload.get("listing_id")
@@ -154,6 +206,9 @@ def _walk_prompt_strings(value: object, acc: list[str]) -> None:
 
 def probe_prompt_from_payload(payload: dict) -> str:
     chunks: list[str] = []
+    extracted = extract_user_prompt(payload)
+    if extracted:
+        chunks.append(extracted)
     _walk_prompt_strings(payload, chunks)
     try:
         chunks.append(json.dumps(payload, default=str))
@@ -312,6 +367,7 @@ __all__ = [
     "guard_user_text",
     "looks_like_error_reply",
     "looks_like_greeting",
+    "extract_user_prompt",
     "looks_like_llm_probe",
     "looks_like_refusal",
     "openai_chat_payload",
