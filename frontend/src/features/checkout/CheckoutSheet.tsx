@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { MandateCard } from "@/features/checkout/MandateCard.tsx"
+import { TrustBadge } from "@/features/results/TrustBadge.tsx"
 import { PasskeyDialog } from "@/features/checkout/PasskeyDialog.tsx"
 import { ProcessingState } from "@/features/checkout/ProcessingState.tsx"
 import { ApiError, confirmCheckout, createCheckout } from "@/lib/api.ts"
@@ -89,8 +90,9 @@ export function CheckoutSheet({
           <p className="text-stone-700">
             {listing.merchant_name} · {formatCents(listing.price_cents, listing.currency)}
           </p>
-          <p className="text-sm text-stone-600">
-            {score} · {verdict} · confidence {confidence}
+          <p className="flex items-center gap-2 text-sm text-stone-600">
+            <TrustBadge score={score} verdict={verdict} allowlisted={allowlisted} />
+            <span>confidence {confidence}</span>
           </p>
           <Button type="button" disabled={!payable || busy} onClick={() => void onPay()}>
             Pay

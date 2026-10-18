@@ -42,6 +42,7 @@ test("enables pay for an allowlisted trusted merchant with a zero score", () => 
     />,
   )
   expect(screen.getByRole("button", { name: /pay/i })).toBeEnabled()
+  expect(screen.getByText(/Verified · Trusted/)).toBeInTheDocument()
 })
 
 test("keeps pay disabled when a non-allowlisted score is below 70", () => {

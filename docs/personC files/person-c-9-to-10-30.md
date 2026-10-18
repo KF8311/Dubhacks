@@ -2,9 +2,11 @@
 
 Done when the four demo screens are captured, text meets WCAG AA on white, keyboard focus is visible, the layout holds at 1024px, and reduced motion skips the purge fade.
 
-The 7:30 live checkout stays blocked. `POST /api/checkout` is still not on the server.
+The live checkout path is in place. See `person-c-7-30-to-9.md`.
 
 ## Screenshots for the Devpost draft
+
+The four screens were reviewed in the browser. The image files were not saved into the repo, so `docs/devpost.md` still has placeholders for them.
 
 - [x] Results grid, with the best pick visible.
 - [x] One trust card, showing the verdict and the check rows.
