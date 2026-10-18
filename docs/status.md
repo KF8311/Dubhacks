@@ -16,12 +16,12 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **153 passed**. Frontend **9 files / 22 tests passed**, `npm run build` clean. |
+| Tests | Backend **153 passed**. Frontend **10 files / 23 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments. B: trust + data + **Mongo persistence (Task 27, D-016)**. C: frontend. |
 | Blockers | A redeploys Fly; C clicks the merged flow through once; B has Task 29 (VEYZL) left |
-| Branches | **`main` carries everything through Block 4 for A, B, and C** (PRs #1–#14). No branch is ahead of `main`. Branch from `main` for Block 5. |
+| Branches | **`main` carries everything** (PRs #1–#17, plus C's `c/web` merged directly). No branch is ahead of `main`. Branch from `main` for Block 5. |
 
 Last updated: 2026-10-17 19:05 PT
 
@@ -60,7 +60,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 |---|---|---|---|---|
 | A | Fly redeploy from repo root; free-text budget parsing | 18:25 | 20:00 | Turns commits into a public URL |
 | C | Browser click-through + screenshot of the merged checkout sheet and receipt page | 18:25 | 20:00 | Tasks 25–26 merged in PR #14; `?mock=1` remains the fallback |
-| B | Devpost draft, README, VEYZL audit | 18:40 | 22:00 | ✅ `docs/devpost.md` and `README.md` written; Task 29 open |
+| B | Devpost draft, README, VEYZL audit | 18:40 | 22:00 | ✅ `docs/devpost.md`, `README.md`, and the `docs/veylz-audit.md` scaffold; Task 29 blocked on tool access |
 
 ## Done since last update
 
@@ -80,6 +80,8 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] Hookup: refusal messages are human copy instead of the bare code
 - [x] B: `docs/devpost.md` drafted with every number checked against the code; placeholders only for the URL, video, and screenshots
 - [x] B: `README.md` rewritten — setup, env vars, API table, demo script, tests, offline replay, and the honesty notes (sandbox, no model in the path, in-memory store)
+- [x] B: `docs/veylz-audit.md` scaffolded — scope, method, and six candidate controls; no finding is claimed until one is reproduced (PR #17)
+- [x] C: `c/web` merged — 1024px layout, reduced-motion support, purge overlay test (10 files / 23 tests)
 
 ## Next three actions
 
