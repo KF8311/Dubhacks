@@ -16,14 +16,14 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **130 passed**. Frontend **6 files / 9 tests passed**, `npm run build` clean. |
+| Tests | Backend **133 passed**. Frontend **6 files / 9 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is the next build. |
 | Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
 | Blockers | Task 23 checkout routes; Fly serves the pre-merge build |
-| Branches | **`main` is `16aa403` and fully merged** (PRs #1–#11). No follow-on branch is required; branch from `main` for the next block. |
+| Branches | **`main` is `06a9e3c` and fully merged** (PRs #1–#11). No follow-on branch is required; branch from `main` for the next block. |
 
-Last updated: 2026-10-17 18:05 PT
+Last updated: 2026-10-17 18:15 PT
 
 ## Gate board
 
@@ -72,12 +72,13 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] CORS confirmed for `http://localhost:5173` on both JSON and SSE
 - [x] B: **Task 28** — offline replay (`app/demo/replay.py`, `scripts/replay_offline.py`) reproduces the live run with no server and no network; exit 1 on drift
 - [x] B: domain age and SSL honour `OFFLINE=1`; the orchestrator accepts an injected `Settings`
+- [x] B: villain integration golden test — real checks → `danger` → excluded from the pick even when cheapest
 
 ## Next three actions
 
 1. A builds Task 23 — `POST /api/checkout` and `POST /{id}/confirm` — so the payability guard is reachable over HTTP.
 2. C opens `npm run dev` against `uvicorn` on :8000 and confirms the villain card turns red and the best pick is `lst_tgt_bsp` in the actual browser.
-3. B adds the villain integration golden test, then Task 29 (VEYZL audit + README) and the Devpost technical section.
+3. B starts Task 29 (VEYZL audit + README) and the Devpost technical section.
 
 ## Demo trap to avoid
 
