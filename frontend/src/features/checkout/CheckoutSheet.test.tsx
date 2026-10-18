@@ -30,6 +30,33 @@ test("disables pay for caution", () => {
   expect(screen.getByRole("button", { name: /pay/i })).toBeDisabled()
 })
 
+test("enables pay for an allowlisted trusted merchant with a zero score", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="trusted"
+      score={0}
+      confidence={1}
+      allowlisted
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /pay/i })).toBeEnabled()
+})
+
+test("keeps pay disabled when a non-allowlisted score is below 70", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="trusted"
+      score={0}
+      confidence={1}
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /pay/i })).toBeDisabled()
+})
+
 test("enables pay for trusted", () => {
   render(
     <CheckoutSheet

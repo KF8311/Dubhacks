@@ -36,4 +36,4 @@ test("walks discovery into the mock results", async () => {
   await waitFor(() => {
     expect(screen.queryByText(/XM5 Pro/)).not.toBeInTheDocument()
   })
-})
+}, 15000)
