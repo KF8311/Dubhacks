@@ -3,6 +3,7 @@ from pathlib import Path
 from app.core.paths import _candidates, data_dir
 
 
+
 def test_data_dir_prefers_backend_copy_when_repo_root_is_missing(tmp_path, monkeypatch):
     bundled = tmp_path / "backend" / "data"
     bundled.mkdir(parents=True)
@@ -75,3 +76,29 @@ def test_candidates_walk_up_from_the_module_dir(tmp_path):
 
     for depth in (1, 2):
         assert module_dir.parents[depth] / "data" in candidates
+
+
+def test_data_dir_materializes_the_embedded_bundle_when_no_files_exist(
+    tmp_path, monkeypatch
+):
+    """A function that ships without data files still has to serve the catalog."""
+    monkeypatch.setattr("app.core.paths._candidates", lambda: [tmp_path / "nope"])
+    monkeypatch.setattr("app.core.paths._EMBEDDED_TMP", tmp_path / "embedded")
+
+    resolved = data_dir()
+
+    assert (resolved / "catalog.json").is_file()
+    assert (resolved / "allowlist.json").is_file()
+
+
+def test_embedded_bundle_matches_the_repo_data():
+    """Editing data/ without rerunning bundle_data.py would ship stale fixtures."""
+    from app.data_bundle import DATA
+
+    repo_data = Path(__file__).resolve().parents[3] / "data"
+    on_disk = {
+        path.relative_to(repo_data).as_posix(): path.read_text(encoding="utf-8")
+        for path in repo_data.rglob("*")
+        if path.is_file()
+    }
+    assert DATA == on_disk
