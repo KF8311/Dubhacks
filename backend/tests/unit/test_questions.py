@@ -1,5 +1,19 @@
+import json
+
 from app.domain.models import Answer
-from app.sessions.questions import build_search_spec
+from app.sessions.questions import build_search_spec, templates_for
+
+
+def test_non_audio_templates_are_not_about_headphones():
+    blob = json.dumps(templates_for("water bottles")).lower()
+    assert "noise cancell" not in blob
+    assert "home listening" not in blob
+    assert "headphone" not in blob
+
+
+def test_audio_templates_keep_the_demo_chips():
+    blob = json.dumps(templates_for("noise cancelling headphones")).lower()
+    assert "noise cancelling" in blob
 
 
 def test_budget_option_id_300_is_cents():
