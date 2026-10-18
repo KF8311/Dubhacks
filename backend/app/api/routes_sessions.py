@@ -41,11 +41,12 @@ def _require_session(session_id: str):
 async def create_session(body: SessionCreateIn) -> dict:
     session = registry.create(body.client_id, body.query)
     questions = await generate_questions(body.query)
-    registry.set_questions(session.id, questions)
+    payload = [item.model_dump() for item in questions]
+    registry.set_questions(session.id, payload)
     return {
         "session_id": session.id,
         "stage": session.stage.value,
-        "questions": questions,
+        "questions": payload,
         "expires_at": session.expires_at.isoformat().replace("+00:00", "Z"),
     }
 

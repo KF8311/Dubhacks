@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import re
 
-from app.domain.models import Answer, SearchSpec
+from pydantic import ValidationError
+
+from app.domain.models import Answer, Question, SearchSpec
 from app.search.catalog import catalog_covers
 
 QUESTIONS: list[dict] = [
@@ -84,11 +86,15 @@ def templates_for(query: str) -> list[dict]:
     return list(GENERIC_QUESTIONS)
 
 
-async def generate_questions(query: str) -> list[dict]:
+async def generate_questions(query: str) -> list[Question]:
     """Gemini when a key is present; templates on timeout, offline, or bad JSON."""
     from app.services.llm import generate_questions as llm_questions
 
-    return await llm_questions(query, fallback=templates_for(query))
+    raw = await llm_questions(query, fallback=templates_for(query))
+    try:
+        return [Question.model_validate(item) for item in raw]
+    except ValidationError:
+        return [Question.model_validate(item) for item in templates_for(query)]
 
 
 def _dollar_amounts(raw: str) -> list[int]:

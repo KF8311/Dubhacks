@@ -78,14 +78,15 @@ Eligibility is `verdict == "trusted"` and `confidence >= 0.6` and (`score >= 70`
  "merchants_preferred": ["bestbuy.com"]}
 ```
 
-`Question` — returned by `POST /api/sessions`. **Not yet in `models.py`; A confirms before freeze.**
+`Question` — returned by `POST /api/sessions` and defined in `app/domain/models.py` (`Question`, `QuestionOption`):
 
 ```json
 {"id": "use_case", "prompt": "What will you use them for?",
- "kind": "single_select", "options": [{"id": "commute", "label": "Commuting"}]}
+ "kind": "single_select", "options": [{"id": "commute", "label": "Commuting"}],
+ "allow_free_text": false}
 ```
 
-`kind` is `single_select | multi_select | free_text`; `options` is `[]` for `free_text`.
+`kind` is `single_select | multi_select | free_text`; `options` is `[]` for `free_text`. `allow_free_text` says whether the shopper may type an answer instead of choosing an option; it defaults to `false` and is required in the model.
 
 `Answer`:
 

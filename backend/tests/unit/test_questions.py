@@ -4,6 +4,17 @@ from app.domain.models import Answer
 from app.sessions.questions import build_search_spec, templates_for
 
 
+def test_templates_validate_as_the_question_model():
+    from app.domain.models import Question
+
+    for item in templates_for("noise cancelling headphones") + templates_for("water bottles"):
+        model = Question.model_validate(item)
+        assert model.id
+        assert model.prompt
+        assert model.options
+        assert isinstance(model.allow_free_text, bool)
+
+
 def test_non_audio_templates_are_not_about_headphones():
     blob = json.dumps(templates_for("water bottles")).lower()
     assert "noise cancell" not in blob
