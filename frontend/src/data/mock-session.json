@@ -67,7 +67,7 @@
         "currency": "USD",
         "merchant_name": "Best Buy",
         "merchant_domain": "bestbuy.com",
-        "image_url": "",
+        "image_url": "/listings/sony.svg",
         "product_url": "https://www.bestbuy.com/",
         "category": "audio",
         "source": "catalog"
@@ -79,7 +79,7 @@
         "currency": "USD",
         "merchant_name": "Walmart",
         "merchant_domain": "walmart.com",
-        "image_url": "",
+        "image_url": "/listings/sony.svg",
         "product_url": "https://www.walmart.com/",
         "category": "audio",
         "source": "catalog"
@@ -91,7 +91,7 @@
         "currency": "USD",
         "merchant_name": "Amazon",
         "merchant_domain": "amazon.com",
-        "image_url": "",
+        "image_url": "/listings/bose.svg",
         "product_url": "https://www.amazon.com/",
         "category": "audio",
         "source": "catalog"
@@ -103,7 +103,7 @@
         "currency": "USD",
         "merchant_name": "Best Buy",
         "merchant_domain": "bestbuy.com",
-        "image_url": "",
+        "image_url": "/listings/sony.svg",
         "product_url": "https://www.bestbuy.com/",
         "category": "audio",
         "source": "catalog"
@@ -115,7 +115,7 @@
         "currency": "USD",
         "merchant_name": "Nordstrom",
         "merchant_domain": "nordstrom.com",
-        "image_url": "",
+        "image_url": "/listings/studio.svg",
         "product_url": "https://www.nordstrom.com/",
         "category": "audio",
         "source": "catalog"
@@ -127,7 +127,7 @@
         "currency": "USD",
         "merchant_name": "Target",
         "merchant_domain": "target.com",
-        "image_url": "",
+        "image_url": "/listings/bose.svg",
         "product_url": "https://www.target.com/",
         "category": "audio",
         "source": "catalog"
@@ -139,7 +139,7 @@
         "currency": "USD",
         "merchant_name": "Amazon",
         "merchant_domain": "amazon.com",
-        "image_url": "",
+        "image_url": "/listings/budget.svg",
         "product_url": "https://www.amazon.com/",
         "category": "audio",
         "source": "catalog"
@@ -151,7 +151,7 @@
         "currency": "USD",
         "merchant_name": "Premium Audio Deals",
         "merchant_domain": "premium-audio-deals.shop",
-        "image_url": "",
+        "image_url": "/listings/villain.svg",
         "product_url": "https://premium-audio-deals.shop/",
         "category": "audio",
         "source": "fixture"

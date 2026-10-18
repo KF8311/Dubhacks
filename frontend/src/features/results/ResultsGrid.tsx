@@ -53,7 +53,7 @@ export function ResultsGrid({
           </li>
         ))}
       </ul>
-      <aside className="min-w-0 lg:sticky lg:top-24">
+      <aside className="counter-lens min-w-0 lg:sticky lg:top-24">
         <p className="mb-2 text-sm font-medium text-accent">On the counter</p>
         <ProductCard
           listing={selected}
