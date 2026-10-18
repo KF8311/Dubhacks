@@ -15,16 +15,16 @@ This is the only file that claims to be current.
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy in Block 5) |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
-| SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **184 passed**. Frontend **13 files / 34 tests passed**, `npm run build` clean. |
+| SerpAPI | No `SERPAPI_KEY`. Catalog-only in the deploy; the live path (D-021, superseding D-011) infers the merchant domain from Google Shopping's `source` and immersive `stores`, and is untested against a real key. |
+| Tests | Backend **187 passed** (13 files). Frontend **34 passed** (13 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
 | Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
-| Branches | **`main` carries everything** (PRs #1–#19, plus `c/web` and `agent_backend` merged directly; `main` is `9af147a`). Every remote head is contained in `main` — `git rev-list --count main..origin/<branch>` is 0 for all of them. Branch from `main`. |
+| Branches | **`main` carries everything and is pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20), [PR #21](https://github.com/KF8311/Dubhacks/pull/21), [PR #22](https://github.com/KF8311/Dubhacks/pull/22) rebase-merged; every working branch deleted after its diff against `main` came back empty). Run `git log --oneline origin/main` for the current tip — recording the hash here just goes stale on the next docs commit. Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 19:55 PT
+Last updated: 2026-10-17 20:35 PT
 
 ## Gate board
 
@@ -34,7 +34,7 @@ Last updated: 2026-10-17 19:55 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 184 backend / 34 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
+| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 187 backend / 34 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
 | G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done; URL, VEYZL check, screenshots, video pending | `docs/devpost-form.md` + Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
@@ -60,7 +60,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
 | A | Fly redeploy; smoke the public URL; **VEYZL audit + fix PR (D-020)** | 18:25 | 22:30 | ✅ Merged at 19:40 — `source`→domain search (D-021), budget parsing, session-guarded checkout. ⬜ Public URL is the last G4/G5 blocker; VEYZL needs the app installed on `KF8311/Dubhacks` |
-| C | Browser click-through + screenshot of the merged checkout sheet and receipt page | 18:25 | 20:00 | Tasks 25–26 merged in PR #14; `?mock=1` remains the fallback |
+| C | Browser screenshots — results grid, danger detail, receipt — plus one recording | 18:25 | 22:30 | ✅ Block 6 UI merged (`cf24bdb`, `3ceffbc`): 390px reflow (overflow 0), `api_key` redaction, immersive merchant resolution, offline catalog pinning. ⬜ Screenshots and video are the last G5 items |
 | B | Devpost, final numbers, audit review | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, technical-claims handoff, audit scope + `/api/demo/reset` reproduction, repository review first pass (`8c89260`); ⬜ fill the form as A and C land artifacts |
 
 ## Done since last update
@@ -93,16 +93,19 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] B: **Repository review, first pass (`8c89260`)** — protocol covers all 17 methods; `get_repository()` typed with the protocol; `idempotency_key` partial index replaces `sparse`, so keyless checkouts no longer collide on `null`
 - [x] B: persistence claim narrowed — Mongo carries the payment path only; sessions, listings, and investigations stay in-process, and mock VIC tokens never leave the process
 - [x] A merged (`8687203`) — Google `source`→domain (D-021, supersedes D-011), `under_150` budget parsing, upper-case `SERPAPI_KEY`, catalog fallback on an empty budget filter (D-022), session-guarded checkout. Three conflicts resolved by hand; A's `D-019` renumbered to `D-021`
+- [x] C merged (`cf24bdb`, `3ceffbc`, fast-forwarded; rebase-merged as PR #20 rewrote the SHAs and dropped her merge commit) — phone-width reflow at 390px with zero horizontal overflow, `api_key`/`x-goog-api-key` redaction in `redact()`, unknown merchants resolved through Google Shopping's immersive `stores` with a 4-lookup/2 s cap, and `OFFLINE=1` pinned to the curated catalog so replay numbers cannot drift
+- [x] B restored the receipt score assertion C's wrap fix dropped; the test now covers `Score 92` and `break-words` (`f0014c0`)
+- [x] Verified after the merge: **187 backend / 34 frontend**, build clean, replay exit 0, and the live HTTP run for **$300–$600** matches the replay exactly
 
 ## Next three actions
 
-1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
-2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it.
-3. A installs the VEYZL app on `KF8311/Dubhacks`, opens the fix PR, and runs the audit; B fills `docs/devpost-form.md` as the URL and screenshots land.
+1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
+2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
+3. A installs the VEYZL GitHub App on the repo and runs the audit on a PR (D-020); only then re-add `VEYZL Audit` as a required status check.
 
 ## Demo trap to avoid
 
-Picking **"Under $150"** filters the catalog to the villain alone and ends in `no_trusted_option`. That is a legitimate refusal path worth showing *after* the happy path, but the demo run should answer with **$150–$300**. See `docs/checklist.md` §9.
+The demo run must answer **$300–$600**. Measured on the merged build: `Under $150` → 1 card (the villain, ending in `no_trusted_option`), `$150–$300` → 3 cards, `$300–$600` → all 9. The catalog runs to $549.99, so the lower answers are thinner, not wrong. Under `OFFLINE=1` the budget filter is skipped and all 9 cards appear regardless — do not describe plane mode as budget-filtered. See `docs/checklist.md` §10.
 
 ## Risks that are currently live
 
@@ -110,11 +113,15 @@ Picking **"Under $150"** filters the catalog to the villain alone and ends in `n
 |---|---|---|
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
 | Fly serves the pre-merge build | **yes** | Redeploy from `main` in Block 5 |
+| ~~`main` protected by a required check nothing reports~~ | **was yes — resolved 20:22** | The `VEYZL Audit` requirement was dropped from the repo ruleset, PR #20 was rebase-merged, and the branch deleted. **Do not re-add the check until the VEYZL GitHub App is installed** — a local run posts nothing, and re-adding it early blocks every merge again. |
 | SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | An empty budget filter falls back to the full catalog | yes | D-022: an over-budget listing can be recommended and paid. Say "closest match" on stage; do not call the budget a hard cap |
+| The demo budget answer changes the card count | **yes** | Measured: Under $150 → 1, $150–$300 → 3, $300–$600 → 9. The script uses $300–$600. Under `OFFLINE=1` the filter is skipped entirely |
+| Receipt score coverage silently dropped | was yes | C's wrap fix replaced the score assertion; restored alongside it (`f0014c0`) |
 | Browser never exercised the live flow | **yes** | Wiring is merged; C must click through it once |
 | Devpost overstates the role of the model | **was yes** | Corrected after A's Gemini merge: the model writes copy, never a verdict; the generative-AI answer is **Yes** |
+| Public health reads `degraded` with Mongo off | **yes, by design** | With `MONGODB_URI` unset the API is fully functional but answers `{"status":"degraded","db":"unavailable"}` — the contract in `docs/contracts.md`. Fly has no Mongo, so the public URL will always say this. Read it as "optional store off", not "broken"; say so before a judge asks. |
 | `GEMINI_API_KEY` unset on Fly | likely | Templates are the fallback, so the demo still runs; set the key only if the template copy reads worse on stage |
 | Local venv lacks `motor` | **yes** | `pip install motor`; one repository test otherwise fails to import |
 
