@@ -96,7 +96,7 @@ All optional; the demo runs with none of them set.
 | `MAX_LISTINGS` | `9` | Caps the fan-out |
 | `INVESTIGATION_BUDGET_S` | `14.0` | Wall-clock budget for one session's checks |
 | `RECEIPT_SIGNING_SECRET` | `dev-only-change-me` | HMAC key for receipts |
-| `SERPAPI_KEY` | unset | Live search; catalog is used when unset (D-011) |
+| `SERPAPI_KEY` | unset | Live search; the catalog is used when unset (D-021, superseding D-011) |
 | `GEMINI_API_KEY` | unset | Questions, narration, and check explanations; templates are the fallback |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Override if your key has different model access (D-019) |
 | `GOOGLE_SAFE_BROWSING_KEY` | unset | Live reputation; static denylist when unset |
@@ -137,8 +137,8 @@ Do **not** answer "Under $150" on the happy path: it leaves only the villain and
 ## Tests
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q          # 153 passed
-cd frontend && npx vitest run && npm run build               # 22 passed, build clean
+cd backend && .venv/Scripts/python.exe -m pytest -q          # 184 passed
+cd frontend && npx vitest run && npm run build               # 34 passed, build clean
 ```
 
 **Offline rehearsal** — the whole session in-process, no server, no network:
