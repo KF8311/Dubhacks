@@ -35,14 +35,14 @@ class StubProvider:
 
 
 async def test_uses_provider_results_when_available():
-    provided = [_listing("lst_a", 1000), _listing("lst_b", 2000)]
+    provided = [_listing("lst_a", 1000), _listing("lst_b", 2000), _listing("lst_c", 3000)]
 
     listings, source = await search(
         SPEC, limit=8, provider=StubProvider(provided), catalog=load_catalog()
     )
 
     assert source == "serpapi"
-    assert [item.id for item in listings] == ["lst_a", "lst_b"]
+    assert [item.id for item in listings] == ["lst_a", "lst_b", "lst_c"]
 
 
 async def test_falls_back_to_catalog_when_provider_raises():
@@ -53,6 +53,16 @@ async def test_falls_back_to_catalog_when_provider_raises():
     assert provider.calls == 1
     assert source == "catalog"
     assert len(listings) == 8
+
+
+async def test_falls_back_to_catalog_when_provider_returns_one_listing():
+    listings, source = await search(
+        SPEC, limit=8, provider=StubProvider([_listing("lst_only", 1898)]), catalog=load_catalog()
+    )
+
+    assert source == "catalog"
+    assert len(listings) == 8
+    assert "lst_only" not in {item.id for item in listings}
 
 
 async def test_falls_back_to_catalog_when_provider_returns_nothing():

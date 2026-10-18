@@ -31,14 +31,20 @@ export function DiscoveryFlow({ onStarted }: Props) {
     if (!trimmed) return
     setQuery(trimmed)
     setError(null)
-    const created = await createSession({ query: trimmed, client_id: "demo" })
-    setSessionId(created.session_id)
-    setQuestions(created.questions)
-    showQuestions(created.questions)
-    setIndex(0)
-    setPicked(null)
-    setFreeText("")
-    setPhase("questions")
+    setPhase("submitting")
+    try {
+      const created = await createSession({ query: trimmed, client_id: "demo" })
+      setSessionId(created.session_id)
+      setQuestions(created.questions)
+      showQuestions(created.questions)
+      setIndex(0)
+      setPicked(null)
+      setFreeText("")
+      setPhase("questions")
+    } catch (caught) {
+      setPhase("query")
+      setError(caught instanceof Error ? caught.message : "Search failed")
+    }
   }
 
   function currentAnswer(): Answer | null {
@@ -104,6 +110,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
           placeholder="What are you looking for?"
           onChange={(event) => setLocalQuery(event.target.value)}
         />
+        {error ? <p className="text-sm text-red-800">{error}</p> : null}
         <Button type="submit" disabled={query.trim().length === 0}>
           Find products
         </Button>

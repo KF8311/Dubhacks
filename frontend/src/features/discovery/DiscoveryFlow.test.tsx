@@ -36,6 +36,17 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+test("shows an error when the session API cannot be reached", async () => {
+  vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"))
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "headphones" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  expect(await screen.findByText(/failed to fetch/i)).toBeInTheDocument()
+})
+
 test("renders questions from the mock session", async () => {
   window.history.replaceState({}, "", "/?mock=1")
 
