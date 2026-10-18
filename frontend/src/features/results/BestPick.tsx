@@ -1,4 +1,5 @@
 import { formatCents } from "@/lib/format.ts"
+import { productLink } from "@/lib/productLink.ts"
 import type { Listing, Recommendation } from "@/lib/types.ts"
 
 type Props = {
@@ -11,6 +12,7 @@ export function BestPick({ recommendation, listings, budgetMaxCents = null }: Pr
   const listing = listings.find((item) => item.id === recommendation.recommended_listing_id)
   if (!listing || recommendation.savings_cents === null) return null
   const overBudget = budgetMaxCents != null && listing.price_cents > budgetMaxCents
+  const link = productLink(listing)
 
   return (
     <section className="ticket-best rounded-lg p-6">
@@ -19,14 +21,14 @@ export function BestPick({ recommendation, listings, budgetMaxCents = null }: Pr
       <p className="mt-2 text-muted-foreground">
         {listing.merchant_name} · {formatCents(listing.price_cents, listing.currency)}
       </p>
-      {listing.product_url.startsWith("http") ? (
+      {link ? (
         <a
-          href={listing.product_url}
+          href={link.href}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent underline underline-offset-4"
         >
-          View at {listing.merchant_domain}
+          {link.label}
           <span aria-hidden="true">↗</span>
         </a>
       ) : null}

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
 import { getReceipt } from "@/lib/api.ts"
 import { formatCents } from "@/lib/format.ts"
+import { productLink } from "@/lib/productLink.ts"
 import type { Receipt } from "@/lib/types.ts"
 
 type ViewProps = {
@@ -54,6 +55,7 @@ export function ReceiptView({ receipt }: ViewProps) {
     : "Not issued"
 
   const shareUrl = `${window.location.origin}/r/${receipt.share_id}`
+  const listingLink = productLink(receipt.listing)
 
   async function copyLink() {
     try {
@@ -80,14 +82,14 @@ export function ReceiptView({ receipt }: ViewProps) {
           <p className="text-muted-foreground">{receipt.listing.merchant_name}</p>
           <p className="text-lg font-semibold">{formatCents(receipt.amount_cents, receipt.currency)}</p>
           <p className="text-sm text-muted-foreground">Token ····{receipt.token_last4}</p>
-          {receipt.listing.product_url.startsWith("http") ? (
+          {listingLink ? (
             <a
-              href={receipt.listing.product_url}
+              href={listingLink.href}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-accent underline underline-offset-4"
             >
-              View at {receipt.listing.merchant_domain}
+              {listingLink.label}
               <span aria-hidden="true">↗</span>
             </a>
           ) : null}

@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { CheckRow } from "@/features/results/CheckRow.tsx"
 import { TrustBadge } from "@/features/results/TrustBadge.tsx"
 import { formatCents } from "@/lib/format.ts"
+import { productLink } from "@/lib/productLink.ts"
 import { cn } from "cn"
 import type { CheckId, Listing, ScoreResult, TrustCheckResult } from "@/lib/types.ts"
 
@@ -40,7 +41,7 @@ export function ProductCard({
 }: Props) {
   const [imageFailed, setImageFailed] = useState(listing.image_url.length === 0)
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
-  const productUrl = listing.product_url.startsWith("http") ? listing.product_url : null
+  const link = productLink(listing)
 
   const thumb = imageFailed ? (
     <div
@@ -106,14 +107,14 @@ export function ProductCard({
       ) : (
         <div className="flex items-start gap-3 px-4">{body}</div>
       )}
-      {productUrl ? (
+      {link ? (
         <a
-          href={productUrl}
+          href={link.href}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-2 inline-flex items-center gap-1 px-4 text-sm font-medium text-accent underline underline-offset-4"
         >
-          View at {listing.merchant_domain}
+          {link.label}
           <span aria-hidden="true">↗</span>
         </a>
       ) : null}

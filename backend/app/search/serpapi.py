@@ -62,11 +62,35 @@ def merchant_host(url: str) -> str:
     return host
 
 
+def _clean_url(value: str) -> str:
+    """SerpAPI returns links with literal spaces; a URL must not contain them.
+
+    Tapping a link in a text message stops at the first space, so an encoded
+    URL is the difference between "works" and "404".
+    """
+    return value.strip().replace(" ", "%20")
+
+
 def _product_url(item: dict) -> str:
     for key in ("product_link", "link"):
-        value = str(item.get(key) or "").strip()
+        value = _clean_url(str(item.get(key) or ""))
         host = merchant_host(value)
         if host and host not in GOOGLE_HOSTS:
+            return value
+    return ""
+
+
+def _google_product_url(item: dict) -> str:
+    """A Google Shopping product link is a real page, so keep it as a fallback.
+
+    Google's shopping engine often returns only `google.com/search?ibp=oshop…`
+    links, with the retailer named in `source`. That link lands on the product
+    (and from there on the store), which is useful; an invented
+    `https://<retailer>/item/<id>` is not — it 404s.
+    """
+    for key in ("product_link", "link"):
+        value = _clean_url(str(item.get(key) or ""))
+        if value and merchant_host(value) in GOOGLE_HOSTS:
             return value
     return ""
 
@@ -106,8 +130,8 @@ def listing_from_shopping_result(item: dict) -> Listing | None:
         domain = domain_from_source(str(item.get("source") or ""))
         if not domain:
             return None
-        product_id = str(item.get("product_id") or item.get("title") or "item")
-        product_url = f"https://{domain}/item/{listing_id(product_id)}"
+        # Never invent a merchant path: keep the real Google Shopping link.
+        product_url = _google_product_url(item)
     price_cents = _price_cents(item)
     if price_cents is None:
         return None
@@ -115,8 +139,10 @@ def listing_from_shopping_result(item: dict) -> Listing | None:
     merchant_name = str(item.get("source") or domain).strip() or domain
     thumbs = item.get("serpapi_thumbnails") or []
     image_url = str(item.get("thumbnail") or (thumbs[0] if thumbs else "") or "")
+    # An empty product_url must not collapse every listing onto one id.
+    identity = product_url or f"{domain}:{item.get('product_id') or title}"
     return Listing(
-        id=listing_id(product_url),
+        id=listing_id(identity),
         title=title,
         price_cents=price_cents,
         merchant_name=merchant_name,
@@ -137,9 +163,9 @@ def listings_from_payload(
     seen: set[str] = set()
     for item in payload.get("shopping_results") or []:
         listing = listing_from_shopping_result(item if isinstance(item, dict) else {})
-        if listing is None or listing.product_url in seen:
+        if listing is None or listing.id in seen:
             continue
-        seen.add(listing.product_url)
+        seen.add(listing.id)
         out.append(listing)
         if len(out) >= limit:
             break
@@ -171,7 +197,7 @@ def listing_from_immersive(
     for store in stores:
         if not isinstance(store, dict):
             continue
-        product_url = str(store.get("link") or "").strip()
+        product_url = _clean_url(str(store.get("link") or ""))
         domain = merchant_host(product_url)
         if not domain or domain in GOOGLE_HOSTS or domain.endswith(".google.com"):
             continue

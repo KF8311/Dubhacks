@@ -327,3 +327,52 @@ async def test_serpapi_client_uses_the_provider_timeout(monkeypatch):
     with pytest.raises(RuntimeError, match="stop after constructing"):
         await provider.search(SearchSpec(query="computers"), limit=8)
     assert captured["timeout"] == 4.0
+
+
+def test_google_product_link_is_kept_instead_of_invented():
+    payload = {
+        "shopping_results": [
+            {
+                "title": "Sony WH-1000XM5",
+                "product_link": "https://www.google.com/search?ibp=oshop&q=xm5&prds=productid:17392",
+                "source": "Best Buy",
+                "extracted_price": 249.0,
+                "product_id": "17392",
+            }
+        ]
+    }
+    listings = listings_from_payload(payload, spec=SearchSpec(query="headphones"), limit=8)
+    assert len(listings) == 1
+    listing = listings[0]
+    assert listing.merchant_domain == "bestbuy.com"
+    assert listing.product_url.startswith("https://www.google.com/")
+    assert "/item/" not in listing.product_url
+
+
+def test_missing_link_neither_invents_a_path_nor_collides():
+    payload = {
+        "shopping_results": [
+            {"title": "Juice A", "source": "Target", "extracted_price": 3.69, "product_id": "a"},
+            {"title": "Juice B", "source": "Target", "extracted_price": 4.29, "product_id": "b"},
+        ]
+    }
+    listings = listings_from_payload(payload, spec=SearchSpec(query="juice"), limit=8)
+    assert len(listings) == 2
+    assert [item.product_url for item in listings] == ["", ""]
+    assert len({item.id for item in listings}) == 2
+
+
+def test_product_urls_never_contain_literal_spaces():
+    payload = {
+        "shopping_results": [
+            {
+                "title": "Sony WH-1000XM5",
+                "product_link": "https://www.google.com/search?ibp=oshop&q=noise cancelling headphones",
+                "source": "Best Buy",
+                "extracted_price": 249.0,
+            }
+        ]
+    }
+    listing = listings_from_payload(payload, spec=SearchSpec(query="x"), limit=8)[0]
+    assert " " not in listing.product_url
+    assert "noise%20cancelling%20headphones" in listing.product_url
