@@ -1,9 +1,11 @@
+import os
 import time
 
 from fastapi import APIRouter
 
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.core.paths import _candidates, data_dir
 from app.payments.memory import store as payment_store
 from app.payments.mock_vic import reset as reset_vic
 from app.services.repository import get_db_status, reset_repository
@@ -29,12 +31,25 @@ def health() -> dict:
     settings = get_settings()
     db = get_db_status()
     status = "ok" if db == "ok" else "degraded"
+    resolved = data_dir()
     return {
         "status": status,
         "db": db,
         "version": settings.version,
         "demo_mode": settings.demo_mode,
         "uptime_s": int(time.monotonic() - _started_at),
+        "build": os.environ.get("VERCEL_GIT_COMMIT_SHA", "")[:7],
+        # The answers route 500s when the function ships without its data bundle.
+        # Report the resolved directory and every candidate so a deploy can be
+        # diagnosed from outside, without dashboard logs.
+        "data": {
+            "dir": str(resolved),
+            "catalog_exists": (resolved / "catalog.json").is_file(),
+            "candidates": [
+                {"path": str(path), "exists": (path / "catalog.json").is_file()}
+                for path in _candidates()
+            ],
+        },
     }
 
 

@@ -46,3 +46,32 @@ def _make_app_module_dir(root: Path) -> Path:
     module_dir.mkdir(parents=True)
     (module_dir / "paths.py").write_text("", encoding="utf-8")
     return module_dir
+
+
+def test_data_dir_finds_data_two_levels_up(tmp_path):
+    """<root>/backend/app/core with the catalog at <root>/backend/data."""
+    module_dir = _make_app_module_dir(tmp_path / "backend")
+    packaged = tmp_path / "backend" / "data"
+    packaged.mkdir()
+    (packaged / "catalog.json").write_text("{}", encoding="utf-8")
+
+    assert data_dir(module_dir) == packaged
+
+
+def test_data_dir_finds_data_at_the_repo_root(tmp_path):
+    """<root>/backend/app/core with the only catalog at <root>/data."""
+    module_dir = _make_app_module_dir(tmp_path / "backend")
+    repo = tmp_path / "data"
+    repo.mkdir()
+    (repo / "catalog.json").write_text("{}", encoding="utf-8")
+
+    assert data_dir(module_dir) == repo
+
+
+def test_candidates_walk_up_from_the_module_dir(tmp_path):
+    module_dir = _make_app_module_dir(tmp_path / "backend")
+
+    candidates = _candidates(module_dir)
+
+    for depth in (1, 2):
+        assert module_dir.parents[depth] / "data" in candidates
