@@ -152,7 +152,7 @@ def _validate_questions(raw: str) -> list[dict] | None:
                 "prompt": prompt[:160],
                 "kind": "single_select",
                 "options": opts,
-                "allow_free_text": bool(item.get("allow_free_text", False)),
+                "allow_free_text": True,
             }
         )
     return cleaned

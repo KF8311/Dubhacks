@@ -1,4 +1,4 @@
-# Sniff + Visa
+# Sykes + Visa
 
 A trust-gated shopping agent. It searches listings, runs five trust checks on every merchant, streams the investigation to the browser, recommends the cheapest **trusted** option, and completes a **sandboxed** Visa Intelligent Commerce flow: mandate → passkey → one-time token → transaction → receipt.
 

@@ -23,7 +23,7 @@ FIXTURES = {"premium-audio-deals.shop": "villain_reddit.json"}
 SEARCH_URL = "https://www.reddit.com/search.json"
 SEARCH_TIMEOUT_S = 4.0
 SEARCH_LIMIT = 10
-USER_AGENT = "SniffTrustCheck/1.0 (trust prototype; contact: demo@example.test)"
+USER_AGENT = "SykesTrustCheck/1.0 (trust prototype; contact: demo@example.test)"
 
 WARNING_SEVERITY = 0.5
 FAILED_SEVERITY = 0.8

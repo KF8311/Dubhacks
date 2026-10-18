@@ -26,7 +26,7 @@ async def lifespan(_application: FastAPI):
 def create_app() -> FastAPI:
     configure_logging()
     settings = get_settings()
-    application = FastAPI(title="Sniff Visa", version=settings.version, lifespan=lifespan)
+    application = FastAPI(title="Sykes Visa", version=settings.version, lifespan=lifespan)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins(),

@@ -74,7 +74,7 @@ Eligibility is `verdict == "trusted"` and `confidence >= 0.6` and (`score >= 70`
 `SearchSpec`:
 
 ```json
-{"query": "headphones", "budget_max_cents": 35000, "category": "headphones",
+{"query": "headphones", "budget_max_cents": 35000, "budget_min_cents": null, "category": "headphones",
  "merchants_preferred": ["bestbuy.com"]}
 ```
 

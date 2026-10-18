@@ -16,13 +16,13 @@ export function MandateCard({ mandate, onContinue }: Props) {
   return (
     <div className="space-y-3">
       <h3 className="text-lg font-semibold">Mandate</h3>
-      <p className="text-stone-700">
+      <p className="text-foreground">
         {mandate.merchant_name} · {mandate.merchant_domain}
       </p>
-      <p className="text-stone-700">
+      <p className="text-foreground">
         Cap {formatCents(mandate.max_amount_cents, mandate.currency)}
       </p>
-      <p className="text-sm text-stone-500">Expires at {expires}</p>
+      <p className="text-sm text-muted-foreground">Expires at {expires}</p>
       <Button type="button" onClick={onContinue}>
         Continue
       </Button>

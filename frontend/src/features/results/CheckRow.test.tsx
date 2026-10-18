@@ -14,6 +14,17 @@ const check = {
   duration_ms: 1,
 }
 
+test("a skipped check says it could not be verified", () => {
+  render(
+    <CheckRow
+      check={{ ...check, status: "skipped", summary: "Allowlisted merchant; checks skipped." }}
+      listingId="lst_1"
+    />,
+  )
+  expect(screen.getByText("Could not verify")).toBeInTheDocument()
+  expect(screen.queryByText("Skipped")).not.toBeInTheDocument()
+})
+
 test("explain button asks the API and shows the sentence", async () => {
   useSessionStore.setState({ sessionId: "ses_1" })
   globalThis.fetch = (async () =>

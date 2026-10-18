@@ -198,6 +198,16 @@ def _with_api_key(url: str, api_key: str) -> str:
     return f"{url}{joiner}api_key={api_key}"
 
 
+def _shopping_query(spec: SearchSpec) -> str:
+    query = spec.query
+    lo, hi = spec.budget_min_cents, spec.budget_max_cents
+    if lo is not None and hi is not None:
+        return f"{query} ${lo // 100}-{hi // 100}"
+    if hi is not None:
+        return f"{query} under ${hi // 100}"
+    return query
+
+
 class SerpAPIProvider:
     name = "serpapi"
 
@@ -210,10 +220,14 @@ class SerpAPIProvider:
             raise RuntimeError("SERPAPI_KEY unset")
         params = {
             "engine": "google_shopping",
-            "q": spec.query,
+            "q": _shopping_query(spec),
             "api_key": self.api_key,
             "num": limit,
         }
+        if spec.budget_min_cents is not None:
+            params["min_price"] = spec.budget_min_cents // 100
+        if spec.budget_max_cents is not None:
+            params["max_price"] = spec.budget_max_cents // 100
         async with httpx.AsyncClient(timeout=2.5) as client:
             response = await client.get(SERPAPI_URL, params=params)
             response.raise_for_status()

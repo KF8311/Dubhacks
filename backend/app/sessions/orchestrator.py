@@ -45,6 +45,39 @@ class SessionOrchestrator:
         self.search = search
         self.config = config
 
+    def _search_timeout(self) -> float:
+        return 12.0 if os.environ.get("VERCEL") else SEARCH_S
+
+    async def _search_with_retry(self, session_id: str, spec) -> tuple[list[Listing], str]:
+        """Live search, then one retry. The headphone catalog is last resort."""
+        catalog_hit: tuple[list[Listing], str] | None = None
+        timed_out = False
+        for _attempt in range(2):
+            try:
+                listings, source = await asyncio.wait_for(
+                    self.search(spec, MAX_LISTINGS),
+                    timeout=self._search_timeout(),
+                )
+            except Exception:  # noqa: BLE001 — retry once, then the catalog
+                timed_out = True
+                continue
+            if source != "catalog":
+                return listings, source
+            catalog_hit = (listings, source)
+        if catalog_hit is not None:
+            return catalog_hit
+        if timed_out:
+            self.bus.publish(
+                session_id,
+                "session.error",
+                {
+                    "code": "SEARCH_FAILED",
+                    "message": "Search failed; showing catalog listings.",
+                    "recoverable": True,
+                },
+            )
+        return load_catalog()[:MAX_LISTINGS], "catalog"
+
     def _active_checks(self) -> list[TrustCheck]:
         if self.checks is None:
             return get_checks()
@@ -78,24 +111,7 @@ class SessionOrchestrator:
             # when a search key is present in the environment.
             listings, source = load_catalog()[:MAX_LISTINGS], "catalog"
         else:
-            try:
-                listings, source = await asyncio.wait_for(
-                    self.search(session.search_spec, MAX_LISTINGS),
-                    timeout=12.0 if os.environ.get("VERCEL") else SEARCH_S,
-                )
-            except Exception:
-                # A failed live search falls back to the curated catalog so the
-                # demo still renders; the session.error event says so.
-                listings, source = load_catalog()[:MAX_LISTINGS], "catalog"
-                self.bus.publish(
-                    session_id,
-                    "session.error",
-                    {
-                        "code": "SEARCH_FAILED",
-                        "message": "Search failed; showing catalog listings.",
-                        "recoverable": True,
-                    },
-                )
+            listings, source = await self._search_with_retry(session_id, session.search_spec)
 
         self.bus.publish(
             session_id,
@@ -178,9 +194,7 @@ class SessionOrchestrator:
             danger=danger,
             duration_ms=duration_ms,
         )
-        if not listings:
-            session.stage = SessionStage.FAILED
-        elif rec.no_trusted_option:
+        if rec.no_trusted_option or not listings:
             session.stage = SessionStage.NO_TRUSTED_OPTION
         else:
             session.stage = SessionStage.READY

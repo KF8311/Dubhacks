@@ -36,6 +36,46 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+test("says it is asking questions while the session is created", async () => {
+  let finish: ((value: Response) => void) | undefined
+  vi.spyOn(globalThis, "fetch").mockImplementation(
+    () =>
+      new Promise<Response>((resolve) => {
+        finish = resolve
+      }),
+  )
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "running shoes" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  expect(await screen.findByText(/asking a few questions/i)).toBeInTheDocument()
+  finish?.(
+    jsonResponse({
+      session_id: "ses_real",
+      stage: "clarifying",
+      questions,
+      expires_at: "2026-10-17T22:00:00Z",
+    }),
+  )
+})
+
+test("question screens show progress through the set", async () => {
+  window.history.replaceState({}, "", "/?mock=1")
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "headphones" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  expect(await screen.findByText(/question 1 of 3/i)).toBeInTheDocument()
+  expect(screen.getByRole("progressbar", { name: /question progress/i })).toHaveAttribute(
+    "aria-valuenow",
+    "1",
+  )
+})
+
 test("shows an alert and stays on the search when the API is unreachable", async () => {
   vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"))
 
@@ -47,6 +87,36 @@ test("shows an alert and stays on the search when the API is unreachable", async
 
   expect(await screen.findByRole("alert")).toHaveTextContent(/could not reach the server/i)
   expect(screen.getByText(/what do you want to buy/i)).toBeInTheDocument()
+})
+
+test("lets you type a price even when the question is chips only", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+    const url = String(input)
+    if (url.endsWith("/api/sessions")) {
+      return jsonResponse({
+        session_id: "ses_real",
+        stage: "clarifying",
+        questions: [
+          {
+            id: "q_budget",
+            prompt: "What's your ceiling?",
+            kind: "single_select",
+            options: [{ id: "100", label: "Under $100" }],
+            allow_free_text: false,
+          },
+        ],
+        expires_at: "2026-10-17T22:00:00Z",
+      })
+    }
+    return jsonResponse(snapshot)
+  })
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "water bottles" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+  expect(await screen.findByPlaceholderText(/or type your own answer/i)).toBeInTheDocument()
 })
 
 test("renders questions from the mock session", async () => {

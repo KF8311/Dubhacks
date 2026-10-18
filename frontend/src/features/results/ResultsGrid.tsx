@@ -6,9 +6,18 @@ type Props = {
   checks: Record<string, TrustCheckResult[]>
   scores: Record<string, ScoreResult>
   recommendation?: Recommendation | null
+  budgetMaxCents?: number | null
+  budgetMinCents?: number | null
 }
 
-export function ResultsGrid({ listings, checks, scores, recommendation = null }: Props) {
+export function ResultsGrid({
+  listings,
+  checks,
+  scores,
+  recommendation = null,
+  budgetMaxCents = null,
+  budgetMinCents = null,
+}: Props) {
   const bestId = recommendation?.recommended_listing_id
   const ordered = [...listings].sort((a, b) => {
     if (a.id === bestId) return -1
@@ -25,6 +34,8 @@ export function ResultsGrid({ listings, checks, scores, recommendation = null }:
           checks={checks[listing.id] ?? []}
           score={scores[listing.id]}
           isBest={listing.id === bestId}
+          budgetMaxCents={budgetMaxCents}
+          budgetMinCents={budgetMinCents}
         />
       ))}
     </div>

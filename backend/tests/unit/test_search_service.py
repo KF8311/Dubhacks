@@ -85,6 +85,35 @@ async def test_budget_filters_out_pricier_listings():
     assert [item.id for item in listings] == ["lst_cheap", "lst_mid"]
 
 
+async def test_budget_range_drops_listings_outside_the_band():
+    provided = [
+        _listing("lst_cheap", 20000),
+        _listing("lst_ok", 110000),
+        _listing("lst_dear", 200000),
+    ]
+
+    listings, source = await search(
+        SearchSpec(query="computers", budget_min_cents=100_000, budget_max_cents=120_000),
+        limit=8,
+        provider=StubProvider(provided),
+        catalog=load_catalog(),
+    )
+
+    assert source == "serpapi"
+    assert [item.id for item in listings] == ["lst_ok"]
+
+
+async def test_typed_range_miss_does_not_swap_in_the_headphone_catalog():
+    listings, source = await search(
+        SearchSpec(query="computers", budget_min_cents=100_000, budget_max_cents=120_000),
+        limit=8,
+        provider=StubProvider([]),
+        catalog=load_catalog(),
+    )
+    assert listings == []
+    assert source == "serpapi"
+
+
 async def test_budget_that_matches_nothing_keeps_the_catalog():
     catalog = [_listing("lst_cheap", 9000), _listing("lst_dear", 40000)]
 

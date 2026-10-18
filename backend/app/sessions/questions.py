@@ -48,21 +48,60 @@ async def generate_questions(query: str) -> list[dict]:
     return await llm_questions(query, fallback=QUESTIONS)
 
 
-def _budget_max_cents(option_id: str | None) -> int | None:
-    if not option_id:
-        return None
-    if option_id.isdigit():
-        return int(option_id) * 100
-    match = re.search(r"(\d+)", option_id)
-    if match:
-        return int(match.group(1)) * 100
+def _dollar_amounts(raw: str) -> list[int]:
+    return [int(token.replace(",", "")) for token in re.findall(r"\d[\d,]*", raw)]
+
+
+def _budget_bounds(raw: str | None) -> tuple[int | None, int | None]:
+    """Return (min_cents, max_cents). A single number is a ceiling, not a floor."""
+    if not raw:
+        return None, None
+    amounts = _dollar_amounts(raw)
+    if not amounts:
+        return None, None
+    if len(amounts) == 1:
+        return None, amounts[0] * 100
+    return min(amounts) * 100, max(amounts) * 100
+
+
+def _looks_like_budget(item: Answer) -> bool:
+    key = (item.question_id or "").lower()
+    raw = item.option_id or item.text
+    if _budget_bounds(raw) == (None, None):
+        return False
+    if any(token in key for token in ("budget", "price", "ceiling", "cost")):
+        return True
+    if item.text and _dollar_amounts(item.text):
+        return True
+    return bool(item.option_id and item.option_id.isdigit())
+
+
+def _typed_range(answers: list[Answer]) -> Answer | None:
+    for item in answers:
+        if item.text and len(_dollar_amounts(item.text)) >= 2:
+            return item
     return None
 
 
-def build_search_spec(query: str, answers: list[Answer]) -> SearchSpec:
+def _budget_answer(answers: list[Answer]) -> Answer:
+    typed = _typed_range(answers)
+    if typed is not None:
+        return typed
     by_id = {item.question_id: item for item in answers}
-    budget_option = (by_id.get("q_budget") or Answer(question_id="q_budget")).option_id
-    budget_max_cents = _budget_max_cents(budget_option)
-    use = (by_id.get("q_use") or Answer(question_id="q_use")).option_id
-    category = "audio" if use else None
-    return SearchSpec(query=query, budget_max_cents=budget_max_cents, category=category)
+    if "q_budget" in by_id:
+        return by_id["q_budget"]
+    for item in answers:
+        if _looks_like_budget(item):
+            return item
+    return Answer(question_id="q_budget")
+
+
+def build_search_spec(query: str, answers: list[Answer]) -> SearchSpec:
+    budget = _budget_answer(answers)
+    budget_min_cents, budget_max_cents = _budget_bounds(budget.option_id or budget.text)
+    return SearchSpec(
+        query=query,
+        budget_min_cents=budget_min_cents,
+        budget_max_cents=budget_max_cents,
+        category=None,
+    )

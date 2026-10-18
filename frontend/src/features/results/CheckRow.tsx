@@ -12,7 +12,14 @@ const statusLabel: Record<TrustStatus, string> = {
   passed: "Passed",
   warning: "Warning",
   failed: "Failed",
-  skipped: "Skipped",
+  skipped: "Could not verify",
+}
+
+const statusColor: Record<TrustStatus, string> = {
+  passed: "text-[color:var(--trust-trusted)]",
+  warning: "text-[color:var(--trust-caution)]",
+  failed: "text-[color:var(--trust-danger)]",
+  skipped: "text-stone-600",
 }
 
 export function CheckRow({ check, listingId }: Props) {
@@ -36,18 +43,18 @@ export function CheckRow({ check, listingId }: Props) {
     <div className="flex items-start justify-between gap-3 border-t py-2 text-sm">
       <div>
         <p className="font-medium">{check.name}</p>
-        <p className="text-stone-600">{check.summary}</p>
-        {explanation ? <p className="mt-1 text-stone-800">{explanation}</p> : null}
+        <p className="text-muted-foreground">{check.summary}</p>
+        {explanation ? <p className="mt-1 text-foreground">{explanation}</p> : null}
         <button
           type="button"
-          className="mt-1 text-xs font-medium text-stone-700 underline"
+          className="mt-1 text-xs font-medium text-[#00A5B5] underline"
           onClick={onExplain}
           disabled={busy || !sessionId}
         >
           {busy ? "Explaining…" : "Explain"}
         </button>
       </div>
-      <p className="shrink-0 font-medium">{statusLabel[check.status]}</p>
+      <p className={`shrink-0 font-medium ${statusColor[check.status]}`}>{statusLabel[check.status]}</p>
     </div>
   )
 }

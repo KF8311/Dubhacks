@@ -9,7 +9,7 @@ export function PasskeyDialog({ busy, onConfirm }: Props) {
   return (
     <div className="space-y-3" role="dialog" aria-label="Simulated passkey">
       <h3 className="text-lg font-semibold">Passkey</h3>
-      <p className="text-sm text-stone-600">
+      <p className="text-sm text-muted-foreground">
         This is a simulated biometric. No fingerprint or device credential is collected.
       </p>
       <div className="flex flex-wrap gap-2">
