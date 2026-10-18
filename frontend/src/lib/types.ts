@@ -154,3 +154,45 @@ export interface SubmitAnswersResponse {
   events_url: string
   search_spec: SearchSpec
 }
+
+export interface Mandate {
+  merchant_name: string
+  merchant_domain: string
+  max_amount_cents: number
+  currency: string
+  expires_at: string
+}
+
+export interface Checkout {
+  id: string
+  stage: CheckoutStage
+  listing_id: string
+  mandate: Mandate
+}
+
+export interface InvestigationSnapshot {
+  id: string
+  listing_id: string
+  session_id: string
+  checks: TrustCheckResult[]
+  score: ScoreResult
+  allowlisted: boolean
+  duration_ms: number
+  created_at: string
+}
+
+export interface Receipt {
+  id: string
+  share_id: string
+  checkout_id: string
+  transaction_id: string
+  listing: Listing
+  investigation_snapshot: InvestigationSnapshot
+  amount_cents: number
+  currency: string
+  token_last4: string
+  verified: string[]
+  unverified: string[]
+  issued_at: string
+  signature: string
+}

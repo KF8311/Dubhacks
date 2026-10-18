@@ -4,7 +4,7 @@ import App from "./App.tsx"
 test("renders the app shell", () => {
   render(<App />)
   expect(screen.getByText(/sniff/i)).toBeInTheDocument()
-  expect(screen.getByText(/sandbox — simulated visa flow/i)).toBeInTheDocument()
+  expect(screen.getByText(/sandbox — simulated visa intelligent commerce flow/i)).toBeInTheDocument()
 })
 
 test("walks discovery into the mock results", async () => {
@@ -26,7 +26,7 @@ test("walks discovery into the mock results", async () => {
   expect(screen.getByText(/92\s*·\s*Trusted/)).toBeInTheDocument()
   expect(screen.getByText(/12\s*·\s*Danger/)).toBeInTheDocument()
   expect(screen.getAllByText("Best pick").length).toBeGreaterThan(0)
-  expect(screen.getByRole("button", { name: /^pay$/i })).toBeDisabled()
+  expect(screen.getByRole("button", { name: /^pay$/i })).toBeEnabled()
   fireEvent.click(screen.getByRole("button", { name: /purge danger/i }))
   await waitFor(() => {
     expect(screen.queryByText(/XM5 Pro/)).not.toBeInTheDocument()

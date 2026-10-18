@@ -1,7 +1,10 @@
 import mockFile from "../data/mock-session.json"
 import type {
   Answer,
+  Checkout,
   CreateSessionResponse,
+  Listing,
+  Receipt,
   SearchSpec,
   SessionSnapshot,
   SubmitAnswersResponse,
@@ -100,14 +103,107 @@ export async function getSnapshot(sessionId: string): Promise<SessionSnapshot> {
   return request<SessionSnapshot>(`/api/sessions/${sessionId}`)
 }
 
-export async function createCheckout(): Promise<never> {
-  throw new Error("Checkout UI starts at 6:00 PM.")
+const receipts = new Map<string, Receipt>()
+let pendingListingId: string | null = null
+
+function buildReceipt(listing: Listing, checkoutId: string): Receipt {
+  const checks = mock.snapshot.checks[listing.id] ?? []
+  const score = mock.snapshot.scores[listing.id]
+  const receipt: Receipt = {
+    id: "rcp_mock",
+    share_id: "shr_mock",
+    checkout_id: checkoutId,
+    transaction_id: "txn_mock",
+    listing,
+    investigation_snapshot: {
+      id: "inv_mock",
+      listing_id: listing.id,
+      session_id: mock.snapshot.session_id,
+      checks,
+      score,
+      allowlisted: false,
+      duration_ms: 1,
+      created_at: new Date().toISOString(),
+    },
+    amount_cents: listing.price_cents,
+    currency: listing.currency,
+    token_last4: "4242",
+    verified: checks.filter((check) => check.status === "passed").map((check) => check.name),
+    unverified: checks.filter((check) => check.status !== "passed").map((check) => check.name),
+    issued_at: new Date().toISOString(),
+    signature: "sandbox",
+  }
+  receipts.set(receipt.share_id, receipt)
+  return receipt
 }
 
-export async function confirmCheckout(): Promise<never> {
-  throw new Error("Checkout UI starts at 6:00 PM.")
+const hero = mock.snapshot.listings.find((listing) => listing.id === "lst_bestbuy_xm5")
+if (hero) buildReceipt(hero, "chk_mock")
+
+export async function createCheckout(input: {
+  session_id: string
+  listing_id: string
+  max_amount_cents: number
+}): Promise<Checkout> {
+  if (useMock) {
+    await delay(200)
+    const listing = mock.snapshot.listings.find((item) => item.id === input.listing_id)
+    const score = listing ? mock.snapshot.scores[listing.id] : undefined
+    if (
+      !listing ||
+      !score ||
+      score.verdict !== "trusted" ||
+      score.score < 70 ||
+      score.confidence < 0.6
+    ) {
+      throw new Error("This merchant is not trusted enough to pay.")
+    }
+    if (input.max_amount_cents < listing.price_cents) {
+      throw new Error("Amount exceeds the cap.")
+    }
+    pendingListingId = listing.id
+    return {
+      id: "chk_mock",
+      stage: "awaiting_passkey",
+      listing_id: listing.id,
+      mandate: {
+        merchant_name: listing.merchant_name,
+        merchant_domain: listing.merchant_domain,
+        max_amount_cents: input.max_amount_cents,
+        currency: listing.currency,
+        expires_at: new Date(Date.now() + 600_000).toISOString(),
+      },
+    }
+  }
+  return request<Checkout>("/api/checkout", {
+    method: "POST",
+    body: JSON.stringify(input),
+  })
 }
 
-export async function getReceipt(): Promise<never> {
-  throw new Error("Receipt UI starts at 6:00 PM.")
+export async function confirmCheckout(
+  checkoutId: string,
+  input: { client_data: string },
+): Promise<Receipt> {
+  if (useMock) {
+    await delay(200)
+    if (input.client_data === "fail") throw new Error("Payment declined.")
+    const listing = mock.snapshot.listings.find((item) => item.id === pendingListingId)
+    if (!listing) throw new Error("Checkout expired.")
+    return buildReceipt(listing, checkoutId)
+  }
+  return request<Receipt>(`/api/checkout/${checkoutId}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ passkey_assertion: input }),
+  })
+}
+
+export async function getReceipt(shareId: string): Promise<Receipt> {
+  if (useMock) {
+    await delay(150)
+    const found = receipts.get(shareId)
+    if (!found) throw new Error("Receipt not found.")
+    return found
+  }
+  return request<Receipt>(`/api/public/receipts/${shareId}`)
 }
