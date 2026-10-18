@@ -20,6 +20,9 @@ There is no `.claude/settings.json` on purpose. Committing `enabledPlugins` does
 | [superpowers](https://github.com/obra/superpowers) 7.0.0, Jesse Vincent | MIT | 13 process skills | Removed the `superpowers:` namespace prefix from cross-references, because project skills are flat (`writing-plans`, not `superpowers:writing-plans`) |
 | [mattpocock-skills](https://github.com/mattpocock/skills) 1.3.1, Matt Pocock | MIT | the `handoff` skill only | Saves to `docs/handoffs/` instead of the OS temp directory, so the team can read it |
 | [feature-dev](https://github.com/anthropics/claude-code), Anthropic | Apache-2.0 | `code-architect`, `code-explorer`, `code-reviewer` agents | None, verbatim |
+| [anthropics/skills](https://github.com/anthropics/skills) `frontend-design` | Apache-2.0 | `.claude/skills/frontend-design/` (mirrored to `.cursor/skills/`) | None, verbatim |
+| [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills) `web-design-guidelines` | MIT | `.claude/skills/web-design-guidelines/` (mirrored to `.cursor/skills/`) | None, verbatim |
+| project | — | `sykes-ui` skill, `ui-designer` agent | Sykes overlay: no Sniff copy, frozen sandbox sentence |
 
 License texts are beside the skills: `skills/LICENSE-superpowers-MIT.txt`, `skills/LICENSE-mattpocock-skills-MIT.txt`, `agents/LICENSE-feature-dev-Apache-2.0.txt`.
 

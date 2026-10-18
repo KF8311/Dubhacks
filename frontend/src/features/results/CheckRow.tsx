@@ -47,7 +47,7 @@ export function CheckRow({ check, listingId }: Props) {
         {explanation ? <p className="mt-1 text-foreground">{explanation}</p> : null}
         <button
           type="button"
-          className="mt-1 text-xs font-medium text-[#00A5B5] underline"
+          className="mt-1 text-xs font-medium text-accent underline"
           onClick={onExplain}
           disabled={busy || !sessionId}
         >

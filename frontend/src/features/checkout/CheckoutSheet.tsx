@@ -87,9 +87,9 @@ export function CheckoutSheet({
   }
 
   return (
-    <aside className="surface-card rounded-2xl border p-6">
-      <p className="text-xs font-semibold tracking-[0.14em] text-[#00A5B5] uppercase">{SANDBOX_LABEL}</p>
-      <h3 className="mt-2 text-lg font-semibold tracking-tight">Checkout</h3>
+    <aside className="ticket rounded-lg p-6">
+      <p className="text-sm text-muted-foreground">{SANDBOX_LABEL}</p>
+      <h3 className="mt-2 font-heading text-lg font-semibold tracking-tight">Checkout</h3>
       {phase === "review" ? (
         <div className="mt-3 space-y-3">
           <p className="text-foreground">

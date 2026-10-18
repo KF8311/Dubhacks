@@ -22,13 +22,13 @@ function ScoreRing({ score, allowlisted = false }: { score: number; allowlisted?
       role="img"
       aria-label={allowlisted ? "Verified" : `Score ${score}`}
     >
-      <circle cx="50" cy="50" r={radius} fill="none" stroke="#e8eef4" strokeWidth="8" />
+      <circle cx="50" cy="50" r={radius} fill="none" stroke="#cfe0d4" strokeWidth="8" />
       <circle
         cx="50"
         cy="50"
         r={radius}
         fill="none"
-        stroke="#00A5B5"
+        stroke="#1f6b4a"
         strokeWidth="8"
         strokeDasharray={`${filled} ${circumference - filled}`}
         strokeLinecap="round"
@@ -65,8 +65,8 @@ export function ReceiptView({ receipt }: ViewProps) {
   }
 
   return (
-    <article className="surface-card space-y-4 rounded-2xl border p-6">
-      <p className="text-xs font-semibold tracking-[0.14em] text-[#00A5B5] uppercase">{SANDBOX_LABEL}</p>
+    <article className="ticket space-y-4 rounded-lg p-6">
+      <p className="text-sm text-muted-foreground">{SANDBOX_LABEL}</p>
       <div className="flex min-w-0 flex-wrap items-center gap-4">
         <ScoreRing
           score={receipt.investigation_snapshot.score.score}

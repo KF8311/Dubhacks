@@ -1,0 +1,7 @@
+---
+description: Load anti-slop UI skills when editing Sykes frontend visuals
+globs: frontend/src/**/*.{tsx,css}
+alwaysApply: false
+---
+
+When changing layout, styling, visual copy, or motion, read `.claude/skills/frontend-design/SKILL.md` and `.claude/skills/sykes-ui/SKILL.md` before editing. Do not ship the teal-card SaaS default. Keep the sandbox Visa sentence and integer-cent money formatting unchanged.

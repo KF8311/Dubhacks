@@ -1,0 +1,4 @@
+MIT License (Vercel Labs agent-skills)
+
+Source: https://github.com/vercel-labs/agent-skills/blob/main/skills/web-design-guidelines/SKILL.md
+Repo license: https://github.com/vercel-labs/agent-skills (MIT)

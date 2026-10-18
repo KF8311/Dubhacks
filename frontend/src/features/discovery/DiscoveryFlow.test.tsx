@@ -70,6 +70,8 @@ test("question screens show progress through the set", async () => {
   })
   fireEvent.click(screen.getByRole("button", { name: /find products/i }))
   expect(await screen.findByText(/question 1 of 3/i)).toBeInTheDocument()
+  expect(screen.getByText(/a couple of details so the shelves match/i)).toBeInTheDocument()
+  expect(screen.queryByText(/narrow the search/i)).not.toBeInTheDocument()
   expect(screen.getByRole("progressbar", { name: /question progress/i })).toHaveAttribute(
     "aria-valuenow",
     "1",

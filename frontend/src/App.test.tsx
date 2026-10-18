@@ -35,13 +35,33 @@ test("renders the app shell", () => {
   render(<App />)
   expect(screen.getByRole("img", { name: /sykes/i })).toBeInTheDocument()
   expect(screen.getByText(/sandbox — simulated visa intelligent commerce flow/i)).toBeInTheDocument()
+  expect(screen.getByRole("link", { name: /how it works/i })).toBeInTheDocument()
+  expect(screen.getByRole("link", { name: /^about$/i })).toBeInTheDocument()
+})
+
+test("how it works explains the five checks and the pay rule", () => {
+  window.history.replaceState({}, "", "/how")
+  render(<App />)
+  expect(screen.getByRole("heading", { name: /how sykes checks a store/i })).toBeInTheDocument()
+  expect(screen.getByText(/domain age/i)).toBeInTheDocument()
+  expect(screen.getByText(/safe browsing/i)).toBeInTheDocument()
+  expect(screen.getByText(/cannot pay a merchant it cannot verify/i)).toBeInTheDocument()
+})
+
+test("about page tells the brand story", () => {
+  window.history.replaceState({}, "", "/about")
+  render(<App />)
+  expect(screen.getByRole("heading", { name: /about sykes/i })).toBeInTheDocument()
+  expect(screen.getAllByText(/shopkeeper/i).length).toBeGreaterThan(0)
 })
 
 test("landing shows the branded search hero", () => {
   render(<App />)
-  expect(screen.getByText(/secure your kart every second/i)).toBeInTheDocument()
+  expect(screen.queryByText(/secure your kart every second/i)).not.toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: /find a deal you can actually pay for/i })).toBeInTheDocument()
   expect(screen.getByText(/what do you want to buy/i)).toBeInTheDocument()
   expect(screen.getByText(/five trust checks/i)).toBeInTheDocument()
+  expect(screen.getByRole("button", { name: /^headphones$/i })).toBeInTheDocument()
 })
 
 test("walks discovery into the mock results", async () => {
@@ -58,11 +78,13 @@ test("walks discovery into the mock results", async () => {
   fireEvent.click(screen.getByRole("button", { name: /^travel$/i }))
   fireEvent.click(screen.getByRole("button", { name: /see results/i }))
   expect(await screen.findByText(/You save \$30\.00/, {}, { timeout: 8000 })).toBeInTheDocument()
-  expect(screen.getByText("$249.00")).toBeInTheDocument()
+  expect(screen.getAllByText("$249.00").length).toBeGreaterThan(0)
   expect(screen.getAllByText("Sony WH-1000XM5").length).toBeGreaterThan(1)
   expect(screen.getAllByText(/92\s*·\s*Trusted/).length).toBeGreaterThan(0)
   expect(screen.getByText(/12\s*·\s*Danger/)).toBeInTheDocument()
   expect(screen.getAllByText("Best pick").length).toBeGreaterThan(0)
+  expect(screen.queryByText(/^Investigation$/)).not.toBeInTheDocument()
+  expect(screen.getByRole("heading", { name: /what we found for/i })).toBeInTheDocument()
   expect(screen.getByRole("button", { name: /^pay$/i })).toBeEnabled()
   fireEvent.click(screen.getByRole("button", { name: /purge danger/i }))
   await waitFor(() => {

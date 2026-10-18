@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createSession, getSnapshot, submitAnswers } from "@/lib/api.ts"
 import type { Answer, Question } from "@/lib/types.ts"
+import { go } from "@/lib/path.ts"
 import { useSessionStore } from "@/store/sessionStore.ts"
 
 type Props = {
@@ -24,6 +25,8 @@ const PILLARS = [
     body: "A simulated Visa mandate, passkey, and receipt. No real card is charged.",
   },
 ]
+
+const STARTERS = ["Headphones", "Pens", "Water bottles"]
 
 export function DiscoveryFlow({ onStarted }: Props) {
   const setQuery = useSessionStore((state) => state.setQuery)
@@ -103,33 +106,30 @@ export function DiscoveryFlow({ onStarted }: Props) {
 
   if (phase === "submitting") {
     return (
-      <div className="surface-card mx-auto max-w-2xl space-y-4 rounded-3xl border p-6 sm:p-8" aria-busy="true">
+      <div className="ticket mx-auto max-w-2xl space-y-4 rounded-lg p-6 sm:p-8" aria-busy="true">
         <p className="text-lg font-medium">Looking at retailers…</p>
-        <Skeleton className="h-28 w-full" />
-        <Skeleton className="h-28 w-full" />
-        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
       </div>
     )
   }
 
   if (phase === "query" || !question) {
     return (
-      <section className="surface-card relative mx-auto max-w-2xl overflow-hidden rounded-3xl border px-6 py-10 sm:px-10 sm:py-12">
-        <div
-          className="pointer-events-none absolute -top-24 -right-16 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,#18D6C0_0%,transparent_68%)] opacity-40"
-          aria-hidden="true"
-        />
-        <p className="relative text-xs font-semibold tracking-[0.22em] text-[#00A5B5] uppercase">
-          Secure your kart every second
-        </p>
+      <section className="mx-auto max-w-3xl">
+        <p className="text-sm font-medium text-accent">Sykes shops with you</p>
+        <h1 className="mt-2 max-w-xl font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
+          Find a deal you can actually pay for
+        </h1>
         <form
-          className="relative mt-5 space-y-4"
+          className="ticket mt-8 space-y-4 rounded-lg p-5 sm:p-7"
           onSubmit={(event) => {
             event.preventDefault()
             void onFindProducts()
           }}
         >
-          <label className="block text-3xl font-semibold tracking-tight sm:text-4xl" htmlFor="query">
+          <label className="block text-lg font-semibold tracking-tight" htmlFor="query">
             What do you want to buy?
           </label>
           <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
@@ -142,30 +142,49 @@ export function DiscoveryFlow({ onStarted }: Props) {
               placeholder="What are you looking for?"
               onChange={(event) => setLocalQuery(event.target.value)}
               disabled={asking}
-              className="h-12 flex-1 bg-background px-4 text-base md:text-base"
+              className="h-12 flex-1 rounded-md bg-[var(--paper)] px-4 text-base md:text-base"
             />
             <Button
               type="submit"
               disabled={asking || query.trim().length === 0}
-              className="h-12 px-6 text-base"
+              className="h-12 rounded-md px-6 text-base font-semibold"
             >
               {asking ? "Asking a few questions…" : "Find products"}
             </Button>
           </div>
+          <div className="flex flex-wrap gap-2">
+            {STARTERS.map((starter) => (
+              <Button
+                key={starter}
+                type="button"
+                variant="outline"
+                className="h-9 rounded-full bg-[var(--paper)]"
+                disabled={asking}
+                onClick={() => setLocalQuery(starter)}
+              >
+                {starter}
+              </Button>
+            ))}
+          </div>
           {error ? (
-            <p className="text-sm text-red-800" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {error}
             </p>
           ) : null}
         </form>
-        <ul className="relative mt-10 grid gap-4 sm:grid-cols-3">
+        <ul className="mt-8 grid gap-6 sm:grid-cols-3">
           {PILLARS.map((pillar) => (
-            <li key={pillar.title} className="rounded-2xl bg-[#f4f7fa] px-4 py-4">
+            <li key={pillar.title} className="border-t-2 border-[var(--marigold)] pt-3">
               <p className="text-sm font-semibold">{pillar.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{pillar.body}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pillar.body}</p>
             </li>
           ))}
         </ul>
+        <p className="mt-6 text-sm">
+          <button type="button" className="font-medium text-accent underline" onClick={() => go("/how")}>
+            How Sykes checks a store
+          </button>
+        </p>
       </section>
     )
   }
@@ -175,12 +194,12 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const progress = ((index + 1) / questions.length) * 100
 
   return (
-    <div className="surface-card mx-auto max-w-xl space-y-5 rounded-3xl border p-6 sm:p-8">
+    <div className="ticket mx-auto max-w-xl space-y-5 rounded-lg p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Question {index + 1} of {questions.length}
         </p>
-        <p className="text-xs font-medium tracking-wide text-[#00A5B5] uppercase">Narrow the search</p>
+        <p className="text-sm font-medium text-accent">A couple of details so the shelves match</p>
       </div>
       <div
         role="progressbar"
@@ -190,9 +209,12 @@ export function DiscoveryFlow({ onStarted }: Props) {
         aria-valuenow={index + 1}
         className="h-1.5 overflow-hidden rounded-full bg-muted"
       >
-        <div className="h-full rounded-full bg-[#18D6C0] transition-[width]" style={{ width: `${progress}%` }} />
+        <div
+          className="h-full rounded-full bg-[var(--marigold)] transition-[width]"
+          style={{ width: `${progress}%` }}
+        />
       </div>
-      <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">{question.prompt}</h2>
+      <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">{question.prompt}</h2>
       <div className="flex flex-wrap gap-2">
         {question.options.map((option) => {
           const selected = picked === option.id
@@ -201,7 +223,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
               key={option.id}
               type="button"
               variant={selected ? "default" : "outline"}
-              className="h-11 px-4"
+              className="h-11 rounded-full px-4"
               onClick={() => {
                 setPicked(option.id)
                 setFreeText("")
@@ -215,18 +237,18 @@ export function DiscoveryFlow({ onStarted }: Props) {
       <Input
         value={freeText}
         placeholder="Or type your own answer"
-        className="h-11 bg-background px-4"
+        className="h-11 rounded-md bg-[var(--paper)] px-4"
         onChange={(event) => {
           setFreeText(event.target.value)
           setPicked(null)
         }}
       />
       {error ? (
-        <p className="text-sm text-red-800" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {error}
         </p>
       ) : null}
-      <Button type="button" disabled={!ready} className="h-11 px-5" onClick={() => void onNext()}>
+      <Button type="button" disabled={!ready} className="h-11 rounded-md px-5 font-semibold" onClick={() => void onNext()}>
         {last ? "See results" : "Next"}
       </Button>
     </div>
