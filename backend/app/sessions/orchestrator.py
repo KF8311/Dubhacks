@@ -34,11 +34,13 @@ class SessionOrchestrator:
         bus: EventBus,
         checks: list[TrustCheck] | None = None,
         search=default_search,
+        config=None,
     ) -> None:
         self.store = store
         self.bus = bus
         self.checks = checks
         self.search = search
+        self.config = config
 
     def _active_checks(self) -> list[TrustCheck]:
         if self.checks is None:
@@ -98,7 +100,7 @@ class SessionOrchestrator:
 
         allowlist = _load_allowlist()
         checks = self._active_checks()
-        ctx = CheckContext(allowlist=allowlist, config=get_settings())
+        ctx = CheckContext(allowlist=allowlist, config=self.config or get_settings())
         sem = asyncio.Semaphore(CHECK_CONCURRENCY)
 
         async def investigate(listing: Listing) -> None:

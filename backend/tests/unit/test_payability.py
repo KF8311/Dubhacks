@@ -1,20 +1,27 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from app.domain.enums import CheckId, TrustStatus, Verdict
-from app.domain.models import Investigation, Listing, Mandate, ScoreResult, TrustCheckResult
+from app.domain.models import (
+    Investigation,
+    Listing,
+    Mandate,
+    ScoreResult,
+    TrustCheckResult,
+)
 from app.payments.mandates import create_mandate
 from app.payments.payability import PayabilityCode, PayabilityError, assert_payable
 
-NOW = datetime(2026, 10, 17, 19, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 10, 17, 19, 0, tzinfo=UTC)
 
 
-def listing(cents=10000, domain="bestbuy.com"):
+def listing(cents=10000, domain="bestbuy.com", currency="USD"):
     return Listing(
         id="lst_1",
         title="x",
         price_cents=cents,
+        currency=currency,
         merchant_name="m",
         merchant_domain=domain,
         image_url="",
@@ -72,6 +79,57 @@ def test_trusted_is_payable():
 def test_mandate_below_price_raises():
     with pytest.raises(ValueError):
         create_mandate(listing(10000), max_amount_cents=5000, now=NOW)
+
+
+def test_danger_blocked():
+    with pytest.raises(PayabilityError) as e:
+        assert_payable(inv(Verdict.DANGER, 0), listing(), mandate(), now=NOW)
+    assert e.value.code == PayabilityCode.MERCHANT_NOT_TRUSTED
+    assert e.value.details["verdict"] == "danger"
+
+
+def test_low_confidence_blocked():
+    with pytest.raises(PayabilityError) as e:
+        assert_payable(inv(confidence=0.5), listing(), mandate(), now=NOW)
+    assert e.value.code == PayabilityCode.COVERAGE_TOO_LOW
+    assert e.value.details["confidence"] == 0.5
+
+
+def test_a_missing_investigation_is_stale_not_payable():
+    with pytest.raises(PayabilityError) as e:
+        assert_payable(None, listing(), mandate(), now=NOW)
+    assert e.value.code == PayabilityCode.INVESTIGATION_STALE
+
+
+def test_an_allowlisted_merchant_pays_at_score_zero():
+    """D-015: the allowlist exempts a merchant from the score and coverage floor."""
+    assert_payable(
+        inv(Verdict.TRUSTED, score=0, confidence=1.0, completed=0, allowlisted=True),
+        listing(),
+        mandate(),
+        now=NOW,
+    )
+
+
+def test_currency_mismatch_blocked():
+    with pytest.raises(PayabilityError) as e:
+        assert_payable(inv(), listing(currency="EUR"), mandate(), now=NOW)
+    assert e.value.code == PayabilityCode.MERCHANT_MISMATCH
+    assert e.value.details["reason"] == "currency"
+
+
+def test_exactly_thirty_minutes_is_not_stale():
+    assert_payable(inv(minutes_ago=30), listing(), mandate(), now=NOW)
+
+
+def test_the_payability_constants_are_frozen():
+    from app.payments.payability import MIN_CONFIDENCE, STALE_AFTER
+    from app.trust.scoring import MIN_COMPLETED_CHECKS, TRUSTED_THRESHOLD
+
+    assert STALE_AFTER == timedelta(minutes=30)
+    assert MIN_CONFIDENCE == 0.6
+    assert TRUSTED_THRESHOLD == 70
+    assert MIN_COMPLETED_CHECKS == 3
 
 
 def test_caution_blocked():

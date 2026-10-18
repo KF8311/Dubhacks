@@ -18,6 +18,7 @@ from pathlib import Path
 import httpx
 
 from app.checks.base import CheckContext, CheckTarget
+from app.core.config import get_settings
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, TrustCheckResult
 
@@ -95,14 +96,22 @@ def _load_fixture(domain: str) -> dict | None:
     return None
 
 
+def _fixture_facts(domain: str) -> dict | None:
+    """Registration facts from a local fixture, with no network call."""
+    fixture = _load_fixture(domain)
+    if fixture is None:
+        return None
+    parsed = _from_rdap(fixture)
+    if parsed is not None:
+        parsed["source_of_truth"] = "fixture"
+    return parsed
+
+
 async def fetch_rdap(domain: str) -> dict | None:
     """Registration age from RDAP, or a local fixture when one exists."""
-    fixture = _load_fixture(domain)
+    fixture = _fixture_facts(domain)
     if fixture is not None:
-        parsed = _from_rdap(fixture)
-        if parsed is not None:
-            parsed["source_of_truth"] = "fixture"
-        return parsed
+        return fixture
     try:
         async with httpx.AsyncClient(timeout=RDAP_TIMEOUT_S) as client:
             response = await client.get(RDAP_URL.format(domain=domain))
@@ -175,9 +184,14 @@ class DomainAgeCheck:
         self, target: CheckTarget, ctx: CheckContext | None = None
     ) -> TrustCheckResult:
         started = time.perf_counter()
-        info = await fetch_rdap(target.merchant_domain)
-        if info is None:
-            info = await fetch_whois(target.merchant_domain)
+        settings = getattr(ctx, "config", None) or get_settings()
+        if getattr(settings, "offline", False):
+            # Fixtures only: an offline replay must not open a socket.
+            info = _fixture_facts(target.merchant_domain)
+        else:
+            info = await fetch_rdap(target.merchant_domain)
+            if info is None:
+                info = await fetch_whois(target.merchant_domain)
 
         if info is None or info.get("age_days") is None:
             return self._result(

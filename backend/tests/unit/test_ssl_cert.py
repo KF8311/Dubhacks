@@ -1,4 +1,6 @@
-from app.checks.base import CheckTarget
+from types import SimpleNamespace
+
+from app.checks.base import CheckContext, CheckTarget
 from app.checks.ssl_cert import SSLCertCheck
 from app.domain.enums import CheckId, TrustStatus
 
@@ -79,6 +81,19 @@ async def test_an_unreachable_host_is_skipped(monkeypatch):
     monkeypatch.setattr("app.checks.ssl_cert.inspect_cert", unreachable)
 
     result = await SSLCertCheck().run(target(), ctx=None)
+
+    assert result.status == TrustStatus.SKIPPED
+    assert result.source == "unavailable"
+
+
+async def test_offline_mode_never_touches_the_network(monkeypatch):
+    async def blow_up(domain):
+        raise AssertionError("offline mode must not inspect a certificate")
+
+    monkeypatch.setattr("app.checks.ssl_cert.inspect_cert", blow_up)
+    ctx = CheckContext(config=SimpleNamespace(offline=True))
+
+    result = await SSLCertCheck().run(target(), ctx=ctx)
 
     assert result.status == TrustStatus.SKIPPED
     assert result.source == "unavailable"
