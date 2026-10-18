@@ -100,10 +100,10 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 **Read first:** [Spectrum quickstart](https://photon.codes/docs/spectrum-ts/introduction) · [iMessage provider](https://photon.codes/docs/spectrum-ts/providers/imessage) · [create-user / shared numbers](https://photon.codes/docs/api-reference/users/create-user) · dashboard at [photon.co/beta](https://photon.co/beta)
 
 - [ ] Avatar menu → attach a number; confirm the project leaves `account_phone_missing`
-- [ ] `bun create spectrum-project@latest dub --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --providers imessage --yes`
-- [ ] `SPECTRUM_PROJECT_SECRET` lives only in the scaffold's gitignored `.env` — never in this repo or chat
-- [ ] `bun start`, text the line, confirm the `echo:` reply — **this is the go/no-go**
-- [ ] Replace the echo: text → `POST /api/sessions` → answers → results → reply with the top trusted pick, its one-line reason, **and `listing.product_url`** so the pick is one tap away. Shorten long URLs only if the provider does not linkify; never send a tracking or redirect wrapper.
+- [x] Scaffolded at `../dub-spectrum` with `bun create spectrum-project@latest dub-spectrum --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --platforms imessage --yes`. The flag is `--platforms` now, not `--providers`. **The Cloud step in the scaffolder fails on Windows** (`spawn npx ENOENT` — Bun cannot start the `.cmd` shim), so the project id is written by hand and the secret is fetched with `bunx @photon-ai/cli@latest projects secret --project …` after `login`.
+- [x] `PROJECT_SECRET` lives only in the scaffold's gitignored `.env` — never in this repo or chat
+- [ ] `bun start`, text the line, confirm the `echo:` reply — **this is the go/no-go**. Blocked on `bunx @photon-ai/cli@latest login` (interactive, user's account).
+- [x] Bridge written (`dub-spectrum/src/agent.ts` + `src/index.ts`): text → `POST /api/sessions` → first clarifying question as numbered options → `POST /answers` → poll until `ready`/`no_trusted_option`/`failed` → reply with the top trusted pick, price, merchant, one-line reason, **and `listing.product_url`**. 9 unit tests cover choice parsing and every reply shape; untested against a live line.
 - [ ] Capture one real round trip for the video
 
 **Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-028, and stop.
