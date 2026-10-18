@@ -25,6 +25,20 @@ def test_health_returns_200_even_without_db(monkeypatch):
     assert "uptime_s" in body
 
 
+def test_health_reports_where_the_catalog_is():
+    """A hosted 500 on the answers route is almost always the data bundle.
+
+    The response has to say which directory the app resolved and whether the
+    catalog is really there, so a deploy can be diagnosed without dashboard logs.
+    """
+    client = TestClient(create_app())
+    body = client.get("/api/health").json()
+
+    assert body["data"]["catalog_exists"] is True
+    assert body["data"]["dir"].endswith("data")
+    assert any(item["exists"] for item in body["data"]["candidates"])
+
+
 def test_demo_reset_ok_in_demo_mode():
     client = TestClient(create_app())
     r = client.post("/api/demo/reset")
