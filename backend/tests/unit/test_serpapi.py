@@ -71,3 +71,111 @@ def test_rejects_google_hosted_and_empty_domains():
 
 def test_merchant_host_strips_www():
     assert merchant_host("https://www.Target.com/p/1") == "target.com"
+
+
+def test_immersive_store_link_becomes_a_listing():
+    from app.search.serpapi import listing_from_immersive
+
+    listing = listing_from_immersive(
+        {
+            "product_results": {
+                "title": "Puma Fast-R",
+                "stores": [
+                    {
+                        "name": "Google",
+                        "link": "https://www.google.com/shopping/product/1",
+                        "extracted_price": 10,
+                    },
+                    {
+                        "name": "PUMA",
+                        "link": "https://us.puma.com/pd/fast-r",
+                        "extracted_price": 199.99,
+                    },
+                ],
+            }
+        },
+        fallback_title="shoe",
+        image_url="https://img.example/a.jpg",
+    )
+    assert listing is not None
+    assert listing.merchant_domain == "us.puma.com"
+    assert listing.merchant_name == "PUMA"
+    assert listing.price_cents == 19999
+    assert listing.title == "Puma Fast-R"
+    assert listing.source == "serpapi"
+
+
+def test_google_only_results_follow_the_immersive_store(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.search.serpapi import SerpAPIProvider
+
+    calls: list[str] = []
+
+    class FakeResponse:
+        def __init__(self, payload: dict) -> None:
+            self.payload = payload
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del timeout
+            if params is not None:
+                calls.append("shopping")
+                return FakeResponse(
+                    {
+                        "shopping_results": [
+                            {
+                                "title": "Puma Fast-R",
+                                "product_link": "https://www.google.com/shopping/product/1",
+                                "extracted_price": 199.99,
+                                "thumbnail": "https://img.example/a.jpg",
+                                "serpapi_immersive_product_api": (
+                                    "https://serpapi.com/search.json?engine=google_immersive_product"
+                                    "&page_token=abc%2Bdef"
+                                ),
+                            }
+                        ]
+                    }
+                )
+            calls.append(url)
+            assert "page_token=abc%2Bdef" in url
+            assert "api_key=test-key" in url
+            return FakeResponse(
+                {
+                    "product_results": {
+                        "title": "Puma Fast-R",
+                        "stores": [
+                            {
+                                "name": "PUMA",
+                                "link": "https://us.puma.com/pd/fast-r",
+                                "extracted_price": 199.99,
+                            }
+                        ],
+                    }
+                }
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    listings = asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(SearchSpec(query="running shoes"))
+    )
+    assert calls[0] == "shopping"
+    assert len(listings) == 1
+    assert listings[0].merchant_domain == "us.puma.com"
