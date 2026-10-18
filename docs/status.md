@@ -21,10 +21,10 @@ This is the only file that claims to be current.
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
 | Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
-| Branches | **`main` carries everything and is pushed** ([`3e349b8`](https://github.com/KF8311/Dubhacks/commit/3e349b8), rebase-merged as [PR #20](https://github.com/KF8311/Dubhacks/pull/20) and [PR #21](https://github.com/KF8311/Dubhacks/pull/21); both working branches were deleted after their diffs against `main` came back empty). Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
+| Branches | **`main` carries everything and is pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20), [PR #21](https://github.com/KF8311/Dubhacks/pull/21), [PR #22](https://github.com/KF8311/Dubhacks/pull/22) rebase-merged; every working branch deleted after its diff against `main` came back empty). Run `git log --oneline origin/main` for the current tip — recording the hash here just goes stale on the next docs commit. Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 20:30 PT
+Last updated: 2026-10-17 20:35 PT
 
 ## Gate board
 
