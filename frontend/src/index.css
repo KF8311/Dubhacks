@@ -13,6 +13,10 @@
   --marigold-ink: #17251e;
   --marigold-wash: color-mix(in srgb, var(--marigold) 18%, var(--paper));
   --leaf: #0f7a52;
+  --sky: #2f8fce;
+  --sky-wash: #d9eefb;
+  --berry: #d5487a;
+  --berry-wash: #fbe0ea;
   --background: #cfeade;
   --foreground: #17251e;
   --card: #fffaf0;
@@ -181,7 +185,7 @@
 }
 
 .ticket-best {
-  background: var(--paper);
+  background: color-mix(in srgb, var(--marigold) 14%, var(--paper));
   border: 1px solid rgb(30 42 36 / 18%);
   box-shadow:
     5px 5px 0 var(--marigold),
@@ -195,13 +199,13 @@
     0 14px 30px -24px rgb(30 42 36 / 45%);
 }
 
-/* ProductCard supplies its own padding inside the flipping faces. The verdict
-   becomes a slim color edge; hover answers with a wash and a stronger border,
-   never with movement. */
+/* ProductCard supplies its own row padding. The verdict becomes a color edge
+   and a tint; hover answers with a wash and a stronger border, never with
+   movement. */
 .product-card {
   padding: 0;
   gap: 0;
-  border-left-width: 3px;
+  border-left-width: 4px;
   transition:
     background-color 150ms ease,
     border-color 150ms ease,
@@ -209,17 +213,17 @@
 }
 
 .product-card[data-verdict="trusted"] {
-  background: color-mix(in srgb, var(--trust-trusted-bg) 40%, var(--paper));
+  background: color-mix(in srgb, var(--trust-trusted-bg) 55%, var(--paper));
   border-left-color: var(--trust-trusted);
 }
 
 .product-card[data-verdict="caution"] {
-  background: color-mix(in srgb, var(--trust-caution-bg) 40%, var(--paper));
+  background: color-mix(in srgb, var(--trust-caution-bg) 55%, var(--paper));
   border-left-color: var(--trust-caution);
 }
 
 .product-card[data-verdict="danger"] {
-  background: color-mix(in srgb, var(--trust-danger-bg) 50%, var(--paper));
+  background: color-mix(in srgb, var(--trust-danger-bg) 65%, var(--paper));
   border-left-color: var(--trust-danger);
 }
 
@@ -254,53 +258,6 @@
   box-shadow:
     5px 5px 0 var(--marigold),
     0 18px 32px -24px rgb(23 37 30 / 45%);
-}
-
-/* A product ticket turns over on hover to show its site stats. Both faces
-   share one grid cell so the card keeps the taller face's height and nothing
-   clips during the rotation. Focus does not flip the card: the merchant link
-   and the select button now live on the same face, and rotating them away
-   would hide the control the person just reached. */
-.flip-card {
-  perspective: 1400px;
-}
-
-.flip-inner {
-  display: grid;
-  transition: transform 480ms cubic-bezier(0.2, 0.75, 0.25, 1);
-  transform-style: preserve-3d;
-}
-
-.flip-face {
-  grid-area: 1 / 1;
-  min-width: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.flip-back {
-  transform: rotateY(180deg);
-  pointer-events: none;
-}
-
-.flip-card:hover .flip-inner {
-  transform: rotateY(180deg);
-}
-
-.flip-card:hover .flip-back {
-  pointer-events: auto;
-}
-
-@media (hover: none) {
-  .flip-card:hover .flip-inner {
-    transform: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .flip-inner {
-    transition: none;
-  }
 }
 
 button:focus-visible,

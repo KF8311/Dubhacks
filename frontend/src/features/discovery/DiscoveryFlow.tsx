@@ -15,18 +15,28 @@ const PILLARS = [
   {
     title: "Five trust checks",
     body: "Domain age, SSL, Safe Browsing, Reddit, and page flags on every merchant.",
+    tint: "var(--marigold-wash)",
+    line: "var(--marigold)",
   },
   {
     title: "Cheapest trusted",
     body: "The pick is the lowest price that passed — not the cheapest listing on the page.",
+    tint: "var(--sky-wash)",
+    line: "var(--sky)",
   },
   {
     title: "Sandbox checkout",
     body: "A simulated Visa mandate, passkey, and receipt. No real card is charged.",
+    tint: "var(--berry-wash)",
+    line: "var(--berry)",
   },
 ]
 
-const STARTERS = ["Headphones", "Pens", "Water bottles"]
+const STARTERS = [
+  { label: "Headphones", tint: "var(--marigold-wash)" },
+  { label: "Pens", tint: "var(--sky-wash)" },
+  { label: "Water bottles", tint: "var(--berry-wash)" },
+]
 
 export function DiscoveryFlow({ onStarted }: Props) {
   const setQuery = useSessionStore((state) => state.setQuery)
@@ -123,7 +133,9 @@ export function DiscoveryFlow({ onStarted }: Props) {
   if (phase === "query" || !question) {
     return (
       <section className="mx-auto max-w-3xl">
-        <p className="text-sm font-medium text-accent">Sykes shops with you</p>
+        <p className="inline-flex rounded-full bg-[var(--marigold-wash)] px-3 py-1 text-sm font-semibold text-foreground ring-1 ring-[color-mix(in_srgb,var(--marigold)_45%,transparent)]">
+          Sykes shops with you
+        </p>
         <h1 className="mt-2 max-w-xl font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
           Find a deal you can actually pay for
         </h1>
@@ -160,14 +172,15 @@ export function DiscoveryFlow({ onStarted }: Props) {
           <div className="flex flex-wrap gap-2">
             {STARTERS.map((starter) => (
               <Button
-                key={starter}
+                key={starter.label}
                 type="button"
                 variant="outline"
-                className="h-9 rounded-full bg-[var(--paper)]"
+                className="h-9 rounded-full border-[color-mix(in_srgb,var(--ink)_14%,transparent)] px-4"
+                style={{ background: starter.tint }}
                 disabled={asking}
-                onClick={() => setLocalQuery(starter)}
+                onClick={() => setLocalQuery(starter.label)}
               >
-                {starter}
+                {starter.label}
               </Button>
             ))}
           </div>
@@ -177,9 +190,13 @@ export function DiscoveryFlow({ onStarted }: Props) {
             </p>
           ) : null}
         </form>
-        <ul className="mt-8 grid gap-6 sm:grid-cols-3">
+        <ul className="mt-8 grid gap-4 sm:grid-cols-3">
           {PILLARS.map((pillar) => (
-            <li key={pillar.title} className="border-t-2 border-[var(--marigold)] pt-3">
+            <li
+              key={pillar.title}
+              className="rounded-3xl p-4"
+              style={{ background: pillar.tint, borderTop: `3px solid ${pillar.line}` }}
+            >
               <p className="text-sm font-semibold">{pillar.title}</p>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pillar.body}</p>
             </li>

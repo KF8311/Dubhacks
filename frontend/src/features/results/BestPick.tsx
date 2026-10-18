@@ -16,7 +16,9 @@ export function BestPick({ recommendation, listings, budgetMaxCents = null }: Pr
 
   return (
     <section className="ticket-best rounded-3xl p-6">
-      <p className="text-sm font-semibold text-accent">Best pick</p>
+      <p className="inline-flex rounded-full bg-[var(--marigold)] px-3 py-1 text-xs font-semibold text-[var(--marigold-ink)]">
+        Best pick
+      </p>
       <h3 className="mt-1 break-words font-heading text-3xl font-semibold tracking-tight">{listing.title}</h3>
       <p className="mt-2 text-muted-foreground">
         {listing.merchant_name} · {formatCents(listing.price_cents, listing.currency)}

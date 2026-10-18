@@ -126,7 +126,7 @@ test("only the best pick wears the marigold edge", () => {
   expect(card).not.toHaveClass("ticket-selected")
 })
 
-test("the whole ticket flips, merchant link included", () => {
+test("the row never flips and keeps the merchant link beside it", () => {
   const { container } = render(
     <ProductCard
       listing={{ ...listing, product_url: "https://www.bestbuy.com/site/sony-xm5" }}
@@ -135,13 +135,15 @@ test("the whole ticket flips, merchant link included", () => {
       onSelect={() => undefined}
     />,
   )
-  const front = container.querySelector(".flip-front")
-  expect(front).not.toBeNull()
-  expect(front?.querySelector("a")).toHaveAttribute("href", "https://www.bestbuy.com/site/sony-xm5")
-  expect(container.querySelector(".flip-back")).not.toBeNull()
+  expect(container.querySelector(".flip-card")).toBeNull()
+  expect(container.querySelector(".flip-inner")).toBeNull()
+  expect(screen.getByRole("link", { name: /view at bestbuy\.com/i })).toHaveAttribute(
+    "href",
+    "https://www.bestbuy.com/site/sony-xm5",
+  )
 })
 
-test("the ticket turns over to site stats with a pass/warning/fail tally", () => {
+test("the tally sits on the row, no flip required", () => {
   render(
     <ProductCard
       listing={listing}
@@ -158,13 +160,10 @@ test("the ticket turns over to site stats with a pass/warning/fail tally", () =>
       isBest={false}
     />,
   )
-  expect(screen.getByText("Site stats")).toBeInTheDocument()
   expect(screen.getByText("1 passed · 1 warning · 1 failed")).toBeInTheDocument()
-  expect(screen.getByText("One check failed.")).toBeInTheDocument()
 })
 
-test("the back of the ticket says when checks are still running", () => {
+test("a pending row says checks are still running", () => {
   render(<ProductCard listing={listing} checks={[]} isBest={false} />)
-  expect(screen.getByText("Site stats")).toBeInTheDocument()
-  expect(screen.getByText("Checks are still running.")).toBeInTheDocument()
+  expect(screen.getByText("Checks running…")).toBeInTheDocument()
 })

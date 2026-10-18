@@ -22,7 +22,7 @@ function NavLink({ to, label }: { to: string; label: string }) {
       className={
         current
           ? "rounded-full bg-[var(--paper)] px-3 py-1.5 font-semibold text-foreground shadow-[0_6px_16px_-14px_rgb(23_37_30/70%)]"
-          : "rounded-full px-3 py-1.5 text-muted-foreground hover:bg-[var(--paper)] hover:text-foreground"
+          : "rounded-full px-3 py-1.5 text-muted-foreground hover:bg-[var(--marigold-wash)] hover:text-foreground"
       }
       onClick={(event) => {
         event.preventDefault()

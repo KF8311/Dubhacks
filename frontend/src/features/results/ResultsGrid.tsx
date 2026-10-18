@@ -54,7 +54,9 @@ export function ResultsGrid({
         ))}
       </ul>
       <aside className="min-w-0 lg:sticky lg:top-24">
-        <p className="mb-2 text-sm font-medium text-accent">On the counter</p>
+        <p className="mb-2 inline-flex rounded-full bg-[var(--sky-wash)] px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-[color-mix(in_srgb,var(--sky)_35%,transparent)]">
+          On the counter
+        </p>
         <ProductCard
           listing={selected}
           checks={checks[selected.id] ?? []}
