@@ -124,6 +124,12 @@ class _FakeCollection:
     async def create_index(self, *args, **kwargs):
         self.indexes.append((args, kwargs))
 
+    async def index_information(self):
+        return {}
+
+    async def drop_index(self, name):
+        self.indexes.append((("drop", name), {}))
+
     async def replace_one(self, filt, doc, upsert=False):
         self.docs[filt["_id"]] = doc
 

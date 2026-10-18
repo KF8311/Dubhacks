@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import time
 from datetime import datetime, timezone
@@ -22,6 +23,8 @@ from app.sessions.store import SessionRegistry
 from app.trust.allowlist import Allowlist, load_allowlist
 from app.trust.recommendation import recommend
 from app.trust.scoring import score_investigation
+
+logger = logging.getLogger(__name__)
 
 
 def _load_allowlist() -> Allowlist:
@@ -150,7 +153,15 @@ class SessionOrchestrator:
         # path must still find the listing after a restart.
         repo = get_repository()
         for listing in listings:
-            await repo.save_listing(listing)
+            try:
+                await repo.save_listing(listing)
+            except Exception:  # noqa: BLE001 — a store write must never freeze the session
+                logger.warning(
+                    "listing persist failed; continuing in memory",
+                    exc_info=True,
+                    extra={"listing_id": listing.id},
+                )
+                break
         session.stage = SessionStage.INVESTIGATING
         self.store.update(session)
         self.bus.publish(session_id, "session.stage", {"stage": session.stage.value})
@@ -307,7 +318,14 @@ class SessionOrchestrator:
             created_at=datetime.now(timezone.utc),
         )
         self.store.attach_investigation(session_id, inv)
-        await get_repository().save_investigation(inv)
+        try:
+            await get_repository().save_investigation(inv)
+        except Exception:  # noqa: BLE001 — same rule: memory keeps the session alive
+            logger.warning(
+                "investigation persist failed; continuing in memory",
+                exc_info=True,
+                extra={"investigation_id": inv.id},
+            )
         self.bus.publish(
             session_id,
             "listing.scored",

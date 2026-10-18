@@ -20,7 +20,7 @@ This is the only file that claims to be current.
 | Contracts | `Question` is now a backend model (`Question`, `QuestionOption` in `models.py`, `allow_free_text` included); [`contracts.md`](contracts.md#L81) matches the code. Everything is frozen. |
 | Data | **Atlas is connected and load-bearing.** Health returns `db: ok`; checkout → confirm → public receipt works against Atlas (Mongo 8.0.34, `sniff` database, indexes created on boot), and a **pending checkout still confirms after a backend restart** — the listing and investigation are read back from Atlas and the token id is persisted on the checkout (D-027). Two adapter bugs surfaced first and were fixed under D-026. Sessions remain registry-only. |
 | Search | Live SerpAPI path with a **10 s client timeout inside an 11 s per-attempt budget**, one retry. **Live mode never substitutes the catalog** (D-025): a slow query shows "Searching live listings…" for up to ~22 s, then the `failed` stage with `SEARCH_UNAVAILABLE` and a Start over button. Verified: `noise cancelling headphones` + `$300-$600` → live listings; a bad key → `SEARCH_UNAVAILABLE`, stage `failed`, zero catalog products. Offline mode is unchanged. |
-| Tests | Backend **248 passed**. Frontend **62 passed** (16 files), `npm run build` clean. |
+| Tests | Backend **250 passed**. Frontend **62 passed** (16 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0; 9 listings, 8 trusted, 1 danger, pick `lst_tgt_bsp`, median $374.49, savings $194.50. |
 | Run | `.\scripts\dev.cmd` (live) · `.\scripts\dev.cmd offline` · `.\scripts\dev.cmd mock` · `.\scripts\dev.cmd check`. `/api/health` now reports `offline`, and `dev.cmd` refuses to reuse an offline backend for a live run (that trap served the catalog demo with no warning). Details: [`RUN.md`](RUN.md). |
 | Owners | A: search quality + contracts + deploy. B: docs truth + Devpost. C: browser proof + copy fixes. |
@@ -115,6 +115,7 @@ The demo run must answer **$300–$600**. Measured: `Under $150` → 1 card (the
 | Thin live search | **yes** | Optional: adopt the `<3` guard (idea B) if a query returns one or two cards. |
 | Slow SerpAPI query swaps in unrelated products | **fixed 2026-10-18 (D-025)** | Client timeout is 10 s inside an 11 s budget; live mode fails honestly instead of showing the catalog. |
 | Slow live query looks stuck | **yes, by design** | Up to ~22 s with skeleton cards, then a retry state. Say "live search is slow" on stage, not "it is broken". |
+| Session stuck on "searching" with cards visible | **fixed 2026-10-18 (D-030)** | A unique `product_url` index made the second Google-hosted listing fail with `E11000`, killing the orchestrator task before `investigating`. Index is now non-unique; store writes are best-effort. Measured ready in 10.8 s. |
 | Browser never exercised the kept build | **yes** | C's first task; G1–G4 depend on it. |
 | Docs claim stale counts | **fixed** | `README.md`, `devpost.md`, `status.md`, and the checklist now say **231/49**. |
 | Docs claim removed features | **yes** | B scrubs VEYZL/Vercel/host-aware references before submit. |

@@ -199,6 +199,33 @@ async def test_orchestrator_fails_honestly_instead_of_showing_the_catalog():
 
 
 @pytest.mark.asyncio
+async def test_orchestrator_survives_a_repository_that_rejects_a_write(monkeypatch):
+    """A store failure must not leave the session stuck on "searching"."""
+    from app.sessions import orchestrator as module
+
+    class ExplodingRepo:
+        async def save_listing(self, _listing):
+            raise RuntimeError("E11000 duplicate key error collection: sniff.listings")
+
+        async def save_investigation(self, _inv):
+            raise RuntimeError("E11000 duplicate key error collection: sniff.listings")
+
+    monkeypatch.setattr(module, "get_repository", lambda: ExplodingRepo())
+
+    store, bus = SessionRegistry(), EventBus()
+    orch = SessionOrchestrator(store, bus, checks=[])
+    session = store.create("c1", "headphones")
+    session.search_spec = SearchSpec(query="headphones")
+    store.update(session)
+    await orch._run(session.id)
+
+    assert store.get(session.id).stage.value in {"ready", "no_trusted_option"}
+    events = [event async for event in bus.subscribe(session.id)]
+    assert events[-1].type == "investigation.complete"
+    assert store.listings(session.id)
+
+
+@pytest.mark.asyncio
 async def test_orchestrator_uses_llm_narrative(monkeypatch):
     async def fake_narrate(_recommendation):
         return "LLM pick story"
