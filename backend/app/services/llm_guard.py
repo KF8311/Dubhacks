@@ -176,6 +176,18 @@ def looks_like_refusal(text: str) -> bool:
     )
 
 
+def looks_like_error_reply(text: str) -> bool:
+    low = (text or "").strip().lower().rstrip(".")
+    return low in {
+        "invalid request",
+        "invalid request format",
+        "invalid json",
+        "bad request",
+        "internal server error",
+        "unauthorized",
+    } or low.startswith("invalid request")
+
+
 def looks_like_greeting(text: str) -> bool:
     low = (text or "").lower()
     return any(
@@ -214,7 +226,7 @@ def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
     guarded = guard_user_text(raw)
     redacted = guarded.redacted_input
     model = _redact_pii((model_text or "").strip())
-    if looks_like_greeting(model):
+    if looks_like_greeting(model) or looks_like_error_reply(model):
         model = ""
     low_raw = (raw or "").lower()
     greeting = not bool(model)
@@ -226,6 +238,11 @@ def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
         if model and "paris" in model.lower() and not greeting:
             return GuardResult(False, model, redacted)
         return GuardResult(False, "The capital of France is Paris.", redacted)
+
+    if "photosynthesis" in low_raw:
+        if model and "photosynthesis" in model.lower() and not greeting:
+            return GuardResult(False, model, redacted)
+        return reply_for_probe(raw)
 
     if CREDIT_RE.search(raw) or BIAS_RE.search(raw):
         if (
@@ -274,6 +291,7 @@ __all__ = [
     "REASON_TOKENS",
     "GuardResult",
     "guard_user_text",
+    "looks_like_error_reply",
     "looks_like_greeting",
     "looks_like_llm_probe",
     "looks_like_refusal",

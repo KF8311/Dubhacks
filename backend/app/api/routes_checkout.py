@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Request
@@ -110,10 +111,12 @@ async def _confirm_payload(checkout: Checkout) -> dict:
 
 
 async def _request_payload(request: Request) -> object:
+    body = (await request.body()).decode("utf-8", errors="replace")
+    if not body.strip():
+        return {"body": ""}
     try:
-        data = await request.json()
-    except Exception:
-        body = (await request.body()).decode("utf-8", errors="replace")
+        data = json.loads(body)
+    except json.JSONDecodeError:
         return {"body": body}
     if isinstance(data, str):
         return {"body": data}

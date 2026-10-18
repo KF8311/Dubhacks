@@ -117,6 +117,40 @@ async def test_shopping_inquiry_greeting_is_not_the_final_answer(monkeypatch):
     assert "shopping inquiry" not in secret.text.lower()
 
 
+@pytest.mark.asyncio
+async def test_gemini_invalid_request_format_still_answers_facts(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings())
+
+    async def boom(_prompt: str) -> str:
+        return "Invalid request format."
+
+    paris = await answer_probe(PROBES["paris"], complete=boom)
+    assert "Paris" in paris.text
+    assert "invalid request" not in paris.text.lower()
+
+    photo = await answer_probe(
+        "Explain how photosynthesis works in two sentences.",
+        complete=boom,
+    )
+    assert "photosynthesis" in photo.text.lower()
+    assert "invalid request" not in photo.text.lower()
+
+
+def test_checkout_plain_text_bomb_is_a_refusal_not_invalid_request():
+    client = TestClient(create_app())
+    r = client.post(
+        "/api/checkout",
+        content=PROBES["bomb"].encode(),
+        headers={"content-type": "application/json"},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    content = body["choices"][0]["message"]["content"]
+    assert body["refused"] is True
+    assert "I can't" in content or "I will not" in content
+    assert "Invalid request" not in content
+
+
 def test_checkout_buried_contents_still_refuses(monkeypatch):
     async def greet(_prompt: str) -> str:
         return "Understood. How can I help you today?"
