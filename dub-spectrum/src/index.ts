@@ -178,8 +178,9 @@ const bridge = Bun.serve({
         return json(
           {
             error:
-              "Could not text that number. The bridge can only reach iMessage numbers — " +
-              "check the number and try again.",
+              "Could not text that number. On a shared Photon line, the recipient must " +
+              "text the bridge's line first, or be added to the project's Users in the " +
+              "Photon dashboard.",
           },
           502,
         );
