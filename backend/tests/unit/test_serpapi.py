@@ -1,5 +1,7 @@
+import pytest
+
 from app.domain.models import SearchSpec
-from app.search.serpapi import listings_from_payload, merchant_host
+from app.search.serpapi import SerpAPIProvider, listings_from_payload, merchant_host
 
 
 def test_maps_merchant_product_url_to_domain():
@@ -253,3 +255,28 @@ def test_search_sends_price_bounds_to_serpapi(monkeypatch):
     assert captured["min_price"] == 1000
     assert captured["max_price"] == 1200
     assert captured["q"] == "computers $1000-1200"
+
+
+@pytest.mark.asyncio
+async def test_serpapi_client_uses_the_provider_timeout(monkeypatch):
+    captured: dict = {}
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            captured["timeout"] = kwargs.get("timeout", args[0] if args else None)
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, params, timeout
+            raise RuntimeError("stop after constructing the client")
+
+    monkeypatch.setattr("app.search.serpapi.httpx.AsyncClient", FakeClient)
+    provider = SerpAPIProvider(api_key="test-key", timeout_s=4.0)
+    with pytest.raises(RuntimeError, match="stop after constructing"):
+        await provider.search(SearchSpec(query="computers"), limit=8)
+    assert captured["timeout"] == 4.0

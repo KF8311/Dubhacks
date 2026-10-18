@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from app.core.timeouts import MAX_LISTINGS
 from app.domain.models import Listing, SearchSpec
-from app.search.catalog import load_catalog
+from app.search.catalog import catalog_covers, load_catalog
 from app.search.provider import SearchProvider
 from app.search.serpapi import SerpAPIProvider
 
@@ -61,6 +61,9 @@ async def search(
         return listings[:limit], source
 
     if spec.budget_min_cents is not None:
+        return [], "serpapi"
+
+    if not catalog_covers(spec.query):
         return [], "serpapi"
 
     listings = catalog if catalog is not None else load_catalog()

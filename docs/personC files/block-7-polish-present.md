@@ -57,10 +57,10 @@ Save the files into `docs/personC files/screenshots/` or hand them to B. Devpost
 
 ### Click-through proof
 
-- [ ] Full path on localhost: search → 3 questions → stream → best pick → Pay → passkey → receipt.
-- [ ] Villain Pay is refused; the sheet shows the server's code (`MERCHANT_NOT_TRUSTED`).
-- [ ] `?mock=1` still finishes the story with the API ignored.
-- [ ] If the API is stopped, Find products shows the red "could not reach the server" line.
+- [x] Full path on localhost: search → 3 questions → stream → best pick → Pay → passkey → receipt.
+- [ ] Villain Pay is refused; the sheet shows the server's code (`MERCHANT_NOT_TRUSTED`). Pay stays disabled for danger — see `person-c-sunday-8-to-950.md`.
+- [x] `?mock=1` still finishes the story with the API ignored.
+- [x] If the API is stopped, Find products shows the red "could not reach the server" line.
 
 ### Spoken demo (rehearse twice)
 

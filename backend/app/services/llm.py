@@ -30,10 +30,10 @@ TAG_RE = re.compile(r"<[^>]+>")
 FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.I)
 
 
-def _templates() -> list[dict]:
-    from app.sessions.questions import QUESTIONS
+def _templates(query: str = "") -> list[dict]:
+    from app.sessions.questions import templates_for
 
-    return list(QUESTIONS)
+    return templates_for(query)
 
 
 def sanitize(text: str, limit: int = 2000) -> str:
@@ -164,7 +164,7 @@ async def generate_questions(
     complete: CompleteFn | None = None,
     fallback: list[dict] | None = None,
 ) -> list[dict]:
-    templates = list(fallback) if fallback is not None else _templates()
+    templates = list(fallback) if fallback is not None else _templates(query)
     guarded = guard_user_text(query)
     if guarded.refused:
         return templates

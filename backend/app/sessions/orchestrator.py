@@ -13,7 +13,7 @@ from app.core.ids import new_id
 from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LISTINGS, SEARCH_S
 from app.domain.enums import SessionStage, TrustStatus, Verdict
 from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
-from app.search.catalog import load_catalog
+from app.search.catalog import catalog_covers, load_catalog
 from app.search.service import search as default_search
 from app.services.llm import narrate
 from app.sessions.events import EventBus
@@ -46,7 +46,9 @@ class SessionOrchestrator:
         self.config = config
 
     def _search_timeout(self) -> float:
-        return 12.0 if os.environ.get("VERCEL") else SEARCH_S
+        # Shopping + immersive store lookups need more than SEARCH_S or
+        # wait_for cancels a live result and the grid goes empty.
+        return 12.0 if os.environ.get("VERCEL") else max(SEARCH_S, 8.0)
 
     async def _search_with_retry(self, session_id: str, spec) -> tuple[list[Listing], str]:
         """Live search, then one retry. The headphone catalog is last resort."""
@@ -62,21 +64,29 @@ class SessionOrchestrator:
                 timed_out = True
                 continue
             if source != "catalog":
-                return listings, source
+                if listings:
+                    return listings, source
+                continue
             catalog_hit = (listings, source)
         if catalog_hit is not None:
-            return catalog_hit
+            if catalog_covers(spec.query):
+                return catalog_hit
+            return [], "serpapi"
         if timed_out:
             self.bus.publish(
                 session_id,
                 "session.error",
                 {
                     "code": "SEARCH_FAILED",
-                    "message": "Search failed; showing catalog listings.",
+                    "message": "Search failed; showing catalog listings."
+                    if catalog_covers(spec.query)
+                    else "Search failed for this query.",
                     "recoverable": True,
                 },
             )
-        return load_catalog()[:MAX_LISTINGS], "catalog"
+        if catalog_covers(spec.query):
+            return load_catalog()[:MAX_LISTINGS], "catalog"
+        return [], "serpapi"
 
     def _active_checks(self) -> list[TrustCheck]:
         if self.checks is None:

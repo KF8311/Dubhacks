@@ -83,6 +83,38 @@ async def test_orchestrator_retries_search_after_one_timeout():
 
 
 @pytest.mark.asyncio
+async def test_orchestrator_retries_when_first_live_search_is_empty():
+    calls = {"n": 0}
+    pen = Listing(
+        id="lst_pen",
+        title="BIC Cristal",
+        price_cents=379,
+        currency="USD",
+        merchant_name="Walmart",
+        merchant_domain="walmart.com",
+        image_url="",
+        product_url="https://walmart.com/bic",
+        source="serpapi",
+    )
+
+    async def flaky(_spec, _limit):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return [], "serpapi"
+        return [pen], "serpapi"
+
+    store, bus = SessionRegistry(), EventBus()
+    orch = SessionOrchestrator(store, bus, checks=[], search=flaky)
+    session = store.create("c1", "pens")
+    session.search_spec = SearchSpec(query="pens")
+    store.update(session)
+    await orch._run(session.id)
+    titles = [item.title for item in store.listings(session.id)]
+    assert calls["n"] == 2
+    assert titles == ["BIC Cristal"]
+
+
+@pytest.mark.asyncio
 async def test_orchestrator_retries_when_first_search_returns_catalog():
     calls = {"n": 0}
     drink = Listing(
@@ -126,7 +158,7 @@ async def test_orchestrator_retries_when_first_search_returns_catalog():
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_falls_back_to_catalog_when_search_times_out():
+async def test_orchestrator_does_not_show_headphones_when_a_non_audio_search_times_out():
     async def boom(_spec, _limit):
         raise TimeoutError("search budget")
 
@@ -137,7 +169,23 @@ async def test_orchestrator_falls_back_to_catalog_when_search_times_out():
     store.update(session)
     await orch._run(session.id)
     found = [event for event in [e async for e in bus.subscribe(session.id)] if event.type == "listing.found"]
-    assert found, "timed-out SerpAPI must still show catalog listings"
+    assert found == []
+    assert store.get(session.id).stage.value == "no_trusted_option"
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_falls_back_to_catalog_when_headphone_search_times_out():
+    async def boom(_spec, _limit):
+        raise TimeoutError("search budget")
+
+    store, bus = SessionRegistry(), EventBus()
+    orch = SessionOrchestrator(store, bus, checks=[], search=boom)
+    session = store.create("c1", "headphones")
+    session.search_spec = SearchSpec(query="headphones")
+    store.update(session)
+    await orch._run(session.id)
+    found = [event for event in [e async for e in bus.subscribe(session.id)] if event.type == "listing.found"]
+    assert found, "timed-out headphone search may still show the curated catalog"
 
 
 @pytest.mark.asyncio

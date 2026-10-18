@@ -228,7 +228,7 @@ class SerpAPIProvider:
             params["min_price"] = spec.budget_min_cents // 100
         if spec.budget_max_cents is not None:
             params["max_price"] = spec.budget_max_cents // 100
-        async with httpx.AsyncClient(timeout=2.5) as client:
+        async with httpx.AsyncClient(timeout=self.timeout_s) as client:
             response = await client.get(SERPAPI_URL, params=params)
             response.raise_for_status()
             payload = response.json()
