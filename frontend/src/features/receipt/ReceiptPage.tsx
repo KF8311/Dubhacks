@@ -67,7 +67,7 @@ export function ReceiptView({ receipt }: ViewProps) {
   return (
     <article className="space-y-4 rounded-xl border bg-white p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{SANDBOX_LABEL}</p>
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 flex-wrap items-center gap-4">
         <ScoreRing
           score={receipt.investigation_snapshot.score.score}
           allowlisted={
@@ -75,8 +75,8 @@ export function ReceiptView({ receipt }: ViewProps) {
             receipt.investigation_snapshot.score.allowlisted === true
           }
         />
-        <div>
-          <h2 className="text-xl font-semibold">{receipt.listing.title}</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="break-words text-xl font-semibold">{receipt.listing.title}</h2>
           <p className="text-stone-600">{receipt.listing.merchant_name}</p>
           <p className="text-lg font-semibold">{formatCents(receipt.amount_cents, receipt.currency)}</p>
           <p className="text-sm text-stone-500">Token ····{receipt.token_last4}</p>
