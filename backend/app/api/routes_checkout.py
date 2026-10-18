@@ -16,7 +16,12 @@ from app.payments.receipts import create_receipt, persist_receipt
 from app.search.catalog import load_catalog
 from app.services.audit import AuditEvent
 from app.services.repository import get_repository
-from app.services.llm_guard import guard_user_text, looks_like_llm_probe, probe_prompt_from_payload
+from app.services.llm_guard import (
+    looks_like_llm_probe,
+    openai_chat_payload,
+    probe_prompt_from_payload,
+    reply_for_probe,
+)
 from app.sessions.store import registry
 
 SANDBOX = "Sandbox — simulated Visa Intelligent Commerce flow."
@@ -108,13 +113,9 @@ async def _confirm_payload(checkout: Checkout) -> dict:
 async def create_checkout(request: Request):
     raw = await request.json()
     if looks_like_llm_probe(raw):
-        guarded = guard_user_text(probe_prompt_from_payload(raw))
+        guarded = reply_for_probe(probe_prompt_from_payload(raw))
         return JSONResponse(
-            {
-                "refused": True,
-                "text": guarded.text,
-                "sandbox_label": SANDBOX,
-            }
+            openai_chat_payload(guarded.text, refused=guarded.refused, sandbox_label=SANDBOX)
         )
     try:
         body = CheckoutIn.model_validate(raw)
