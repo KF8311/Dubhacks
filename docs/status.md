@@ -11,20 +11,20 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | **Block 4 is closed and G5 is open.** Checkout → confirm → receipt is merged end to end, and C's sheet and receipt page are wired to the live contract. G4's browser proof is the first action of Block 5. |
+| Gate | **Block 4 is closed and G5 is close-out.** Every text artifact for the Devpost is written; what remains is A's public deploy plus the VEYZL check run and C's browser screenshots. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy in Block 5) |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **177 passed**. Frontend **11 files / 26 tests passed**, `npm run build` clean. |
+| Tests | Backend **177 passed**. Frontend **13 files / 31 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
-| Owners | A: platform + orchestrator + payments. B: trust + data + **Mongo review (Task 27, D-016)** + VEYZL + Devpost. C: frontend. |
-| Blockers | A redeploys Fly; C clicks the merged flow through once; B runs the VEYZL audit on the fix PR and fills `docs/devpost-form.md` |
-| Branches | **`main` carries everything** (PRs #1–#17, plus `c/web` and `agent_backend` merged directly). No branch is ahead of `main`. Branch from `main`. |
+| Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
+| Blockers | A redeploys Fly and runs the VEYZL audit; C clicks the merged flow through once; B fills `docs/devpost-form.md` as those artifacts land |
+| Branches | **`main` carries everything** (PRs #1–#19, plus `c/web` and `agent_backend` merged directly). No branch is ahead of `main`. Branch from `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 19:15 PT
+Last updated: 2026-10-17 19:25 PT
 
 ## Gate board
 
@@ -34,8 +34,8 @@ Last updated: 2026-10-17 19:15 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 153 backend / 22 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
-| G5 Devpost draft submitted | Sat 22:30 | 🟡 **block open** | Devpost confirmation |
+| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 177 backend / 31 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
+| G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done; URL, VEYZL check, screenshots, video pending | `docs/devpost-form.md` + Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
 
@@ -59,9 +59,9 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Fly redeploy from repo root; smoke the public URL | 18:25 | 20:00 | Turns commits into a public URL |
+| A | Fly redeploy; smoke the public URL; **VEYZL audit + fix PR (D-020)** | 18:25 | 22:30 | Public URL is the last G4/G5 blocker; VEYZL needs the app installed on `KF8311/Dubhacks` |
 | C | Browser click-through + screenshot of the merged checkout sheet and receipt page | 18:25 | 20:00 | Tasks 25–26 merged in PR #14; `?mock=1` remains the fallback |
-| B | VEYZL audit, Devpost, final numbers | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, audit scaffold; ⬜ the audit run and the fix PR |
+| B | Devpost, final numbers, audit review | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, audit scope + `/api/demo/reset` reproduction; ⬜ fill the form as A and C land artifacts |
 
 ## Done since last update
 
@@ -86,12 +86,16 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] A: **Gemini 3.5 Flash Lite** for questions, narration, and on-demand explanations; trust/check/payment modules still cannot import it
 - [x] A: **`Repository` protocol** — in-memory + Mongo adapters, TTL indexes; `MONGODB_URI` unset remains the default
 - [x] C: `c/web` — responsive layout, reduced motion, allowlisted merchants through checkout (D-015)
+- [x] B: `docs/devpost-form.md` — all five Devpost steps mapped with limits, required fields, exact copy, and track selections (PR #19)
+- [x] B: reproduced the unauthenticated `/api/demo/reset` (`200`, session destroyed) and recorded it in `docs/veylz-audit.md`
+- [x] C: **API-unreachable alert** on discovery, and `Verified` rendering for allowlisted merchants on card, sheet, and receipt (13 files / 31 tests)
+- [x] Ownership: **Task 29 (VEYZL) moves to A** (D-020) because the GitHub App install needs repo admin; B's scoping and reproduction carry over
 
 ## Next three actions
 
 1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
 2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it.
-3. B opens the VEYZL fix PR, runs the audit, reproduces one finding, and fixes it with a test; then fills `docs/devpost-form.md`.
+3. A installs the VEYZL app on `KF8311/Dubhacks`, opens the fix PR, and runs the audit; B fills `docs/devpost-form.md` as the URL and screenshots land.
 
 ## Demo trap to avoid
 

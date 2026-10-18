@@ -172,3 +172,11 @@ Format:
 - **Why:** `gemini-3.8-flash` exceeds the 2.5s session-create budget (timeouts / 503), so questions, narration, and explain always fell back to templates. Lite returned in under 1s on this key.
 - **Alternatives considered:** Keep 3.8 and raise the timeout (violates the plan's 2.5s cap); `gemini-flash-lite-latest` (alias, less reproducible).
 - **Consequences:** Override with `GEMINI_MODEL` if a judge laptop still has 2.5/3.8 access. Templates remain the fallback.
+
+## D-020 — VEYZL (Task 29) moves to A; B's scoping and reproduction carry over
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Task 29 is owned by **A**. B hands over the scope, the six candidate controls, the Devpost field map, and the reproduced `/api/demo/reset` transcript in `docs/veylz-audit.md`.
+- **Why:** VEYZL is a GitHub App that must be installed on `KF8311/Dubhacks` and linked to a project in the vendor portal. That requires repo-admin rights, which A has and B does not. An audit task owned by someone who cannot install the app stalls at step one.
+- **Alternatives considered:** B installs the app on a fork (the side track asks for the project repo; a fork weakens the evidence); keep it with B and have A act as installer only (splits one task across two people and leaves the fix PR ownerless).
+- **Consequences:** A now owns the audit run, the fix PR, and `docs/veylz-audit.md`. B reviews the final finding and keeps the Devpost. No block or gate moves: the audit still fits Block 5/6, and the Devpost is still B's.

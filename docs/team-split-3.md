@@ -52,7 +52,7 @@
 | 26 | C | Receipt UI + share page | C |
 | 27 | B | Mongo repositories, caches, audit, redaction (D-016) | A |
 | 28 | B | Demo mode, fixtures, offline replay | All |
-| 29 | B | VEYZL audit + docs | All |
+| 29 | A | VEYZL audit + docs (D-020) | All |
 | 30 | C | Video, screenshots, Devpost visuals | All |
 
 **Shared:** B owns the Devpost and its technical claims (the checks, scoring, and payability rule are B's area); A reviews every technical claim before submission; C owns visuals and the video edit.
@@ -177,7 +177,7 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 10:30 PM–2:00 AM — VEYZL, docs, and persistence (Block 6)
 
-- [ ] Task 29: connect the repo to VEYZL, pick one real finding, fix it, write `docs/veylz-audit.md`.
+- [ ] Task 29 (**A** as of D-020): install the VEYZL app on `KF8311/Dubhacks`, run the audit on a PR, pick one real finding, fix it, write `docs/veylz-audit.md`. B's scope and the reproduced `/api/demo/reset` transcript are already in that file.
 - [ ] `README.md`: setup, env vars, demo script, mock disclosure.
 - [ ] **Task 27 (owned by B as of D-016):** `InMemoryRepository` + `MongoRepository` behind the same protocol, TTL indexes, cache collections, PII redaction, `transition_checkout` via `find_one_and_update`.
 - [ ] Verify the app still runs with `MONGODB_URI` unset — the in-memory adapter is the default and the cut-order survivor.
