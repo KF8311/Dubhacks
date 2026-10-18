@@ -76,7 +76,7 @@ export default function App() {
   return <Shop />
 }
 
-function ShopResults() {
+function Shop() {
   const stage = useSessionStore((state) => state.stage)
   const sessionId = useSessionStore((state) => state.sessionId)
   const query = useSessionStore((state) => state.query)
@@ -187,52 +187,8 @@ function ShopResults() {
           <PurgeOverlay active={purging} onComplete={finishPurge} />
         </ScreenSlide>
       ) : (
-        <>
-          {recommendation && best ? (
-            <BestPick
-              recommendation={recommendation}
-              listings={visible}
-              budgetMaxCents={budgetMaxCents}
-            />
-          ) : null}
-          {searching ? (
-            <div role="status" aria-busy="true" className="surface-card rounded-2xl border p-6">
-              <p className="text-lg font-medium">Searching live listings…</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Real merchants can take a few seconds. We would rather wait than show products you
-                did not ask for.
-              </p>
-              <div className="mt-4 space-y-3">
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-                <Skeleton className="h-16 w-full" />
-              </div>
-            </div>
-          ) : null}
-          <ResultsGrid
-            listings={visible}
-            checks={checks}
-            scores={scores}
-            recommendation={recommendation}
-            budgetMaxCents={budgetMaxCents}
-            budgetMinCents={budgetMinCents}
-          />
-          {receipt ? (
-            <ReceiptView receipt={receipt} />
-          ) : best && scores[best.id] ? (
-            <CheckoutSheet
-              listing={best}
-              verdict={scores[best.id].verdict}
-              score={scores[best.id].score}
-              confidence={scores[best.id].confidence}
-              allowlisted={scores[best.id].allowlisted === true}
-              sessionId={sessionId ?? undefined}
-              onComplete={setReceipt}
-            />
-          ) : null}
-        </>
+        <DiscoveryFlow onStarted={() => undefined} />
       )}
-      <PurgeOverlay active={purging} onComplete={finishPurge} />
-    </div>
+    </AppShell>
   )
 }

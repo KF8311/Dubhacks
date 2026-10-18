@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { ShopWindow } from "@/components/ShopWindow.tsx"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScreenSlide } from "@/components/ScreenSlide.tsx"

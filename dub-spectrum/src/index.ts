@@ -101,6 +101,12 @@ const OPT_IN_DECLINED = "No problem. I won't send deal alerts.";
 const OPT_IN_RETRY = "Reply Y to get deal alerts, or N to skip.";
 const OPT_OUT_CONFIRMED = "Deal alerts off. Text a product any time to keep shopping.";
 
+/** SDK errors can echo the recipient; keep numbers out of the log. */
+function redact(value: unknown): string {
+  const text = value instanceof Error ? `${value.name}: ${value.message}` : String(value);
+  return text.replace(/\+?\d[\d\s().-]{6,}\d/g, "[number]").slice(0, 300);
+}
+
 const CORS = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "GET, POST, OPTIONS",
@@ -145,14 +151,39 @@ const bridge = Bun.serve({
           400,
         );
       }
+      let consentId: string | undefined;
       try {
         const space = await mail.space.create(phone);
+
+        // Already answered: do not text the number again on a page reload.
+        const confirmed = consents.confirmedFor(space.id);
+        if (confirmed) {
+          return json({ request_id: confirmed.id, status: confirmed.status });
+        }
+        // A retry after a slow response reuses the request that is already
+        // waiting for Y/N instead of expiring the text the shopper just got.
+        const existing = consents.pendingFor(space.id);
+        if (existing) {
+          return json({ request_id: existing.id, status: existing.status });
+        }
+
         const consent = consents.start(space.id);
+        consentId = consent.id;
         await space.send(OPT_IN_TEXT);
         return json({ request_id: consent.id, status: consent.status });
-      } catch {
-        // Never echo the number or the SDK error: it may contain the number.
-        return json({ error: "Could not text that number. Check it and try again." }, 502);
+      } catch (error) {
+        // The opt-in text did not go out, so there is nothing to wait for.
+        if (consentId) consents.abandon(consentId);
+        console.error("[opt-in] could not open an iMessage chat:", redact(error));
+        return json(
+          {
+            error:
+              "Could not text that number. On a shared Photon line, the recipient must " +
+              "text the bridge's line first, or be added to the project's Users in the " +
+              "Photon dashboard.",
+          },
+          502,
+        );
       }
     }
 

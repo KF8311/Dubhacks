@@ -97,13 +97,32 @@ describe("ConsentStore", () => {
     expect(store.confirm(request.id, 1_000 + PENDING_TTL_MS + 2)).toBeUndefined();
   });
 
-  test("a new request replaces the older pending one for the same chat", () => {
+  test("a retry for the same chat reuses the pending request", () => {
     const store = new ConsentStore(tempPath());
     const first = store.start("space-1", 1_000);
     const second = store.start("space-1", 1_001);
 
-    expect(store.get(first.id, 1_002)?.status).toBe("expired");
-    expect(store.pendingFor("space-1", 1_002)?.id).toBe(second.id);
+    expect(second.id).toBe(first.id);
+    expect(store.get(first.id, 1_002)?.status).toBe("pending");
+  });
+
+  test("space ids that differ only in prefix still match the same chat", () => {
+    const store = new ConsentStore(tempPath());
+    const request = store.start("any;-;+14155550123", 1_000);
+
+    expect(store.pendingFor("imessage;-;+14155550123", 1_001)?.id).toBe(request.id);
+    store.confirm(request.id, 1_002);
+    expect(store.confirmedFor("imessage;-;+14155550123")?.id).toBe(request.id);
+  });
+
+  test("an abandoned request is forgotten", () => {
+    const store = new ConsentStore(tempPath());
+    const request = store.start("space-1", 1_000);
+
+    store.abandon(request.id);
+
+    expect(store.get(request.id, 1_001)).toBeUndefined();
+    expect(store.pendingFor("space-1", 1_001)).toBeUndefined();
   });
 
   test("confirmed consent survives a restart, and no phone number is written", () => {

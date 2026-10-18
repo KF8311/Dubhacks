@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   getPhoneOptIn,
+  looksLikePhone,
   startPhoneOptIn,
   type PhoneOptInStatus,
 } from "@/lib/phoneBridge.ts"
@@ -54,6 +55,10 @@ export function DealAlerts() {
     event.preventDefault()
     const trimmed = phone.trim()
     if (!trimmed || busy) return
+    if (!looksLikePhone(trimmed)) {
+      setError("Use the full number with its country code, e.g. +1 415 555 0123.")
+      return
+    }
     setBusy(true)
     setError(null)
     try {

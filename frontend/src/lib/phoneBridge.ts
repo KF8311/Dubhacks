@@ -18,12 +18,22 @@ export type PhoneOptIn = {
   status: PhoneOptInStatus
 }
 
-async function bridgeRequest<T>(path: string, init?: RequestInit): Promise<T> {
+/** The forms the bridge accepts: E.164, or a US 10/11-digit number. */
+export function looksLikePhone(raw: string): boolean {
+  const cleaned = raw.trim().replace(/[\s().-]/g, "")
+  return /^\+\d{8,15}$/.test(cleaned) || /^\d{10}$/.test(cleaned) || /^1\d{10}$/.test(cleaned)
+}
+
+async function bridgeRequest<T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs = 8000,
+): Promise<T> {
   const response = await fetch(`${phoneBridgeBase()}${path}`, {
     method: init?.method ?? "GET",
     headers: { "content-type": "application/json" },
     body: init?.body,
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(timeoutMs),
   })
   if (!response.ok) {
     let message = "The phone bridge did not accept the request."
@@ -42,15 +52,19 @@ export async function sendPhoneText(text: string): Promise<void> {
   await bridgeRequest<{ ok: true }>("/send", {
     method: "POST",
     body: JSON.stringify({ text }),
-  })
+  }, 15000)
 }
 
-/** Ask the bridge to text `phone` for permission. The number is not stored. */
+/**
+ * Ask the bridge to text `phone` for permission. The number is not stored by
+ * the site. Opening the iMessage chat can take a few seconds on a cold start,
+ * so this request waits longer than the other bridge calls.
+ */
 export async function startPhoneOptIn(phone: string): Promise<PhoneOptIn> {
   return bridgeRequest<PhoneOptIn>("/opt-in", {
     method: "POST",
     body: JSON.stringify({ phone }),
-  })
+  }, 25000)
 }
 
 export async function getPhoneOptIn(requestId: string): Promise<PhoneOptIn> {
@@ -62,5 +76,5 @@ export async function sendPhoneNotification(requestId: string, text: string): Pr
   await bridgeRequest<{ ok: true }>(`/notify/${encodeURIComponent(requestId)}`, {
     method: "POST",
     body: JSON.stringify({ text }),
-  })
+  }, 15000)
 }

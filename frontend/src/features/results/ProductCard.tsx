@@ -36,46 +36,6 @@ type Props = {
   budgetMinCents?: number | null
 }
 
-function Photo({
-  listing,
-  failed,
-  onFail,
-  hero,
-}: {
-  listing: Listing
-  failed: boolean
-  onFail: () => void
-  hero?: boolean
-}) {
-  const initial = listing.merchant_name.slice(0, 1).toUpperCase()
-  if (failed) {
-    return (
-      <div
-        className={
-          hero
-            ? "flex aspect-[4/3] w-full items-center justify-center bg-[var(--ink)] text-4xl font-semibold text-[var(--paper)]"
-            : "flex size-20 shrink-0 items-center justify-center rounded-md bg-[var(--ink)] text-lg font-semibold text-[var(--paper)]"
-        }
-        aria-hidden="true"
-      >
-        {initial}
-      </div>
-    )
-  }
-  return (
-    <img
-      src={listing.image_url}
-      alt=""
-      className={
-        hero
-          ? "listing-photo-hero aspect-[4/3] w-full bg-[var(--paper)] object-contain"
-          : "listing-photo size-20 shrink-0 rounded-md bg-[var(--paper)] object-contain"
-      }
-      onError={onFail}
-    />
-  )
-}
-
 export function ProductCard({
   listing,
   checks,
@@ -136,7 +96,7 @@ export function ProductCard({
   }
 
   const actions = (
-    <div className="flex gap-2 px-2.5 pb-2.5">
+    <div className="flex gap-2 px-2.5 pb-2.5 pt-2.5">
       {link ? (
         <a
           href={link.href}
@@ -227,7 +187,7 @@ export function ProductCard({
     <Card
       data-verdict={score?.verdict ?? "pending"}
       className={cn(
-        "product-card h-full min-w-0 gap-0 rounded-3xl",
+        "product-card h-full min-w-0 gap-0 rounded-3xl ring-0",
         !expanded ? "product-flip" : null,
         isBest && !expanded ? "ticket-best" : "ticket",
         !isBest && selected && !expanded ? "ticket-selected" : null,
