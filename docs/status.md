@@ -11,20 +11,20 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | **Block 4 is closed and G5 is close-out.** The code is done. What remains is a public deploy, C's browser screenshots, the video, and a clean VEYZL re-run. |
-| Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy is still owed) |
-| Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013), from the repo root. **Vercel services** is now a second path — [`vercel.json`](../vercel.json), backend `bundle_data.py`, frontend same-origin `/api` — merged 22:49 PT and not yet exercised. Render is backup. |
+| Gate | **Block 5 is closed and G5 is close-out.** The code is done and the public deploy is live. What remains is C's browser screenshots, the video, the Devpost form, and a clean VEYZL re-run. |
+| Health | **https://sykes.select/api/health** → 200, `{"status":"degraded","db":"unavailable","version":"0.9.0"}` (`degraded` is correct: Mongo is optional and unset). Served by Vercel. The Fly URL still serves the pre-merge build. |
+| Deploy | **Live on Vercel at `https://sykes.select`** via [`vercel.json`](../vercel.json) — backend `app.main:app` with `bundle_data.py`, frontend on the same origin, `/api/*` rewritten to the service. Verified end to end 23:00 PT: session → answers `ready` → checkout `201 awaiting_passkey` → confirm `200` → public receipt `200` with an HMAC signature. Fly (`dubhacks` / `sniff-visa-dubhacks` / `sjc`, D-010, D-012, D-013) remains a second path; Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
-| SerpAPI | No `SERPAPI_KEY`. Catalog-only in the deploy; the live path (D-021, superseding D-011) infers the merchant domain from Google Shopping's `source` and immersive `stores`, and is untested against a real key. |
+| SerpAPI | **The Vercel deploy has a working key.** Every listing comes back with `"source": "serpapi"` and a hashed id, so the public URL runs real Google Shopping search (D-021). Locally with no key the app is catalog-only. The live path is now exercised against a real key — this row previously said otherwise. |
 | Tests | Backend **204 passed** (35 files). Frontend **39 passed** (15 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments + **VEYZL (Task 29, D-020)**. B: trust + data + **Mongo review (Task 27, D-016)** + Devpost. C: frontend. |
-| Blockers | **A still owes a public deploy** (Fly or Vercel) and a clean VEYZL re-run; C owes the browser click-through and screenshots; B fills `docs/devpost-form.md` as those artifacts land. None of them blocks the others. |
+| Blockers | **A's deploy is done** (`sykes.select`). Remaining: C's browser click-through and screenshots, the team video, B filling `docs/devpost-form.md`, and a clean VEYZL re-run. **One decision is now on the team:** the public URL serves live search, so it has no villain — see the risk row below. None of these blocks the others. |
 | Branches | **`main` carries everything and is pushed** ([PR #20](https://github.com/KF8311/Dubhacks/pull/20)–[PR #25](https://github.com/KF8311/Dubhacks/pull/25) rebase-merged or open; every working branch deleted after its diff against `main` came back empty). Run `git log --oneline origin/main` for the current tip — recording the hash here just goes stale on the next docs commit. Local and remote `main` are the same commit. Every other remote head is contained in `main`. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 22:49 PT
+Last updated: 2026-10-17 23:10 PT
 
 ## Gate board
 
@@ -34,8 +34,8 @@ Last updated: 2026-10-17 22:49 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through opens Block 5 | 204 backend / 39 frontend tests; live HTTP checkout → confirm → public receipt; refusal shows `MERCHANT_NOT_TRUSTED` |
-| G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done; URL, screenshots, video, and a clean VEYZL report pending. The VEYZL finding is already reproduced and fixed | `docs/devpost-form.md` + Devpost confirmation |
+| G4 Checkout → passkey → receipt | Sat 21:00 | 🟢 **server proof on the public URL** (browser click-through is C's, under G5) | `https://sykes.select`: checkout `201 awaiting_passkey` → confirm `200` → public receipt `200`; refusal shows `MERCHANT_NOT_TRUSTED` |
+| G5 Devpost draft submitted | Sat 22:30 | 🟡 **close-out** — text done and the live URL exists; screenshots, video, and a clean VEYZL report pending. The VEYZL finding is already reproduced and fixed | `docs/devpost-form.md` + Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
 
@@ -55,11 +55,31 @@ villain: lst_vln_xm5 → danger, score 0, "Reported by the local threat list: LO
 
 Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run build` clean.
 
+## Proof of the public deploy (2026-10-17 23:00 PT)
+
+`https://sykes.select`, no headers, over the real internet. Hosted by Vercel:
+
+```
+GET  /api/health                     → 200  status "degraded", db "unavailable", version 0.9.0
+POST /api/sessions                   → 201
+POST /api/sessions/{id}/answers      → 202  stage "ready"
+GET  /api/sessions/{id}              → 200  9 listings
+POST /api/checkout                   → 201  stage "awaiting_passkey"
+POST /api/checkout/{id}/confirm      → 200  receipt_id rcp_Z-Oqv9M-trZ2yOok, receipt_url /r/shr_f4r5vezengss
+GET  /r/{share_id}                   → 200  amount 3999, last4 4242, HMAC signature present
+```
+
+**The listings come from live SerpAPI, not the catalog.** Measured on a fresh session: 9 real products
+(Sony WH-1000XM6, Sennheiser, JBL, …) with hashed ids and `"source": "serpapi"`; recommendation
+`Cheapest of 9 trusted options`; **all 9 trusted, no villain.** The catalog's `lst_tgt_bsp` /
+`lst_vln_xm5` numbers do not appear on the public URL. One answers call returned a transient `500` on a
+cold start and succeeded immediately on retry.
+
 ## In progress
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Public deploy; smoke the public URL; **VEYZL audit + fix (D-020, D-023)** | 18:25 | 22:30 | ✅ Search/budget work merged at 19:40. ✅ **VEYZL audit ran** (three reports) and finding 1 — no guard on the generative path — is fixed with five tests, merged 22:49 PT. ✅ **Vercel services path** added. ✅ **The VEYZL GitHub App is installed** and posts `VEYZL Audit` on PRs. ⬜ That check **fails** on PR #26 and the report has not been read in the portal; a public deploy is still owed |
+| A | Public deploy; smoke the public URL; **VEYZL audit + fix (D-020, D-023)** | 18:25 | 22:30 | ✅ **Deploy is live at `https://sykes.select`** and the full checkout → confirm → receipt path was verified there. ✅ VEYZL audit ran (three reports); finding 1 — no guard on the generative path — is fixed with five tests, merged 22:49 PT. ✅ The VEYZL GitHub App is installed and posts `VEYZL Audit` on PRs. ⬜ That check **fails** on PR #26 and the report has not been read in the portal. ⬜ **Decide the demo source** (next actions #1) |
 | C | Browser screenshots — results grid, danger detail, receipt — plus one recording | 18:25 | 22:30 | ✅ Block 6 UI merged (`cf24bdb`, `3ceffbc`): 390px reflow (overflow 0), `api_key` redaction, immersive merchant resolution, offline catalog pinning. ⬜ Screenshots and video are the last G5 items |
 | B | Devpost, final numbers, audit review | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, technical-claims handoff, audit scope + `/api/demo/reset` reproduction, repository review first pass (`8c89260`); ⬜ fill the form as A and C land artifacts |
 
@@ -98,12 +118,13 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] Verified after the merge: **187 backend / 34 frontend at the time** (now 204 / 39), build clean, replay exit 0, and the live HTTP run for **$300–$600** matches the replay exactly
 - [x] A merged (`agent_backend`, 22:49 PT) — **VEYZL guard [D-023]**: `llm_guard.py` refuses jailbreaks, self-harm, explosives, SSNs, and secrets before Gemini, redacts PII, and answers VEYZL-shaped probe payloads with an OpenAI-style refusal; **Vercel services** config with `bundle_data.py` and `paths.py`; a failed live search falls back to the catalog rather than an empty grid. Five conflicts resolved: decision renumbered (D-020 was taken), audit doc merged rather than replaced, README kept, both SerpAPI tests and both orchestrator paths kept, and `apiBase()` restores the `localhost:8000` dev default
 - [x] Post-merge: **204 backend**, **39 frontend**, build clean, replay exit 0
+- [x] **The public deploy is live at `https://sykes.select`** (Vercel services). Verified over the internet: health 200, session 201, answers `ready`, checkout `201`, confirm `200`, public receipt 200 with a valid signature. It runs **live SerpAPI**, so all 9 listings are real products and all 9 are trusted — the catalog villain is not on the public URL
 
 ## Next three actions
 
-1. **C or B, no dependency on A:** open `npm run dev` against `uvicorn` on :8000, click the live flow — answer **$300–$600**, villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and screenshot it. Local dev now falls back to `localhost:8000` with no `.env`.
-2. **A:** deploy from the repo root, **either** `fly deploy` **or** the Vercel services path, then run `backend/scripts/smoke_http.py` against it; B fills `docs/devpost-form.md` as the URL and screenshots land.
-3. **A:** re-run VEYZL against the fixed build and capture a report that is not all-error. Only a clean report earns the side track, and only then should `VEYZL Audit` go back on the ruleset.
+1. **A, two minutes:** decide what the public URL should show. It currently runs live search, so all 9 listings are trusted and **the demo has no villain**. Setting `OFFLINE=1` in the Vercel project forces the curated catalog (villain, $179.99 pick, $374.49 median) — and `OFFLINE=1` also skips the budget filter, which is invisible at the scripted **$300–$600** answer. Leave it as-is if the "live search" story matters more than the villain on the hosted link. Either way, **record the screenshots and video locally**, where the curated numbers are guaranteed.
+2. **C, 30 minutes:** `npm run dev` against `uvicorn` on :8000, answer **$300–$600**, click through villain → best pick → Pay → passkey → receipt, and take three screenshots plus one recording.
+3. **A, then B:** read the failing `VEYZL Audit` report on PR #26 in the portal, reproduce what it names, and re-run. B fills `docs/devpost-form.md` with `https://sykes.select`, C's images, and the video as they land.
 
 ## Demo trap to avoid
 
@@ -113,12 +134,14 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 
 | Risk | Trigger seen? | Action taken |
 |---|---|---|
-| Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
-| Fly serves the pre-merge build | **yes** | Redeploy from `main`; the Vercel path is merged but has never been exercised |
+| Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; the public URL completes checkout → confirm → receipt |
+| **The public URL has no villain** | **yes, measured 23:00** | `sykes.select` runs live SerpAPI: 9 real listings, all trusted, pick "cheapest of 9 trusted". The catalog's danger merchant only appears when the catalog is used. **Take the screenshots and record the video locally**; decide separately whether to set `OFFLINE=1` on Vercel |
+| Hosted cold start can 500 once | **yes, once** | The first answers call after idle returned 500, then succeeded on retry. Warm the deploy (health + one session) before judging, and rehearse the local path as the primary |
+| Fly serves the pre-merge build | **yes** | The Fly app is still stale; **`sykes.select` is the live URL now**. Redeploy Fly only if it is the URL you are putting in the form |
 | VEYZL audit produced no usable report | **yes** | Two hosted runs were all-error or wrong response shape; the guard and shape are fixed (D-023). The GitHub App is now installed and posts `VEYZL Audit` on PRs, but its report on PR #26 **failed** and has not been read in the portal. Do not claim the side track, and do not re-add the check as required, until it passes |
-| A failed live search silently shows the demo catalog | **changed 22:49** | The orchestrator now falls back to `load_catalog()` on a search error and emits `SEARCH_FAILED`. Good for the demo, but do not describe a fallback render as live search |
+| A failed live search silently shows the demo catalog | **changed 22:49** | The orchestrator falls back to `load_catalog()` on a search error and emits `SEARCH_FAILED`, which surfaces as a dismissible error banner. Good for the demo, but do not describe a fallback render as live search |
 | ~~`main` protected by a required check nothing reports~~ | **was yes — resolved 20:22** | The `VEYZL Audit` requirement was dropped from the repo ruleset, PR #20 was rebase-merged, and the branch deleted. **Do not re-add the check until the VEYZL GitHub App is installed** — a local run posts nothing, and re-adding it early blocks every merge again. |
-| SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
+| SerpAPI key unavailable | **no longer true on Vercel** | The deploy has a working key and returns `"source": "serpapi"` listings. Locally with no key the app is catalog-only. On stage, say which one you are showing |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | An empty budget filter falls back to the full catalog | yes | D-022: an over-budget listing can be recommended and paid. Say "closest match" on stage; do not call the budget a hard cap |
 | The demo budget answer changes the card count | **yes** | Measured: Under $150 → 1, $150–$300 → 3, $300–$600 → 9. The script uses $300–$600. Under `OFFLINE=1` the filter is skipped entirely |
