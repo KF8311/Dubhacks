@@ -111,7 +111,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
 
   if (phase === "submitting") {
     return (
-      <div className="ticket mx-auto max-w-2xl space-y-4 rounded-lg p-6 sm:p-8" aria-busy="true">
+      <div className="ticket mx-auto max-w-2xl space-y-4 rounded-2xl p-6 sm:p-8" aria-busy="true">
         <p className="text-lg font-medium">Looking at retailers…</p>
         <Skeleton className="h-16 w-full" />
         <Skeleton className="h-16 w-full" />
@@ -128,7 +128,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
           Find a deal you can actually pay for
         </h1>
         <form
-          className="ticket mt-8 space-y-4 rounded-lg p-5 sm:p-7"
+          className="ticket mt-8 space-y-4 rounded-2xl p-5 sm:p-7"
           onSubmit={(event) => {
             event.preventDefault()
             void onFindProducts()
@@ -147,12 +147,12 @@ export function DiscoveryFlow({ onStarted }: Props) {
               placeholder="What are you looking for?"
               onChange={(event) => setLocalQuery(event.target.value)}
               disabled={asking}
-              className="h-12 flex-1 rounded-md bg-[var(--paper)] px-4 text-base md:text-base"
+              className="h-12 flex-1 rounded-full bg-[var(--paper)] px-5 text-base md:text-base"
             />
             <Button
               type="submit"
               disabled={asking || query.trim().length === 0}
-              className="h-12 rounded-md px-6 text-base font-semibold"
+              className="h-12 rounded-full px-6 text-base font-semibold"
             >
               {asking ? "Asking a few questions…" : "Find products"}
             </Button>
@@ -199,7 +199,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const progress = ((index + 1) / questions.length) * 100
 
   return (
-    <div className="ticket mx-auto max-w-xl space-y-5 rounded-lg p-6 sm:p-8">
+    <div className="ticket mx-auto max-w-xl space-y-5 rounded-2xl p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Question {index + 1} of {questions.length}
@@ -242,7 +242,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
       <Input
         value={freeText}
         placeholder="Or type your own answer"
-        className="h-11 rounded-md bg-[var(--paper)] px-4"
+        className="h-11 rounded-full bg-[var(--paper)] px-5"
         onChange={(event) => {
           setFreeText(event.target.value)
           setPicked(null)
@@ -254,7 +254,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
         </p>
       ) : null}
       <div className="flex flex-wrap items-center gap-4">
-        <Button type="button" disabled={!ready} className="h-11 rounded-md px-5 font-semibold" onClick={() => void onNext()}>
+        <Button type="button" disabled={!ready} className="h-11 rounded-full px-5 font-semibold" onClick={() => void onNext()}>
           {last ? "See results" : "Next"}
         </Button>
         {phase === "questions" ? (

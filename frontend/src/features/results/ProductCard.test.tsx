@@ -63,7 +63,7 @@ test("leads with a compact ticket, not a hero photo", () => {
     />,
   )
   const photo = document.querySelector("img")
-  expect(photo).toHaveClass("size-16")
+  expect(photo).toHaveClass("size-12")
   const title = screen.getByText("Sony WH-1000XM5")
   expect(photo && title.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
 })
@@ -112,6 +112,34 @@ const checks: TrustCheckResult[] = [
     duration_ms: 8,
   },
 ]
+
+test("only the best pick wears the marigold edge", () => {
+  const { container, rerender } = render(
+    <ProductCard listing={listing} checks={[]} isBest={false} selected onSelect={() => undefined} />,
+  )
+  const card = container.querySelector("[data-slot='card']")
+  expect(card).not.toHaveClass("ticket-best")
+  expect(card).toHaveClass("ticket-selected")
+
+  rerender(<ProductCard listing={listing} checks={[]} isBest selected onSelect={() => undefined} />)
+  expect(card).toHaveClass("ticket-best")
+  expect(card).not.toHaveClass("ticket-selected")
+})
+
+test("the whole ticket flips, merchant link included", () => {
+  const { container } = render(
+    <ProductCard
+      listing={{ ...listing, product_url: "https://www.bestbuy.com/site/sony-xm5" }}
+      checks={[]}
+      isBest={false}
+      onSelect={() => undefined}
+    />,
+  )
+  const front = container.querySelector(".flip-front")
+  expect(front).not.toBeNull()
+  expect(front?.querySelector("a")).toHaveAttribute("href", "https://www.bestbuy.com/site/sony-xm5")
+  expect(container.querySelector(".flip-back")).not.toBeNull()
+})
 
 test("the ticket turns over to site stats with a pass/warning/fail tally", () => {
   render(

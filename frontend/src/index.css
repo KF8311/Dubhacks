@@ -11,6 +11,7 @@
   --paper: #f7f3ea;
   --marigold: #e8a317;
   --marigold-ink: #1e2a24;
+  --marigold-wash: color-mix(in srgb, var(--marigold) 16%, var(--paper));
   --leaf: #1f6b4a;
   --background: #dce8e0;
   --foreground: #1e2a24;
@@ -161,27 +162,54 @@
     0 18px 40px -28px rgb(30 42 36 / 35%);
 }
 
+/* Soft, lifted paper. The layered shadow reads as float; the only hard
+   shadow in the system is the marigold offset under the single best pick. */
 .ticket {
   background: var(--paper);
   border: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgb(30 42 36 / 6%);
+  box-shadow:
+    0 1px 0 rgb(30 42 36 / 6%),
+    0 14px 30px -26px rgb(30 42 36 / 45%);
 }
 
 .ticket-best {
   background: var(--paper);
   border: 1px solid rgb(30 42 36 / 18%);
-  box-shadow: 6px 6px 0 var(--marigold);
+  box-shadow:
+    5px 5px 0 var(--marigold),
+    0 18px 32px -24px rgb(30 42 36 / 40%);
+}
+
+.ticket-selected {
+  border-color: rgb(30 42 36 / 28%);
+  box-shadow:
+    0 0 0 1px rgb(30 42 36 / 10%),
+    0 14px 30px -24px rgb(30 42 36 / 45%);
+}
+
+/* ProductCard supplies its own padding inside the flipping faces. */
+.product-card {
+  padding: 0;
+  gap: 0;
 }
 
 .shelf-row {
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease;
+    transform 180ms cubic-bezier(0.2, 0.8, 0.3, 1),
+    box-shadow 180ms ease;
 }
 
 .shelf-row:hover {
-  transform: translateY(-4px) rotate(-0.35deg);
-  box-shadow: 5px 8px 0 var(--marigold);
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 rgb(30 42 36 / 6%),
+    0 18px 34px -24px rgb(30 42 36 / 55%);
+}
+
+.ticket-best.shelf-row:hover {
+  box-shadow:
+    5px 7px 0 var(--marigold),
+    0 18px 34px -24px rgb(30 42 36 / 45%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -190,16 +218,18 @@
   }
 }
 
-/* A product ticket turns over on hover or keyboard focus to show its site
-   stats. Both faces share one grid cell so the card keeps the taller face's
-   height and nothing clips during the rotation. */
+/* A product ticket turns over on hover to show its site stats. Both faces
+   share one grid cell so the card keeps the taller face's height and nothing
+   clips during the rotation. Focus does not flip the card: the merchant link
+   and the select button now live on the same face, and rotating them away
+   would hide the control the person just reached. */
 .flip-card {
-  perspective: 1200px;
+  perspective: 1400px;
 }
 
 .flip-inner {
   display: grid;
-  transition: transform 420ms ease;
+  transition: transform 480ms cubic-bezier(0.2, 0.75, 0.25, 1);
   transform-style: preserve-3d;
 }
 
@@ -215,12 +245,10 @@
   pointer-events: none;
 }
 
-.flip-card:focus-within .flip-inner,
 .flip-card:hover .flip-inner {
   transform: rotateY(180deg);
 }
 
-.flip-card:focus-within .flip-back,
 .flip-card:hover .flip-back {
   pointer-events: auto;
 }

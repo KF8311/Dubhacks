@@ -11,7 +11,7 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 
 **Blocker (2026-10-18): the SerpAPI key has 0 searches left** (Free Plan, 250 used this month). Live search fails in ~0.2 s with the new `SEARCH_QUOTA_EXHAUSTED` message for any query SerpAPI has not cached. **Get a fresh key before a live rehearsal** — put it in `backend/.env` as `SERPAPI_KEY` (never commit it, never paste it into chat) and restart the backend. Cached queries such as `TUL pens at Office Depot` still resolve; use **Skip questions** so the query stays exact.
 
-**Current state:** `a/atlas-durable` carries the kept build (`96cf47f`), D-025, the `c/web` fixes, the embedded data bundle, and D-034–D-038 (real merchant links, flip cards, phone pay, quota error, skippable questions). Backend **263 passed**, frontend **72 passed** (18 files), `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; the live pens demo is proven over HTTP, nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `a/atlas-durable` carries the kept build (`96cf47f`), D-025, the `c/web` fixes, the embedded data bundle, and D-034–D-039 (real merchant links, whole-card flip with one marigold edge, phone pay, quota error, skippable questions, Send to phone). Backend **263 passed**, frontend **76 passed** (18 files), `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; the live pens demo is proven over HTTP, nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
 
@@ -229,7 +229,7 @@ Everything else on A's plate is done (see "Already done"). Two items remain:
 
 ```powershell
 cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 263 passed
-cd frontend; npx vitest run; npm run build                       # 72 passed (18 files), clean
+cd frontend; npx vitest run; npm run build                       # 76 passed (18 files), clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
 ```

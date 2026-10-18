@@ -9,7 +9,13 @@ export function payUrl(checkoutId: string): string {
  * The checkout exists on this device; the passkey lives on the phone. Hand the
  * payer a link (copy or share sheet) so the card is never entered here.
  */
-export function PhonePayLink({ checkoutId }: { checkoutId: string }) {
+export function PhonePayLink({
+  checkoutId,
+  prominent = false,
+}: {
+  checkoutId: string
+  prominent?: boolean
+}) {
   const url = payUrl(checkoutId)
   const [copied, setCopied] = useState(false)
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function"
@@ -33,7 +39,13 @@ export function PhonePayLink({ checkoutId }: { checkoutId: string }) {
   }
 
   return (
-    <div className="rounded-md border border-[var(--border)] p-3">
+    <div
+      className={
+        prominent
+          ? "rounded-2xl border border-[var(--marigold)] bg-[var(--marigold-wash)] p-4 shadow-[0_14px_30px_-26px_rgb(30_42_36/45%)]"
+          : "rounded-2xl border border-[var(--border)] p-3"
+      }
+    >
       <p className="font-heading text-sm font-semibold">Pay on your phone</p>
       <p className="mt-1 text-xs text-muted-foreground">
         Open this link on your phone and approve with your passkey. No card is

@@ -133,6 +133,37 @@ test("the mandate offers a link to finish payment on a phone", async () => {
   expect(screen.getByTestId("pay-url")).toHaveTextContent("/pay/chk_mock")
 })
 
+test("the review can send the checkout to the phone before paying", async () => {
+  render(
+    <CheckoutSheet
+      listing={{ ...listing, id: "lst_bestbuy_xm5" }}
+      verdict="trusted"
+      score={92}
+      confidence={1}
+      sessionId="ses_mock"
+      onComplete={() => undefined}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: /send to phone/i }))
+  expect(await screen.findByText(/pay on your phone/i)).toBeInTheDocument()
+  expect(screen.getByTestId("pay-url")).toHaveTextContent("/pay/chk_mock")
+  expect(screen.getByText(/your checkout is ready/i)).toBeInTheDocument()
+})
+
+test("send to phone stays disabled when the listing cannot be paid", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="danger"
+      score={10}
+      confidence={1}
+      sessionId="ses_1"
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /send to phone/i })).toBeDisabled()
+})
+
 test("trusted checkout reaches the receipt", async () => {
   const onComplete = vi.fn()
   render(

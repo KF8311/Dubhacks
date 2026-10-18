@@ -43,8 +43,9 @@ export function ProductCard({
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
   const link = productLink(listing)
 
-  const thumb = imageFailed ? (    <div
-      className="flex size-16 shrink-0 items-center justify-center rounded-md bg-[var(--ink)] text-lg font-semibold text-[var(--paper)]"
+  const thumb = imageFailed ? (
+    <div
+      className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-[var(--ink)] text-base font-semibold text-[var(--paper)]"
       aria-hidden="true"
     >
       {initial}
@@ -53,7 +54,7 @@ export function ProductCard({
     <img
       src={listing.image_url}
       alt=""
-      className="size-16 shrink-0 rounded-md bg-muted object-cover"
+      className="size-12 shrink-0 rounded-xl bg-muted object-cover"
       onError={() => setImageFailed(true)}
     />
   )
@@ -61,14 +62,14 @@ export function ProductCard({
   const body = (
     <>
       {thumb}
-      <div className="min-w-0 flex-1 space-y-1 text-left">
-        {isBest ? <p className="text-sm font-semibold text-accent">Best pick</p> : null}
-        <h3 className="font-heading line-clamp-2 text-base font-semibold leading-snug">{listing.title}</h3>
-        <p className="text-sm text-muted-foreground">
+      <div className="min-w-0 flex-1 space-y-0.5 text-left">
+        {isBest ? <p className="text-xs font-semibold text-accent">Best pick</p> : null}
+        <h3 className="font-heading line-clamp-2 text-sm font-semibold leading-snug">{listing.title}</h3>
+        <p className="truncate text-xs text-muted-foreground">
           <span>{listing.merchant_name}</span>
           <span> · {listing.merchant_domain}</span>
         </p>
-        <p className="font-heading text-xl font-semibold">
+        <p className="font-heading text-lg font-semibold">
           {formatCents(listing.price_cents, listing.currency)}
         </p>
         {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
@@ -86,83 +87,134 @@ export function ProductCard({
     </>
   )
 
+  /** The link sits on both faces: the front for touch and keyboard, the back
+      so it is still clickable while the card is turned over on hover. The
+      mirrored copy is removed from the tab order and the accessibility tree;
+      the front link is the one assistive tech hears. */
+  function renderLink(mirror: boolean) {
+    if (!link) return null
+    return (
+      <a
+        href={link.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        tabIndex={mirror ? -1 : undefined}
+        className="inline-flex items-center gap-1 text-xs font-medium text-accent underline underline-offset-4"
+      >
+        {link.label}
+        <span aria-hidden="true">↗</span>
+      </a>
+    )
+  }
+
   const passed = checks.filter((check) => check.status === "passed").length
   const warnings = checks.filter((check) => check.status === "warning").length
   const failed = checks.filter((check) => check.status === "failed").length
   const waiting = checks.length === 0
 
+  // The flip covers the whole ticket, merchant link included. It turns on
+  // hover only: the link and the select button stay reachable by keyboard
+  // without the face they are on rotating away.
+  const front = (
+    <div className="flip-face flip-front flex flex-col rounded-2xl bg-[var(--paper)] p-3">
+      {onSelect ? (
+        <button
+          type="button"
+          className="flex w-full items-start gap-2.5 text-left"
+          aria-pressed={selected}
+          onClick={onSelect}
+        >
+          {body}
+        </button>
+      ) : (
+        <div className="flex items-start gap-2.5">{body}</div>
+      )}
+      {link ? <div className="mt-2 flex">{renderLink(false)}</div> : null}
+    </div>
+  )
+
+  const stats = (
+    <div className="space-y-1">
+      <p className="font-heading text-sm font-semibold">Site stats</p>
+      <p className="text-xs text-muted-foreground">
+        {listing.merchant_name} · {listing.merchant_domain}
+      </p>
+      <TrustBadge
+        score={score?.score}
+        verdict={score?.verdict}
+        allowlisted={score?.allowlisted}
+      />
+      {waiting ? (
+        <p className="text-xs text-muted-foreground">Checks are still running.</p>
+      ) : (
+        <p className="text-xs">
+          {passed} passed · {warnings} warning{warnings === 1 ? "" : "s"} · {failed} failed
+        </p>
+      )}
+      {score?.top_reason ? (
+        <p className="line-clamp-2 text-xs text-muted-foreground">{score.top_reason}</p>
+      ) : null}
+    </div>
+  )
+
+  const back = (
+    <div
+      className="flip-face flip-back flex flex-col justify-center rounded-2xl bg-[var(--paper)] p-3"
+      data-testid="site-stats"
+    >
+      {onSelect ? (
+        <button
+          type="button"
+          className="text-left"
+          aria-pressed={selected}
+          onClick={onSelect}
+        >
+          {stats}
+        </button>
+      ) : (
+        stats
+      )}
+      {link ? (
+        <div className="mt-2 flex" aria-hidden="true">
+          {renderLink(true)}
+        </div>
+      ) : null}
+    </div>
+  )
+
   return (
     <Card
       className={cn(
-        "min-w-0 rounded-lg py-3",
-        isBest || selected ? "ticket-best" : "ticket shadow-none",
+        "product-card min-w-0 rounded-2xl",
+        /** Only the actual pick wears the marigold edge. A merely selected
+            row gets a neutral ring so several cards never compete for it. */
+        isBest && !expanded ? "ticket-best" : "ticket",
+        !isBest && selected && !expanded ? "ticket-selected" : null,
         onSelect && !expanded ? "shelf-row" : null,
       )}
     >
-      <div className="flip-card min-w-0">
-        <div className="flip-inner">
-          <div className="flip-face flip-front">
-            {onSelect ? (
-              <button
-                type="button"
-                className="flex w-full items-start gap-3 px-4"
-                aria-pressed={selected}
-                onClick={onSelect}
-              >
-                {body}
-              </button>
-            ) : (
-              <div className="flex items-start gap-3 px-4">{body}</div>
-            )}
-          </div>
-          <div className="flip-face flip-back" data-testid="site-stats">
-            <div className="space-y-1 px-4">
-              <p className="font-heading text-sm font-semibold">Site stats</p>
-              <p className="text-xs text-muted-foreground">
-                {listing.merchant_name} · {listing.merchant_domain}
-              </p>
-              <TrustBadge
-                score={score?.score}
-                verdict={score?.verdict}
-                allowlisted={score?.allowlisted}
-              />
-              {waiting ? (
-                <p className="text-xs text-muted-foreground">Checks are still running.</p>
-              ) : (
-                <p className="text-xs">
-                  {passed} passed · {warnings} warning{warnings === 1 ? "" : "s"} · {failed}{" "}
-                  failed
-                </p>
-              )}
-              {score?.top_reason ? (
-                <p className="line-clamp-2 text-xs text-muted-foreground">{score.top_reason}</p>
-              ) : null}
-            </div>
+      {expanded ? (
+        <>
+          <div className="flex items-start gap-2.5 px-3 pt-3">{body}</div>
+          {link ? <div className="mt-2 flex px-3">{renderLink(false)}</div> : null}
+          <CardContent className="mt-3">
+            {ALL_CHECKS.map((meta) => {
+              const found = checks.find((check) => check.id === meta.id)
+              if (!found) {
+                return <Skeleton key={meta.id} className="my-2 h-10 w-full" />
+              }
+              return <CheckRow key={meta.id} check={found} listingId={listing.id} />
+            })}
+          </CardContent>
+        </>
+      ) : (
+        <div className="flip-card min-w-0">
+          <div className="flip-inner">
+            {front}
+            {back}
           </div>
         </div>
-      </div>
-      {link ? (
-        <a
-          href={link.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-flex items-center gap-1 px-4 text-sm font-medium text-accent underline underline-offset-4"
-        >
-          {link.label}
-          <span aria-hidden="true">↗</span>
-        </a>
-      ) : null}
-      {expanded ? (
-        <CardContent className="mt-3">
-          {ALL_CHECKS.map((meta) => {
-            const found = checks.find((check) => check.id === meta.id)
-            if (!found) {
-              return <Skeleton key={meta.id} className="my-2 h-10 w-full" />
-            }
-            return <CheckRow key={meta.id} check={found} listingId={listing.id} />
-          })}
-        </CardContent>
-      ) : null}
+      )}
     </Card>
   )
 }
