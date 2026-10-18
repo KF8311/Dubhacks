@@ -22,7 +22,7 @@ test("renders title, merchant, and formatted price", () => {
     />,
   )
   expect(screen.getAllByText("Sony XM5").length).toBeGreaterThan(0)
-  expect(screen.getAllByText("Best Buy").length).toBeGreaterThan(0)
+  expect(screen.getAllByText(/Best Buy/).length).toBeGreaterThan(0)
   expect(screen.getAllByText(/\$249\.00/).length).toBeGreaterThan(0)
 })
 
@@ -58,7 +58,7 @@ test("opening a listing shows its checks without stacking every card open", () =
     />,
   )
   expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(5)
-  fireEvent.click(screen.getByRole("button", { name: /bose qc/i }))
+  fireEvent.click(screen.getByRole("button", { name: /show checks for bose qc/i }))
   expect(screen.getAllByText("Bose QC").length).toBeGreaterThan(1)
   expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(5)
 })

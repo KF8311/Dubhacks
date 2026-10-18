@@ -1,9 +1,11 @@
 import { useState } from "react"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CheckRow } from "@/features/results/CheckRow.tsx"
 import { TrustBadge } from "@/features/results/TrustBadge.tsx"
 import { formatCents } from "@/lib/format.ts"
+import { sendPhoneText } from "@/lib/phoneBridge.ts"
 import { productLink } from "@/lib/productLink.ts"
 import { cn } from "cn"
 import type { CheckId, Listing, ScoreResult, TrustCheckResult } from "@/lib/types.ts"
@@ -15,6 +17,12 @@ const ALL_CHECKS: { id: CheckId; name: string }[] = [
   { id: "reddit_sentiment", name: "Reddit" },
   { id: "page_flags", name: "Page flags" },
 ]
+
+const SCORE_COLOR: Record<string, string> = {
+  trusted: "var(--trust-trusted)",
+  caution: "var(--trust-caution)",
+  danger: "var(--trust-danger)",
+}
 
 type Props = {
   listing: Listing
@@ -40,12 +48,14 @@ export function ProductCard({
   budgetMinCents = null,
 }: Props) {
   const [imageFailed, setImageFailed] = useState(listing.image_url.length === 0)
+  const [sendState, setSendState] = useState<"idle" | "sending" | "sent" | "failed">("idle")
+  const [sendError, setSendError] = useState<string | null>(null)
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
   const link = productLink(listing)
 
   const thumb = imageFailed ? (
     <div
-      className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ink)] text-sm font-semibold text-[var(--paper)]"
+      className="flex h-28 w-full items-center justify-center bg-[var(--ink)] text-3xl font-semibold text-[var(--paper)]"
       aria-hidden="true"
     >
       {initial}
@@ -54,7 +64,7 @@ export function ProductCard({
     <img
       src={listing.image_url}
       alt=""
-      className="size-10 shrink-0 rounded-xl bg-muted object-cover"
+      className="h-28 w-full bg-muted object-cover"
       onError={() => setImageFailed(true)}
     />
   )
@@ -63,57 +73,146 @@ export function ProductCard({
   const warnings = checks.filter((check) => check.status === "warning").length
   const failed = checks.filter((check) => check.status === "failed").length
   const waiting = checks.length === 0
-  // The tally lives on the row itself; there is no hidden face to turn over.
   const tally = waiting
     ? "Checks running…"
     : `${passed} passed · ${warnings} warning${warnings === 1 ? "" : "s"} · ${failed} failed`
+  const scoreColor = SCORE_COLOR[score?.verdict ?? "pending"] ?? "var(--trust-pending)"
+  const price = formatCents(listing.price_cents, listing.currency)
 
-  const body = (
-    <>
+  async function onSend() {
+    if (sendState === "sending") return
+    setSendState("sending")
+    setSendError(null)
+    const href = link?.href ?? (listing.merchant_domain ? `https://${listing.merchant_domain}` : "")
+    try {
+      await sendPhoneText(
+        `Sykes found: ${listing.title} — ${price} at ${listing.merchant_name}.${href ? ` ${href}` : ""}`,
+      )
+      setSendState("sent")
+    } catch (caught) {
+      setSendError(caught instanceof Error ? caught.message : "The phone bridge did not accept the message.")
+      setSendState("failed")
+    }
+  }
+
+  const actions = (
+    <div className="flex gap-2 px-2.5 pb-2.5">
+      {link ? (
+        <a
+          href={link.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={link.label.replace(/^View/, "Visit")}
+          className={cn(
+            buttonVariants({ size: "lg" }),
+            "h-9 flex-1 font-semibold transition-all hover:-translate-y-px hover:shadow-sm",
+          )}
+        >
+          Visit site
+        </a>
+      ) : null}
+      <Button
+        type="button"
+        variant="outline"
+        className="h-9 flex-1 font-semibold transition-all hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--sky)_45%,var(--border))] hover:bg-[var(--sky-wash)] hover:shadow-sm"
+        aria-label={`Send ${listing.title} to your phone`}
+        disabled={sendState === "sending"}
+        onClick={() => void onSend()}
+      >
+        {sendState === "sending"
+          ? "Sending…"
+          : sendState === "sent"
+            ? "Sent"
+            : sendState === "failed"
+              ? "Retry"
+              : "Send"}
+      </Button>
+    </div>
+  )
+
+  const front = (
+    <span className="flip-face flip-front block">
       {thumb}
-      <div className="min-w-0 flex-1 space-y-0.5 text-left">
-        {isBest ? <p className="text-xs font-semibold text-accent">Best pick</p> : null}
-        <h3 className="truncate font-heading text-sm font-semibold leading-tight">{listing.title}</h3>
-        <p className="truncate text-xs text-muted-foreground">
-          <span>{listing.merchant_name}</span>
-          <span> · {listing.merchant_domain}</span>
-        </p>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <TrustBadge
-            score={score?.score}
-            verdict={score?.verdict}
-            allowlisted={score?.allowlisted}
-          />
-          <span className="truncate text-xs text-muted-foreground">{tally}</span>
-        </div>
+      <span className="block space-y-1 p-3 text-left">
+        {isBest ? (
+          <span className="inline-flex rounded-full bg-[var(--marigold)] px-2 py-0.5 text-[0.7rem] font-semibold text-[var(--marigold-ink)]">
+            Best pick
+          </span>
+        ) : null}
+        <span className="line-clamp-2 font-heading text-sm font-semibold leading-snug">
+          {listing.title}
+        </span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {listing.merchant_name} · {listing.merchant_domain}
+        </span>
+        <span className="flex items-center justify-between gap-2 pt-1">
+          <span className="font-heading text-lg font-semibold">{price}</span>
+          <TrustBadge score={score?.score} verdict={score?.verdict} allowlisted={score?.allowlisted} />
+        </span>
+        <span className="block truncate text-xs text-muted-foreground">{tally}</span>
         {budgetMaxCents != null && listing.price_cents > budgetMaxCents ? (
-          <p className="text-xs font-medium text-[color:var(--trust-caution)]">Above your budget</p>
+          <span className="block text-xs font-medium text-[color:var(--trust-caution)]">Above your budget</span>
         ) : null}
         {budgetMinCents != null && listing.price_cents < budgetMinCents ? (
-          <p className="text-xs font-medium text-[color:var(--trust-caution)]">Below your budget</p>
+          <span className="block text-xs font-medium text-[color:var(--trust-caution)]">Below your budget</span>
         ) : null}
-      </div>
-      <p className="shrink-0 font-heading text-sm font-semibold">
-        {formatCents(listing.price_cents, listing.currency)}
-      </p>
-    </>
+      </span>
+    </span>
+  )
+
+  const back = (
+    <span className="flip-face flip-back block" aria-hidden="true">
+      <span className="flex h-full min-h-[12rem] flex-col items-center justify-center gap-1 bg-[var(--paper)] p-4 text-center">
+        <span className="text-xs font-semibold text-muted-foreground">Site safety</span>
+        <span className="font-heading text-5xl font-semibold leading-none" style={{ color: scoreColor }}>
+          {score?.score ?? "—"}
+        </span>
+        <TrustBadge score={score?.score} verdict={score?.verdict} allowlisted={score?.allowlisted} />
+        <span className="text-xs">{tally}</span>
+        {score?.top_reason ? (
+          <span className="line-clamp-3 text-xs text-muted-foreground">{score.top_reason}</span>
+        ) : null}
+        <span className="mt-1 text-[0.7rem] text-muted-foreground">{listing.merchant_domain}</span>
+      </span>
+    </span>
   )
 
   return (
     <Card
       data-verdict={score?.verdict ?? "pending"}
       className={cn(
-        "product-card min-w-0 rounded-3xl",
-        /** Only the actual pick wears the marigold edge. A merely selected
-            row gets a neutral ring so several cards never compete for it. */
+        "product-card h-full min-w-0 gap-0 rounded-3xl",
         isBest && !expanded ? "ticket-best" : "ticket",
         !isBest && selected && !expanded ? "ticket-selected" : null,
-        onSelect && !expanded ? "shelf-row" : null,
       )}
     >
       {expanded ? (
         <>
-          <div className="flex items-start gap-2.5 px-3 pt-3">{body}</div>
+          <div className="flex items-start gap-2.5 px-3 pt-3">
+            {imageFailed ? (
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--ink)] text-sm font-semibold text-[var(--paper)]" aria-hidden="true">
+                {initial}
+              </div>
+            ) : (
+              <img
+                src={listing.image_url}
+                alt=""
+                className="size-10 shrink-0 rounded-xl bg-muted object-cover"
+                onError={() => setImageFailed(true)}
+              />
+            )}
+            <div className="min-w-0 flex-1 space-y-0.5 text-left">
+              <h3 className="truncate font-heading text-sm font-semibold leading-tight">{listing.title}</h3>
+              <p className="truncate text-xs text-muted-foreground">
+                {listing.merchant_name} · {listing.merchant_domain}
+              </p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <TrustBadge score={score?.score} verdict={score?.verdict} allowlisted={score?.allowlisted} />
+                <span className="truncate text-xs text-muted-foreground">{tally}</span>
+              </div>
+            </div>
+            <p className="shrink-0 font-heading text-sm font-semibold">{price}</p>
+          </div>
           {link ? (
             <div className="mt-2 flex px-3">
               <a
@@ -138,32 +237,26 @@ export function ProductCard({
           </CardContent>
         </>
       ) : (
-        <div className="flex items-center gap-1 py-2 pl-2.5 pr-1.5">
-          {onSelect ? (
-            <button
-              type="button"
-              className="flex min-w-0 flex-1 items-start gap-2.5 rounded-2xl text-left"
-              aria-pressed={selected}
-              onClick={onSelect}
-            >
-              {body}
-            </button>
-          ) : (
-            <div className="flex min-w-0 flex-1 items-start gap-2.5">{body}</div>
-          )}
-          {link ? (
-            <a
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={link.label}
-              title={link.label}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--paper)] text-sm font-semibold text-accent ring-1 ring-[color-mix(in_srgb,var(--accent)_25%,transparent)] transition-colors hover:bg-[var(--marigold-wash)]"
-            >
-              <span aria-hidden="true">↗</span>
-            </a>
+        <>
+          <button
+            type="button"
+            className="flip-card block w-full cursor-pointer text-left"
+            aria-label={`Show checks for ${listing.title}`}
+            aria-pressed={selected}
+            onClick={onSelect}
+          >
+            <span className="flip-inner">
+              {front}
+              {back}
+            </span>
+          </button>
+          {actions}
+          {sendState === "failed" ? (
+            <p className="px-3 pb-2 text-xs text-[color:var(--trust-danger)]" role="alert">
+              Could not send. {sendError ?? "Open the site with Visit instead."}
+            </p>
           ) : null}
-        </div>
+        </>
       )}
     </Card>
   )

@@ -36,24 +36,8 @@ export function ResultsGrid({
   if (!selected) return null
 
   return (
-    <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <ul className="space-y-1.5">
-        {ordered.map((listing) => (
-          <li key={listing.id}>
-            <ProductCard
-              listing={listing}
-              checks={checks[listing.id] ?? []}
-              score={scores[listing.id]}
-              isBest={listing.id === bestId}
-              selected={listing.id === selected.id}
-              onSelect={() => setSelectedId(listing.id)}
-              budgetMaxCents={budgetMaxCents}
-              budgetMinCents={budgetMinCents}
-            />
-          </li>
-        ))}
-      </ul>
-      <aside className="min-w-0 lg:sticky lg:top-24">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[21rem_minmax(0,1fr)]">
+      <aside className="order-2 min-w-0 lg:order-none lg:sticky lg:top-24 lg:self-start">
         <p className="mb-2 inline-flex rounded-full bg-[var(--sky-wash)] px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-[color-mix(in_srgb,var(--sky)_35%,transparent)]">
           On the counter
         </p>
@@ -68,6 +52,24 @@ export function ResultsGrid({
           budgetMinCents={budgetMinCents}
         />
       </aside>
+      <section className="order-1 min-w-0 lg:order-none" aria-label="Listings found">
+        <ul className="grid min-w-0 gap-4 sm:grid-cols-2">
+          {ordered.map((listing) => (
+            <li key={listing.id} className="min-w-0">
+              <ProductCard
+                listing={listing}
+                checks={checks[listing.id] ?? []}
+                score={scores[listing.id]}
+                isBest={listing.id === bestId}
+                selected={listing.id === selected.id}
+                onSelect={() => setSelectedId(listing.id)}
+                budgetMaxCents={budgetMaxCents}
+                budgetMinCents={budgetMinCents}
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   )
 }

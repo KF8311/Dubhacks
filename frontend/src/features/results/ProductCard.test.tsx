@@ -1,6 +1,10 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { vi } from "vitest"
 import { ProductCard } from "./ProductCard.tsx"
+import { sendPhoneText } from "@/lib/phoneBridge.ts"
 import type { TrustCheckResult } from "@/lib/types.ts"
+
+vi.mock("@/lib/phoneBridge.ts", () => ({ sendPhoneText: vi.fn().mockResolvedValue(undefined) }))
 
 const listing = {
   id: "lst_1",
@@ -43,7 +47,7 @@ test("links the listing to the merchant page", () => {
       isBest={false}
     />,
   )
-  const link = screen.getByRole("link", { name: /view at bestbuy\.com/i })
+  const link = screen.getByRole("link", { name: /visit at bestbuy\.com/i })
   expect(link).toHaveAttribute("href", "https://www.bestbuy.com/site/sony-xm5")
   expect(link).toHaveAttribute("target", "_blank")
   expect(link).toHaveAttribute("rel", "noopener noreferrer")
@@ -54,7 +58,7 @@ test("omits the link when the listing has no product url", () => {
   expect(screen.queryByRole("link")).not.toBeInTheDocument()
 })
 
-test("leads with a compact ticket, not a hero photo", () => {
+test("leads with the item photo, not a text-only row", () => {
   render(
     <ProductCard
       listing={{ ...listing, image_url: "https://example.com/xm5.jpg" }}
@@ -63,7 +67,8 @@ test("leads with a compact ticket, not a hero photo", () => {
     />,
   )
   const photo = document.querySelector("img")
-  expect(photo).toHaveClass("size-10")
+  expect(photo).toHaveClass("h-28")
+  expect(photo).toHaveClass("w-full")
   const title = screen.getByText("Sony WH-1000XM5")
   expect(photo && title.compareDocumentPosition(photo) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
 })
@@ -126,25 +131,35 @@ test("only the best pick wears the marigold edge", () => {
   expect(card).not.toHaveClass("ticket-selected")
 })
 
-test("the row never flips and keeps the merchant link beside it", () => {
+test("the card flips to the site's safety score", () => {
   const { container } = render(
     <ProductCard
-      listing={{ ...listing, product_url: "https://www.bestbuy.com/site/sony-xm5" }}
-      checks={[]}
+      listing={listing}
+      checks={checks}
+      score={{
+        score: 45,
+        verdict: "caution",
+        confidence: 0.8,
+        penalties: [],
+        fatal_flags: [],
+        top_reason: "One check failed.",
+        scoring_version: "1.0",
+      }}
       isBest={false}
       onSelect={() => undefined}
     />,
   )
-  expect(container.querySelector(".flip-card")).toBeNull()
-  expect(container.querySelector(".flip-inner")).toBeNull()
-  expect(screen.getByRole("link", { name: /view at bestbuy\.com/i })).toHaveAttribute(
-    "href",
-    "https://www.bestbuy.com/site/sony-xm5",
-  )
+  expect(container.querySelector(".flip-card")).not.toBeNull()
+  expect(container.querySelector(".flip-inner")).not.toBeNull()
+  const back = container.querySelector(".flip-back")
+  expect(back).not.toBeNull()
+  expect(back?.textContent).toContain("Site safety")
+  expect(back?.textContent).toContain("45")
+  expect(back?.textContent).toContain("One check failed.")
 })
 
-test("the tally sits on the row, no flip required", () => {
-  render(
+test("the tally sits on the front of the card", () => {
+  const { container } = render(
     <ProductCard
       listing={listing}
       checks={checks}
@@ -160,10 +175,30 @@ test("the tally sits on the row, no flip required", () => {
       isBest={false}
     />,
   )
-  expect(screen.getByText("1 passed · 1 warning · 1 failed")).toBeInTheDocument()
+  expect(container.querySelector(".flip-front")?.textContent).toContain(
+    "1 passed · 1 warning · 1 failed",
+  )
 })
 
-test("a pending row says checks are still running", () => {
-  render(<ProductCard listing={listing} checks={[]} isBest={false} />)
-  expect(screen.getByText("Checks running…")).toBeInTheDocument()
+test("a pending card says checks are still running", () => {
+  const { container } = render(<ProductCard listing={listing} checks={[]} isBest={false} />)
+  expect(container.querySelector(".flip-front")?.textContent).toContain("Checks running…")
+})
+
+test("the send button texts the item's own site", async () => {
+  render(
+    <ProductCard
+      listing={{ ...listing, product_url: "https://www.bestbuy.com/site/sony-xm5" }}
+      checks={[]}
+      isBest={false}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: /send sony wh-1000xm5 to your phone/i }))
+  await waitFor(() => expect(sendPhoneText).toHaveBeenCalled())
+  expect(vi.mocked(sendPhoneText).mock.calls[0][0]).toContain(
+    "https://www.bestbuy.com/site/sony-xm5",
+  )
+  expect(await screen.findByRole("button", { name: /send sony wh-1000xm5 to your phone/i })).toHaveTextContent(
+    "Sent",
+  )
 })
