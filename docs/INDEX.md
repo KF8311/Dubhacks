@@ -1,7 +1,7 @@
 ---
 title: Project Index
 type: index
-updated: 2026-10-17
+updated: 2026-10-18
 ---
 
 # Sykes + Visa — Project Index
@@ -18,7 +18,8 @@ One project, one repository, one source of truth. If a fact is not written here 
 | **Claude / an agent** | `CLAUDE.md` → this page → `docs/status.md` → the plan |
 | **On Cursor** | `AGENTS.md` → `.cursor/rules/project.mdc` → `docs/status.md` |
 | **Reviewing a decision** | `docs/decisions.md` |
-| **Writing the Devpost or video** | `docs/devpost-form.md` (field-by-field) → `docs/devpost-technical-claims.md` (the claims) → `docs/devpost.md` (copy) |
+| **Writing the Devpost or video** | `docs/video-script-locked.md` (record against this) → `docs/devpost-form.md` (field-by-field) → `docs/devpost-technical-claims.md` (the claims) → `docs/devpost.md` (copy) |
+| **Finishing the submission** | `docs/remaining-todo.md` — the only open-items file for close-out |
 | **Debugging the demo** | Plan §9 (fallbacks), §16 (risk register), `docs/status.md` |
 
 ## The document set
@@ -31,6 +32,8 @@ One project, one repository, one source of truth. If a fact is not written here 
 | `docs/superpowers/plans/2026-10-17-sniff-visa.md` | Engineering plan: architecture, API, data model, 30 TDD tasks, schedule, risks | Current |
 | `docs/team-split-3.md` | Three-person ownership map, time-boxed checklists, gates, cuts | Current |
 | `docs/checklist.md` | **Live checklist** — open items only, split A / B / C | **Work from this** |
+| `docs/remaining-todo.md` | **Submission close-out** — prioritized P0/P1/P2 list with done-when and cut rules | **Work from this after the merge** |
+| `docs/video-script-locked.md` | **Locked 3:00 video script** — exact lines, rubric map, pre-flight, fallbacks | **Record against this** |
 | `docs/status.md` | The only file that claims to be current: gate, owners, blockers | **Update every 90 min** |
 | `docs/RUN.md` | Every way to run the product locally, including `scripts\dev.cmd` | Current |
 | `docs/decisions.md` | Append-only decision log with rationale and alternatives | Append-only |

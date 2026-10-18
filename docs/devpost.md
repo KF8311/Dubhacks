@@ -1,7 +1,7 @@
 ---
 title: Devpost draft
 type: submission
-updated: 2026-10-17
+updated: 2026-10-18
 owner: B
 ---
 
@@ -30,11 +30,11 @@ Every shopping agent demo we had seen optimised for *finding* the product. None 
 ## What it does
 
 - **Guided discovery.** Three questions (budget, use, priority) become a structured search.
-- **Multi-listing search.** Nine listings across eight merchants, including one deliberately hostile store.
+- **Multi-listing search.** Nine listings across six merchants — Amazon, Best Buy, B&H Photo, Target, Walmart, and one deliberately hostile store.
 - **Five parallel fraud checks per listing, streamed live.** Domain age via RDAP/WHOIS, TLS certificate validity, threat-list reputation, community sentiment, and scam-pattern page analysis.
 - **A 0–100 trust score** and a `trusted` / `caution` / `danger` verdict, computed by observable arithmetic — not a model.
 - **The cheapest trusted recommendation**, with the median trusted price and the saving so the user can see the trade-off.
-- **A Visa checkout** with a human-readable spending mandate, a passkey confirmation, a one-time token, and a signed receipt.
+- **A sandboxed Visa checkout** with a human-readable spending mandate, a passkey confirmation, a one-time token, and a signed receipt.
 - **A shareable trust receipt** at `/r/{share_id}` that carries the score, the checks, and what could *not* be verified.
 
 The closing beat: the agent reaches for the cheapest listing, refuses it, and explains why. In the demo, the villain is $30 cheaper than the pick and is disqualified on four independent signals.
@@ -65,7 +65,7 @@ trusted ≥ 70 · caution ≥ 40 · danger < 40
 fewer than 3 completed checks → score capped at 69
 ```
 
-**The score is deterministic, and a model never decides anything.** Gemini Flash Lite writes the clarifying questions, the recommendation narration, and on-demand check explanations — each call capped at 2.5 seconds and falling back to a template. It never scores, never selects checks, and never sees a verdict it can change. Scoring, checks, payability, and checkout are Python-only, and a build test fails if any trust, check, or payment module imports the LLM. This was a deliberate trade: a trust score you cannot re-derive from evidence is not a trust score, and judges — like users — should be able to check the math.
+**The score is deterministic, and a model never decides anything.** Gemini 3.5 Flash Lite writes the clarifying questions, the recommendation narration, and on-demand check explanations — each call capped at 2.5 seconds and falling back to a template. It never scores, never selects checks, and never sees a verdict it can change. Scoring, checks, payability, and checkout are Python-only, and a build test fails if any trust, check, or payment module imports the LLM. This was a deliberate trade: a trust score you cannot re-derive from evidence is not a trust score, and judges — like users — should be able to check the math.
 
 **The payment is a sandboxed Visa Intelligent Commerce flow.** Mandate → passkey → token → transaction → receipt, with the same state machine and idempotency a real integration needs, and visible honesty about what is simulated.
 
@@ -89,7 +89,7 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 - A score anyone can audit: every deduction names the check and the evidence.
 - A payment moment that puts the human in the loop with a passkey.
 - A receipt that turns a private checkout into a public trust signal.
-- A test suite that treats the demo script as a contract: **232 backend and 49 frontend tests**, plus an offline replay that must reproduce the live numbers exactly.
+- A test suite that treats the demo script as a contract: **264 backend, 88 frontend, and 29 bridge tests**, plus an offline replay that must reproduce the live numbers exactly.
 
 ## What we learned
 
@@ -117,7 +117,7 @@ That is how it spreads. Every agent that embeds the gate turns each checkout it 
 
 `python` · `fastapi` · `pydantic` · `uvicorn` · `httpx` · `beautifulsoup4` · `python-whois` · `pytest`
 `react` · `typescript` · `vite` · `tailwindcss` · `zustand` · `vitest`
-`gemini` · `mongodb`
+`gemini` · `mongodb` · `bun` · `spectrum-ts`
 
 ## Sandbox disclosure (required copy — keep it visible)
 
@@ -125,9 +125,11 @@ That is how it spreads. Every agent that embeds the gate turns each checkout it 
 
 ## Fill before submitting
 
-- [ ] `[LIVE URL]` — the Fly app after A's redeploy
-- [ ] `[REPO URL]`
+- [x] `https://sykes.select` — Vercel; health `{"status":"ok","db":"ok"}`
+- [x] `https://github.com/KF8311/Dubhacks`
 - [ ] `[VIDEO]` — the 3-minute path: question → stream → villain → pick → refusal → receipt
 - [ ] `[SCREENSHOT: results grid]`, `[SCREENSHOT: danger detail]`, `[SCREENSHOT: receipt]`
+- [ ] Confirm the deployment serves the merged build and a live query reports `source: serpapi`
 - [ ] A's review pass on every technical claim
-- [ ] Confirm the numbers still match `scripts/replay_offline.py`
+- [ ] Re-run the test counts against the final commit; update the numbers if the last push changes them
+- [x] Confirm the numbers still match `scripts/replay_offline.py` — verified 2026-10-18

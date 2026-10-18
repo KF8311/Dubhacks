@@ -9,7 +9,7 @@ owner: B
 
 The submission is five steps. Fields marked **\*** are required. Copy below is the final wording; it is kept in sync with `docs/devpost.md`, which is the long-form source.
 
-**Draft state at capture:** 2/5 steps done.
+**Draft state at capture:** text ready; live URL, gallery, and video pending.
 
 | Step | Tab | Status |
 |---|---|---|
@@ -61,14 +61,14 @@ Keep the **Sandbox disclosure** block at the end of the story — it is required
 
 ```
 python, fastapi, pydantic, uvicorn, httpx, beautifulsoup4, python-whois, pytest,
-react, typescript, vite, tailwindcss, zustand, vitest, gemini, mongodb
+react, typescript, vite, tailwindcss, zustand, vitest, gemini, mongodb, bun, spectrum-ts
 ```
 
 **"Try it out" links** — demo site, GitHub repo, video.
 
 | Label | Value |
 |---|---|
-| Live demo | `[LIVE URL]` — after A's redeploy |
+| Live demo | `https://sykes.select` — Vercel; `/api/health` returns `{"status":"ok","db":"ok"}` |
 | Source | `https://github.com/KF8311/Dubhacks` |
 | Sandbox notice | already in the story; do not add a second link |
 
@@ -95,7 +95,7 @@ Mostly judge-facing.
 - [x] **Visa: Reimagine Shopping**
 - [x] **[MLH] Best Use of MongoDB Atlas** — Atlas is connected and proven (D-026)
 
-Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do not look for it here.
+Note: if the live form lists MLH Atlas under both this section and Non-Sponsored Side Tracks, enter it once under Non-Sponsored Side Tracks (D-028); do not double-enter. VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do not look for it here.
 
 **\* Title Track** — exactly one, appears in the gallery.
 
@@ -105,7 +105,7 @@ Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do
 
 - [x] **SideShift — Best Startup Idea** — no build requirement; the pitch is [`devpost.md#who-pays`](devpost.md#who-pays)
 - [x] **CloudForce** — entry is a raffle ticket; Most Interesting is a judges' pick
-- [ ] **Photon 2.0** — conditional: tick only after a real text round-trips through the backend. Project `1afb123e` is blocked on `account_phone_missing`. If it slips, leave this blank.
+- [ ] **Photon 2.0** — conditional: tick only after a real text round-trips through the deployed bridge and the project's key is set. If it slips, leave this blank.
 - [ ] **VEYZL** — the $500 + lifetime-pro track; requires the audit PR evidence in `docs/veylz-audit.md`. **Not selected** (D-028).
 
 **Non-Sponsored Side Tracks** — unlimited.
@@ -122,12 +122,12 @@ Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do
 
 **GoDaddy Registry domains** — none registered; leave blank.
 
-**Technology feedback** — optional. One or two sentences each on VEYZL, Gemini, and MongoDB. Write it after the audit runs so it describes something real.
+**Technology feedback** — optional. One or two sentences each on Gemini and MongoDB. VEYZL is not selected, so do not write VEYZL feedback.
 
 **\* AI tools used this weekend** — this asks about *build* tools. Check honestly:
 
-- [ ] **Anthropic** — Claude Code
-- [ ] **Gemini** — the Gemini API is implemented in the product
+- [x] **Anthropic** — Claude Code
+- [x] **Gemini** — the Gemini API is implemented in the product
 - [ ] anything else the team actually used
 
 **\* Did you implement a generative AI model or API?** — **Yes.** Answer:
@@ -149,7 +149,6 @@ Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do
 
 - [ ] Screenshot the confirmation, drop it in `docs/handoffs/`
 - [ ] Update `docs/status.md` — G5 to 🟢, G7 to in progress
-- [ ] Claim VEYZL access if it was granted as a promo, not a purchase
 
 ---
 
@@ -159,10 +158,10 @@ The form is last because every remaining field waits on an artifact:
 
 | Field | Waits on |
 |---|---|
-| Live URL | A's Fly redeploy |
+| Live URL | done — `https://sykes.select` (Vercel) |
 | Gallery images | C's click-through |
 | Video | the team's recording |
-| VEYZL selection + audit evidence | the audit and the fix |
+| Gemini Project Number | read from AI Studio's project selector |
 | MongoDB selection | done — Atlas connected and proven (D-026) |
 
 Fill the text first (it is all drafted), attach artifacts as they land, and submit once — not incrementally.
