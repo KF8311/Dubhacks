@@ -37,21 +37,27 @@ async def search(
     *,
     provider: SearchProvider | None = None,
     catalog: list[Listing] | None = None,
+    allow_catalog_fallback: bool = True,
 ) -> tuple[list[Listing], str]:
-    """Return ``(listings, source)`` where source is ``serpapi`` or ``catalog``.
+    """Return ``(listings, source)``.
 
-    Any provider failure — missing key, timeout, HTTP error, empty payload — falls
-    back to the catalog. The demo never shows an empty grid because a third party
-    is down.
+    ``source`` is ``serpapi``, ``catalog``, or ``unavailable``.
+
+    With ``allow_catalog_fallback=True`` (the default, used by offline replays and
+    tests) any provider fault falls back to the curated catalog. A live demo sets
+    it to ``False``: the caller prefers a long wait, and then an honest failure,
+    over unrelated products appearing in the grid.
     """
     if limit <= 0:
         raise ValueError("limit must be positive")
 
     active = provider if provider is not None else SerpAPIProvider()
+    failed = False
     try:
         results = await active.search(spec, limit)
-    except Exception:  # noqa: BLE001 — any provider fault must reach the fallback
+    except Exception:  # noqa: BLE001 — any provider fault is handled below
         results = []
+        failed = True
 
     if results:
         listings, source = list(results), "serpapi"
@@ -60,8 +66,14 @@ async def search(
             return matched[:limit], source
         return listings[:limit], source
 
+    if failed and not allow_catalog_fallback:
+        return [], "unavailable"
+
     if spec.budget_min_cents is not None:
         return [], "serpapi"
+
+    if not allow_catalog_fallback:
+        return [], "unavailable"
 
     listings = catalog if catalog is not None else load_catalog()
     return _within_budget(listings, spec)[:limit], "catalog"

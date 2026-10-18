@@ -150,6 +150,47 @@ async def test_the_default_limit_keeps_the_whole_demo_catalog():
     assert "lst_vln_xm5" in {item.id for item in listings}
 
 
+async def test_live_mode_reports_unavailable_instead_of_the_catalog():
+    listings, source = await search(
+        SPEC,
+        limit=8,
+        provider=StubProvider(error=TimeoutError()),
+        catalog=load_catalog(),
+        allow_catalog_fallback=False,
+    )
+
+    assert listings == []
+    assert source == "unavailable"
+
+
+async def test_live_mode_reports_unavailable_when_the_provider_is_empty():
+    listings, source = await search(
+        SPEC,
+        limit=8,
+        provider=StubProvider([]),
+        catalog=load_catalog(),
+        allow_catalog_fallback=False,
+    )
+
+    assert listings == []
+    assert source == "unavailable"
+
+
+async def test_live_mode_keeps_a_typed_range_empty_result():
+    """A live query that matches nothing in a typed range is a real answer."""
+
+    listings, source = await search(
+        SearchSpec(query="computers", budget_min_cents=100_000, budget_max_cents=120_000),
+        limit=8,
+        provider=StubProvider([]),
+        catalog=load_catalog(),
+        allow_catalog_fallback=False,
+    )
+
+    assert listings == []
+    assert source == "serpapi"
+
+
 @pytest.mark.parametrize("limit", [0, -1])
 async def test_rejects_non_positive_limit(limit: int):
     with pytest.raises(ValueError):

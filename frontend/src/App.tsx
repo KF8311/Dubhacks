@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { AppShell } from "@/components/AppShell.tsx"
 import { EmptyState } from "@/components/EmptyState.tsx"
 import { ErrorBanner } from "@/components/ErrorBanner.tsx"
+import { Skeleton } from "@/components/ui/skeleton"
 import { CheckoutSheet } from "@/features/checkout/CheckoutSheet.tsx"
 import { ReceiptPage, ReceiptView } from "@/features/receipt/ReceiptPage.tsx"
 import type { Receipt } from "@/lib/types.ts"
@@ -58,6 +59,8 @@ function Shop() {
   const visible = listings.filter((listing) => !purgedIds.includes(listing.id))
   const best = listings.find((listing) => listing.id === recommendation?.recommended_listing_id)
   const hasDanger = visible.some((listing) => scores[listing.id]?.verdict === "danger")
+  const searching = stage === "searching" && listings.length === 0
+  const failed = stage === "failed"
 
   return (
     <AppShell>
@@ -81,8 +84,13 @@ function Shop() {
               </Button>
             </div>
           </div>
-          {error ? <ErrorBanner message={error} onDismiss={dismissError} /> : null}
-          {recommendation?.no_trusted_option ? (
+          {error && !failed ? <ErrorBanner message={error} onDismiss={dismissError} /> : null}
+          {failed ? (
+            <EmptyState
+              message={error ?? "Live search did not finish. Start over to try again."}
+              onStartOver={reset}
+            />
+          ) : recommendation?.no_trusted_option ? (
             <EmptyState message={recommendation.reason} onStartOver={reset} />
           ) : (
             <>
@@ -93,8 +101,23 @@ function Shop() {
                   budgetMaxCents={budgetMaxCents}
                 />
               ) : null}
-              {listings.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Checking listings…</p>
+              {searching ? (
+                <div
+                  role="status"
+                  aria-busy="true"
+                  className="surface-card rounded-2xl border p-6"
+                >
+                  <p className="text-lg font-medium">Searching live listings…</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Real merchants can take a few seconds. We would rather wait than show
+                    products you did not ask for.
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                </div>
               ) : null}
                 <ResultsGrid
                   listings={visible}
