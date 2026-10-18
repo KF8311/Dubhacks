@@ -257,6 +257,12 @@
   border-width: 0;
 }
 
+/* Only the recommended card is framed (the marigold ticket-best shadow).
+   Every other card sits flat on the canvas so no second outline competes. */
+.product-flip.ticket {
+  box-shadow: none;
+}
+
 .product-flip .flip-front,
 .product-flip .flip-back {
   border-left: 4px solid var(--border);

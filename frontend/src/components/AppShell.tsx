@@ -1,7 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { BrandMark } from "@/components/BrandMark.tsx"
 import { DealAlerts } from "@/features/results/DealAlerts.tsx"
-import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
 import { currentPath, go, withSearch } from "@/lib/path.ts"
 
 type Props = {
@@ -66,9 +65,6 @@ export function AppShell({ children }: Props) {
             ) : null}
           </div>
         </div>
-        <p className="mx-auto max-w-6xl px-4 pb-2 text-xs text-muted-foreground sm:px-6">
-          {SANDBOX_LABEL}
-        </p>
       </header>
       <main className="mx-auto min-w-0 max-w-6xl space-y-8 px-4 py-8 sm:px-6 sm:py-12">{children}</main>
       <footer className="border-t border-border bg-[var(--paper)]">

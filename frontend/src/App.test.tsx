@@ -34,7 +34,6 @@ test("a failed live search offers a retry instead of the catalog", () => {
 test("renders the app shell", () => {
   render(<App />)
   expect(screen.getByRole("img", { name: /sykes/i })).toBeInTheDocument()
-  expect(screen.getByText(/sandbox — simulated visa intelligent commerce flow/i)).toBeInTheDocument()
   expect(screen.getByRole("link", { name: /how it works/i })).toBeInTheDocument()
   expect(screen.getByRole("link", { name: /^about$/i })).toBeInTheDocument()
 })

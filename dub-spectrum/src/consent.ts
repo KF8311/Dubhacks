@@ -5,9 +5,10 @@ import { randomUUID } from "node:crypto";
  * Deal-alert consent.
  *
  * A shopper enters a number on the site; the bridge texts that number and asks
- * for a Y/N reply. Only a confirmed conversation may be notified. The phone
- * number itself is never written to disk or to the website's storage — the
- * bridge keeps the Spectrum space id, which is enough to send later.
+ * for a Y/N reply. Only a confirmed conversation may be notified. The number
+ * is never a stored field — the bridge keeps the Spectrum space id, which is
+ * enough to send later. An iMessage space id can itself contain the address,
+ * so the state file stays gitignored and mode 0600.
  */
 
 export type ConsentStatus = "pending" | "confirmed" | "declined" | "expired";
@@ -45,6 +46,16 @@ export function isStopReply(text: string): boolean {
   return STOP.test(text.trim());
 }
 
+/**
+ * Two space ids for the same chat can differ in their prefix but both carry
+ * the address digits (e.g. `any;-;+1415…`). Compare on the digits so an
+ * inbound reply still matches the chat the bridge opened.
+ */
+function chatKey(spaceId: string): string {
+  const digits = spaceId.replace(/\D/g, "");
+  return digits.length >= 8 ? `tel:${digits}` : spaceId;
+}
+
 type Persisted = { requests?: ConsentRequest[] };
 
 export class ConsentStore {
@@ -70,11 +81,10 @@ export class ConsentStore {
   }
 
   start(spaceId: string, now = Date.now()): ConsentRequest {
-    for (const request of this.requests.values()) {
-      if (request.spaceId === spaceId && request.status === "pending") {
-        request.status = "expired";
-      }
-    }
+    // Retrying the same number should not expire the first text the shopper
+    // just received; keep one open request per chat.
+    const existing = this.pendingFor(spaceId, now);
+    if (existing) return existing;
     const request: ConsentRequest = {
       id: randomUUID(),
       spaceId,
@@ -94,8 +104,9 @@ export class ConsentStore {
   }
 
   pendingFor(spaceId: string, now = Date.now()): ConsentRequest | undefined {
+    const key = chatKey(spaceId);
     for (const request of this.requests.values()) {
-      if (request.spaceId !== spaceId) continue;
+      if (chatKey(request.spaceId) !== key) continue;
       this.expire(request, now);
       if (request.status === "pending") return request;
     }
@@ -103,9 +114,15 @@ export class ConsentStore {
   }
 
   confirmedFor(spaceId: string): ConsentRequest | undefined {
+    const key = chatKey(spaceId);
     return [...this.requests.values()].find(
-      (request) => request.spaceId === spaceId && request.status === "confirmed",
+      (request) => chatKey(request.spaceId) === key && request.status === "confirmed",
     );
+  }
+
+  /** Drop a request whose opt-in text could not be delivered. */
+  abandon(id: string): void {
+    if (this.requests.delete(id)) this.persist();
   }
 
   newestConfirmed(): ConsentRequest | undefined {

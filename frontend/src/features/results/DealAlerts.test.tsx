@@ -4,10 +4,14 @@ import { beforeEach, describe, expect, test, vi } from "vitest"
 import { DealAlerts } from "@/features/results/DealAlerts.tsx"
 import { getPhoneOptIn, startPhoneOptIn } from "@/lib/phoneBridge.ts"
 
-vi.mock("@/lib/phoneBridge.ts", () => ({
-  startPhoneOptIn: vi.fn(),
-  getPhoneOptIn: vi.fn(),
-}))
+vi.mock("@/lib/phoneBridge.ts", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/phoneBridge.ts")>()
+  return {
+    ...actual,
+    startPhoneOptIn: vi.fn(),
+    getPhoneOptIn: vi.fn(),
+  }
+})
 
 const start = vi.mocked(startPhoneOptIn)
 const check = vi.mocked(getPhoneOptIn)
@@ -52,6 +56,18 @@ describe("DealAlerts", () => {
     await askToOptIn()
 
     expect(await screen.findByText(/no alerts will be sent/i)).toBeInTheDocument()
+  })
+
+  test("asks for the country code before calling the bridge", async () => {
+    render(<DealAlerts />)
+
+    fireEvent.change(screen.getByLabelText(/your phone number/i), {
+      target: { value: "555-0123" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /text me/i }))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/country code/i)
+    expect(start).not.toHaveBeenCalled()
   })
 
   test("surfaces a bridge failure instead of pretending the text went out", async () => {

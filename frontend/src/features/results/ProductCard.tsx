@@ -96,7 +96,7 @@ export function ProductCard({
   }
 
   const actions = (
-    <div className="flex gap-2 px-2.5 pb-2.5">
+    <div className="flex gap-2 px-2.5 pb-2.5 pt-2.5">
       {link ? (
         <a
           href={link.href}
@@ -187,7 +187,7 @@ export function ProductCard({
     <Card
       data-verdict={score?.verdict ?? "pending"}
       className={cn(
-        "product-card h-full min-w-0 gap-0 rounded-3xl",
+        "product-card h-full min-w-0 gap-0 rounded-3xl ring-0",
         !expanded ? "product-flip" : null,
         isBest && !expanded ? "ticket-best" : "ticket",
         !isBest && selected && !expanded ? "ticket-selected" : null,
