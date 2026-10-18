@@ -80,18 +80,18 @@ This is the highest-leverage block. Do not spend it discussing the name or the l
 
 ### 1:15–3:30 PM — sessions and streaming
 
-- [v ] Task 5: `SessionRegistry`, `POST /api/sessions`, `POST /{id}/answers`, `GET /{id}`.
-- [v ] Task 6: `EventBus` + `GET /api/sessions/{id}/events`; replay by `Last-Event-ID`.
-- [v ] Task 7: orchestrator skeleton, `search.started` → `listing.found` → `investigation.complete`.
-- [ ] Post the event schema in `docs/contracts.md` and tell C.
+- [x] Task 5: `SessionRegistry`, `POST /api/sessions`, `POST /{id}/answers`, `GET /{id}`.
+- [x] Task 6: `EventBus` + `GET /api/sessions/{id}/events`; replay by `Last-Event-ID`.
+- [x] Task 7: orchestrator skeleton, `search.started` → `listing.found` → `investigation.complete`.
+- [x] Post the event schema in `docs/contracts.md` and tell C.
 
 **Done when:** `curl -N` on a session shows ordered events and closes cleanly.
 
 ### 3:30–6:00 PM — orchestration and the payment gate
 
-- [ ] Task 16: fan out B's `get_checks()`, emit `check.started/completed`, call `score_investigation`, emit `listing.scored` and `recommendation.ready`.
-- [ ] Task 22: `assert_payable`, `PayabilityCode`, `create_mandate`, every 409 path tested.
-- [ ] Send C the exact checkout/confirm JSON.
+- [x] Task 16: fan out B's `get_checks()`, emit `check.started/completed`, call `score_investigation`, emit `listing.scored` and `recommendation.ready`.
+- [x] Task 22: `assert_payable`, `PayabilityCode`, `create_mandate`, every 409 path tested.
+- [x] Send C the exact checkout/confirm JSON.
 
 **Done when:** one real session streams five checks and a score; a caution listing is refused with `MERCHANT_NOT_TRUSTED`.
 

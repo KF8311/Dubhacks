@@ -11,19 +11,19 @@ One shared checklist. Personal scratch notes do not belong here.
 
 **How to use it:** Section 1 is once per machine. After that, work the timed block you are in — each block has a column per person and a proof you have to produce before moving on. Tick boxes in the commit that completes them. `docs/status.md` still wins if the two disagree.
 
-## Where we are now — 16:40 PT
+## Where we are now — 17:10 PT
 
 | Thing | State |
 |---|---|
-| `main` | `4132b67` — everything from PRs #1–#3: scaffold, frontend, session routes, SSE, `search()`, `score_investigation()`. **46 backend / 4 frontend tests pass.** |
-| `b/recommendation` | Adds `recommend()`, `Recommendation`, and the D-015 allowlist exemption. **56 backend tests pass.** Merge before G3. |
-| Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. |
-| Gates | G0 partial (health live, contracts not frozen). **G1 server side proven** — 8 `listing.found` events, closes on `investigation.complete`. Browser half is C's. |
-| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c` fully merged. |
+| `main` | Everything from PRs #1–#8: scaffold, frontend, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`. **122 backend / 4 frontend tests pass.** |
+| `merge/agent-backend` | A's Tasks 16 + 22 on top of `main` — orchestrator fan-out and the payability guard — plus the `MAX_LISTINGS` fix. **123 backend tests pass.** Open for review. |
+| Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. Checkout/confirm routes (Task 23) not built yet. |
+| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 server side proven** — 9 `listing.found`, 45 `check.completed`, 9 `listing.scored`, one `recommendation.ready`. Browser halves are C's. |
+| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend` fully merged. |
 
-**Before anyone starts:** merge **PR #3**. Branching from today's `main` gives you no session routes and no scoring engine. Every block below assumes PR #3 is merged.
+**Before anyone starts:** merge **`merge/agent-backend`**. Branching from today's `main` gives you no orchestrator fan-out and no payability guard. Every block below assumes it is merged.
 
-**Recovery stance:** G1 was 45 minutes late, not lost. The proof exists; it just needs to land on `main`. Do not skip a block's proof to catch up — the proofs are the gate.
+**Recovery stance:** G1 was 45 minutes late, not lost. Do not skip a block's proof to catch up — the proofs are the gate.
 
 ---
 
@@ -38,7 +38,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **46 passed** on `main` (**56** with `b/recommendation` merged); `npx vitest run` → 4 passed. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **122 passed** on `main` (**123** with `merge/agent-backend`); `npx vitest run` → 4 passed. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -68,13 +68,13 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | ✅ **Done on PR #3** — session routes, SSE, orchestrator, event bus. Remaining: have the orchestrator call `run_checks()` then `score_investigation()` per listing instead of the current `checks=[]`, and parse a budget out of free text (`"under $300"` currently yields `budget_max_cents: null`). |
-| **B** | ✅ **Task 4** — `search(spec, limit)` in `app/search/service.py`, catalog fallback on any provider fault, budget filter. ✅ **Task 14** — `score_investigation()` with golden tests. ✅ **Task 15** — `recommend()` with the D-015 allowlist exemption. Next: **Task 9** domain age (the villain's headline reason), then SSL and page flags. |
+| **A** | ✅ **Done** — session routes, SSE, orchestrator, event bus (PR #3). ✅ **Task 16** — orchestrator calls `run_checks()` then `score_investigation()` per listing with bounded concurrency, emits `check.started/completed`, `listing.scored`, `recommendation.ready`. Remaining: parse a budget out of free text (`"under $300"` currently yields `budget_max_cents: null`). |
+| **B** | ✅ **Task 4** — `search(spec, limit)` in `app/search/service.py`, catalog fallback on any provider fault, budget filter. ✅ **Task 14** — `score_investigation()` with golden tests. ✅ **Task 15** — `recommend()` with the D-015 allowlist exemption. ✅ **Tasks 9–13** — all five checks implemented and tested. |
 | **C** | Point `frontend/src/lib/api.ts` at `VITE_API_BASE_URL`. Replace the mock listings with `listing.found` events from the SSE stream. Keep the mock path behind `?mock=1` so a dead backend never kills the demo. |
 
-**Proof:** `curl -N http://127.0.0.1:8000/api/sessions/<id>/events` shows `seq` incrementing and 8 `listing.found` events; the same cards render in the browser.
+**Proof:** `curl -N http://127.0.0.1:8000/api/sessions/<id>/events` shows `seq` incrementing and 9 `listing.found` events; the same cards render in the browser.
 
-**Server-side proof already captured (PR #3):** 8 `listing.found` events, `source: "catalog"`, stream closes on `investigation.complete`. What is still unproven is the **browser** half — that is C's step.
+**Server-side proof captured:** 9 `listing.found` events (8 trusted + villain), `source: "catalog"`, stream closes on `investigation.complete`. What is still unproven is the **browser** half — that is C's step.
 
 **If late:** ship the snapshot route first (`GET /api/sessions/{id}` with listings) and stream second. The browser only needs one of them to pass this gate.
 
@@ -84,11 +84,13 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Orchestrator: for each listing call `run_checks()`, then `score_investigation()`, emit `check.started`, `check.completed`, `listing.scored`. Bounded concurrency — do not open 45 sockets at once. |
-| **B** | **Task 9** domain age (RDAP → WHOIS), **Task 10** SSL, **Task 13** URL validation + page flags. **Task 11** against the static denylist if no Safe Browsing key; record the key status in `status.md`. |
+| **A** | ✅ **Done** — for each listing calls `run_checks()`, then `score_investigation()`, emits `check.started`, `check.completed`, `listing.scored`. `CHECK_CONCURRENCY = 8` bounds the fan-out. |
+| **B** | ✅ **Task 9** domain age (RDAP → WHOIS), ✅ **Task 10** SSL, ✅ **Task 13** URL validation + page flags, ✅ **Task 11** Safe Browsing with the static denylist (no key), ✅ **Task 12** Reddit sentiment. |
 | **C** | `CheckRow` consumes `check.completed` and upserts by `(listing_id, check_id)`. Skipped renders as "could not verify" — never a green tick. Danger card must name the failed checks. |
 
 **Proof:** browser — `premium-audio-deals.shop` shows `danger` with at least domain age and page flags named, and at least one big merchant shows `trusted`.
+
+**Server-side proof captured:** 45 `check.completed` across 9 listings; `premium-audio-deals.shop` scores `0 / danger` on `LOCAL_DENYLIST` plus domain age and Reddit; the eight safe listings are `trusted`.
 
 **If late:** cut page flags (Task 13) before SSL or domain age. Three checks still clears the coverage floor.
 
@@ -98,11 +100,13 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Emit `recommendation.ready`; expose the recommendation in the snapshot. Wire `POST /api/demo/reset` to clear the session registry. |
-| **B** | ✅ **Task 15** `recommend()` done — eligible = trusted ∧ (≥70 ∨ allowlisted) ∧ confidence ≥0.6 (D-015); median of eligible; `no_trusted_option` names the best near-miss. Remaining: **Task 12** Reddit sentiment if time. |
+| **A** | ✅ **Done** — emits `recommendation.ready`, exposes the recommendation in the snapshot. Remaining: wire `POST /api/demo/reset` to clear the session registry. |
+| **B** | ✅ **Task 15** `recommend()` done — eligible = trusted ∧ (≥70 ∨ allowlisted) ∧ confidence ≥0.6 (D-015); median of eligible; `no_trusted_option` names the best near-miss. ✅ **Task 12** Reddit sentiment. |
 | **C** | Recommended-pick banner plus a "why this one" panel: median price, savings, which checks each candidate passed. Empty-state for `no_trusted_option`. |
 
 **Proof:** browser — the cheapest *trusted* listing is the pick, the villain's lower price is visibly rejected with a reason, and savings matches the median minus the pick.
+
+**Server-side proof captured:** pick `lst_tgt_bsp` ($179.99), median `$374.49`, savings `$194.50`; `lst_vln_xm5` is cheaper but `danger`, so it is not eligible.
 
 **If late:** cut Reddit (Task 12). The recommendation math does not depend on it.
 
@@ -162,16 +166,20 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] B: **Task 14** — `score_investigation()` with fatal rules, coverage cap, golden tests — villain `0 / danger`, hero `100 / trusted` — 17 tests
 - [x] B: **Task 15** — `recommend()` with `Recommendation`, median/savings, `no_trusted_option` — 9 tests; allowlisted listings are eligible at score 0 (D-015)
 - [x] A: session routes, SSE stream, orchestrator, event bus — 7 integration tests (PR #3)
-- [x] G1 server proof: 8 `listing.found` events, `source: "catalog"`, closes on `investigation.complete`
+- [x] A: **Task 16** — orchestrator fan-out (`run_checks` → `score_investigation` → `recommend`), per-listing `check.started/completed`, bounded concurrency
+- [x] A: **Task 22** — `assert_payable`, `PayabilityCode` 409, `create_mandate`, `MandateDraft` — 10 tests
+- [x] B: **Task 9** domain age (RDAP → WHOIS) — 9 tests; **Task 10** SSL — 10 tests; **Task 11** Safe Browsing + denylist — 6 tests; **Task 12** Reddit sentiment — 8 tests; **Task 13** URL safety + page flags — 23 tests
+- [x] Fix: `MAX_LISTINGS` was 8, silently dropping the ninth catalog entry (the villain). Raised to 9 with a regression test.
+- [x] G1/G2/G3 server proofs: 9 `listing.found`, 45 `check.completed`, 9 `listing.scored`, one `recommendation.ready`; villain `0 / danger`, pick `lst_tgt_bsp`
 
 ## 6. Gate board
 
 | Gate | Due | State | Owner |
 |---|---|---|---|
 | G0 Contracts frozen + health | Sat 13:15 | 🟡 health live, `Question` shape needs A's sign-off | A |
-| G1 Listings to browser | Sat 15:30 | 🟡 server side proven on PR #3; browser half is C's step | A + B + C |
-| G2 Investigation + score | Sat 18:00 | ⬜ | B |
-| G3 Recommendation | Sat 19:30 | ⬜ | B |
+| G1 Listings to browser | Sat 15:30 | 🟡 server side proven (9 listings); browser half is C's step | A + B + C |
+| G2 Investigation + score | Sat 18:00 | 🟡 server side proven (45 checks, villain `danger`); browser pending | A + B |
+| G3 Recommendation | Sat 19:30 | 🟡 server side proven (pick + median + savings); browser pending | A + B |
 | G4 Checkout → receipt | Sat 21:00 | ⬜ | A + C |
 | G5 Devpost draft | Sat 22:30 | ⬜ | B |
 | G6 Freeze | Sun 02:00 | ⬜ | all |
@@ -181,7 +189,8 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Blocker | Owner | Impact |
 |---|---|---|
-| No session routes | A | G1 cannot pass; C is on mock data |
+| Task 23 checkout routes unbuilt | A | G4 cannot be reached over HTTP; payability logic itself is tested |
+| Browser still on mock data | C | G1/G2/G3 remain server-side only until the stream is wired |
 | Contracts not frozen | A | `Question` shape is a guess; cheap to confirm, expensive to discover at 21:00 |
 | SerpAPI key | A | Catalog only (D-011). Not blocking. |
 | Safe Browsing key | B | Static denylist with `source="unavailable"`. Not blocking. |

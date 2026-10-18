@@ -7,4 +7,4 @@ SSL_S = 4.0
 SAFE_BROWSING_S = 3.0
 REDDIT_S = 4.0
 PAGE_FLAGS_S = 6.0
-MAX_LISTINGS = 8
+MAX_LISTINGS = 9  # the demo catalog has 8 safe listings plus the villain

@@ -159,13 +159,119 @@ Ordering guarantee:
 
 Client: dedupe by `seq`; upsert checks by `(listing_id, check.id)`; ignore unknown `type` values; close on `investigation.complete`.
 
+**Live for C (Tasks 6/7/16):** After answers the stream is:
+
+`search.started` → `listing.found` → `check.started` / `check.completed` → `listing.scored` → `recommendation.ready` → `investigation.complete` (close).
+
+Allowlisted merchants emit `source: "allowlist"` skipped checks and `verdict: "trusted"`. A caution listing is not payable (`MERCHANT_NOT_TRUSTED`).
+
+Example `listing.found` data:
+
+```json
+{
+  "type": "listing.found",
+  "seq": 4,
+  "ts": "2026-10-17T22:40:00.000Z",
+  "session_id": "ses_abc",
+  "listing": {
+    "id": "lst_...",
+    "title": "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
+    "price_cents": 32800,
+    "currency": "USD",
+    "merchant_name": "Best Buy",
+    "merchant_domain": "bestbuy.com",
+    "image_url": "",
+    "product_url": "https://www.bestbuy.com/site/sony-wh-1000xm5/6505727.p",
+    "source": "catalog"
+  },
+  "rank": 1
+}
+```
+
 ## `POST /api/checkout` → 201 or 409
 
-Client sends only `session_id`, `listing_id`, and a mandate cap. Server re-derives price, merchant, and score.
+**For C — request (Task 23 wires the HTTP route; this JSON is frozen):**
+
+```json
+{
+  "session_id": "ses_abc",
+  "listing_id": "lst_1",
+  "mandate": {"max_amount_cents": 30000, "currency": "USD", "expires_in_seconds": 600}
+}
+```
+
+Client sends only IDs and a cap. Server re-derives price, merchant, and score.
+
+**201 response:**
+
+```json
+{
+  "checkout_id": "chk_abc",
+  "stage": "awaiting_passkey",
+  "amount_cents": 24900,
+  "currency": "USD",
+  "merchant": {"name": "Best Buy", "domain": "bestbuy.com"},
+  "mandate": {
+    "id": "man_abc",
+    "max_amount_cents": 30000,
+    "merchant_domain": "bestbuy.com",
+    "expires_at": "2026-10-17T19:10:00Z",
+    "single_use": true
+  },
+  "trust_snapshot": {
+    "score": 92,
+    "verdict": "trusted",
+    "confidence": 0.92,
+    "investigation_id": "inv_abc",
+    "scoring_version": "1.0"
+  },
+  "passkey_challenge": {
+    "challenge": "b64...",
+    "rp_id": "sniff.vercel.app",
+    "timeout_ms": 60000,
+    "mode": "simulated"
+  },
+  "sandbox_label": "Sandbox — simulated Visa Intelligent Commerce flow.",
+  "expires_at": "2026-10-17T19:05:00Z"
+}
+```
 
 409 codes: `MERCHANT_NOT_TRUSTED`, `SCORE_TOO_LOW`, `COVERAGE_TOO_LOW`, `MERCHANT_MISMATCH`, `AMOUNT_EXCEEDS_CAP`, `MANDATE_EXPIRED`, `ALREADY_PAID`, `INVESTIGATION_STALE`.
 
+A caution or danger listing is always `MERCHANT_NOT_TRUSTED`. Payability is enforced in `assert_payable` now; the HTTP route is Task 23.
+
 ## `POST /api/checkout/{checkout_id}/confirm` → 200 or 402
+
+**Request:**
+
+```json
+{
+  "passkey_assertion": {"credential_id": "mock_cred_abc", "client_data": "mock"},
+  "idempotency_key": "uuid"
+}
+```
+
+**200 response:**
+
+```json
+{
+  "checkout_id": "chk_abc",
+  "status": "captured",
+  "transaction": {
+    "id": "txn_abc",
+    "status": "approved",
+    "amount_cents": 24900,
+    "currency": "USD",
+    "network": "visa",
+    "token_last4": "4242",
+    "processor": "mock-vic",
+    "mode": "sandbox"
+  },
+  "receipt_id": "rcp_abc",
+  "receipt_url": "/r/shr_abc",
+  "sandbox_label": "Sandbox — simulated Visa Intelligent Commerce flow."
+}
+```
 
 `passkey_assertion.client_data == "fail"` → 402 `PAYMENT_DECLINED`. Confirm is idempotent.
 
