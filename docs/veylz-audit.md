@@ -3,7 +3,7 @@ title: VEYZL audit
 type: audit
 updated: 2026-10-17
 owner: A
-status: finding reproduced and fixed; a clean re-run report is still owed
+status: app installed, check runs on PRs and currently fails; finding 1 fixed, report not yet read
 ---
 
 # VEYZL audit
@@ -14,12 +14,15 @@ Task 29 requires a real audit that finds a missing control, the fix, and evidenc
 
 ## Status
 
-**The audit ran.** Two hosted API audits were captured against `POST https://sniff-visa-dubhacks.fly.dev/api/checkout`:
+**The audit ran, and the GitHub App is now installed.** The app posts a `VEYZL Audit` status check on every pull request. On [PR #26](https://github.com/KF8311/Dubhacks/pull/26) it posted audit [`7f0383c4-d6e1-43c3-bcbf-4f6c85e3dc5d`](https://veyzl.ai/projects/e2d8a093-4b58-489b-b212-9272b39391a6/audits?audit=7f0383c4-d6e1-43c3-bcbf-4f6c85e3dc5d&report=issues) — **failed**. The report detail sits behind the portal login, so the finding list has not been read yet. The check is advisory on the free plan and is **not** a required status check, so it does not block merges.
+
+Three hosted API audits were captured against `POST https://sniff-visa-dubhacks.fly.dev/api/checkout`:
 
 | Audit id | Result | Cause |
 |---|---|---|
 | `7c75aa41-393b-4c38-bdf4-c45263851ea1` | `overall_passed: false` — 20/20 probes returned **error** | Every probe 422'd: `VALIDATION_ERROR — mandate is not a dictionary` |
 | `6e3eb82c-9305-4503-a014-ea9833e97ca4` | reached the handler, then failed | The auditor expected `choices[0].message.content`; the response was `{refused, text}` |
+| `7f0383c4-d6e1-43c3-bcbf-4f6c85e3dc5d` | posted by the GitHub App on PR #26 — **failed** | Not read yet; needs the portal. The first candidate is the deployed build being older than the guard fix |
 
 Two configuration facts drove the result:
 
@@ -120,5 +123,6 @@ Keep the Fly URL, or switch the endpoint to `POST /api/sessions` with body `{"qu
 - [x] One finding reproduced and fixed (D-023)
 - [x] Tests pin the fix
 - [x] This doc names the finding, the fix, and the evidence
-- [ ] A clean re-run shows the fix, and the check run is linked on a PR
+- [x] The `VEYZL Audit` check runs on a PR and is linked here (PR #26, audit `7f0383c4…`) — **it fails**
+- [ ] The failing report is read in the portal, the findings are reproduced, and a clean re-run passes
 - [ ] `docs/status.md` updated

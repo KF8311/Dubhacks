@@ -59,7 +59,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Public deploy; smoke the public URL; **VEYZL audit + fix (D-020, D-023)** | 18:25 | 22:30 | ✅ Search/budget work merged at 19:40. ✅ **VEYZL audit ran** (two hosted reports) and finding 1 — no guard on the generative path — is fixed with five tests, merged 22:49 PT. ✅ **Vercel services path** added. ⬜ A public deploy (Fly or Vercel) and a **clean VEYZL re-run** are the last A items |
+| A | Public deploy; smoke the public URL; **VEYZL audit + fix (D-020, D-023)** | 18:25 | 22:30 | ✅ Search/budget work merged at 19:40. ✅ **VEYZL audit ran** (three reports) and finding 1 — no guard on the generative path — is fixed with five tests, merged 22:49 PT. ✅ **Vercel services path** added. ✅ **The VEYZL GitHub App is installed** and posts `VEYZL Audit` on PRs. ⬜ That check **fails** on PR #26 and the report has not been read in the portal; a public deploy is still owed |
 | C | Browser screenshots — results grid, danger detail, receipt — plus one recording | 18:25 | 22:30 | ✅ Block 6 UI merged (`cf24bdb`, `3ceffbc`): 390px reflow (overflow 0), `api_key` redaction, immersive merchant resolution, offline catalog pinning. ⬜ Screenshots and video are the last G5 items |
 | B | Devpost, final numbers, audit review | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, technical-claims handoff, audit scope + `/api/demo/reset` reproduction, repository review first pass (`8c89260`); ⬜ fill the form as A and C land artifacts |
 
@@ -115,7 +115,7 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 |---|---|---|
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
 | Fly serves the pre-merge build | **yes** | Redeploy from `main`; the Vercel path is merged but has never been exercised |
-| VEYZL audit produced no usable report | **yes** | Two runs, both all-error or wrong response shape. The guard and the response shape are fixed (D-023); a clean re-run is still owed. Do not claim the side track until one exists |
+| VEYZL audit produced no usable report | **yes** | Two hosted runs were all-error or wrong response shape; the guard and shape are fixed (D-023). The GitHub App is now installed and posts `VEYZL Audit` on PRs, but its report on PR #26 **failed** and has not been read in the portal. Do not claim the side track, and do not re-add the check as required, until it passes |
 | A failed live search silently shows the demo catalog | **changed 22:49** | The orchestrator now falls back to `load_catalog()` on a search error and emits `SEARCH_FAILED`. Good for the demo, but do not describe a fallback render as live search |
 | ~~`main` protected by a required check nothing reports~~ | **was yes — resolved 20:22** | The `VEYZL Audit` requirement was dropped from the repo ruleset, PR #20 was rebase-merged, and the branch deleted. **Do not re-add the check until the VEYZL GitHub App is installed** — a local run posts nothing, and re-adding it early blocks every merge again. |
 | SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
