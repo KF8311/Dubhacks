@@ -55,8 +55,22 @@ def _get_investigation(session_id: str, listing_id: str) -> Investigation | None
     return registry.investigation_for(session_id, listing_id)
 
 
+# The code is the machine contract; the message is what the checkout sheet shows.
+PAYABILITY_MESSAGES = {
+    "MERCHANT_NOT_TRUSTED": "This merchant did not pass the trust checks.",
+    "SCORE_TOO_LOW": "This merchant's trust score is below the payment threshold.",
+    "COVERAGE_TOO_LOW": "Too few trust checks completed to authorize payment.",
+    "MERCHANT_MISMATCH": "The mandate is for a different merchant.",
+    "AMOUNT_EXCEEDS_CAP": "The price is above the mandate cap.",
+    "MANDATE_EXPIRED": "The mandate expired before payment.",
+    "ALREADY_PAID": "This checkout was already paid.",
+    "INVESTIGATION_STALE": "The investigation is stale; rerun it before paying.",
+}
+
+
 def _raise_payability(exc: PayabilityError) -> None:
-    raise AppError(exc.code.value, exc.code.value, status_code=409, details=exc.details)
+    message = PAYABILITY_MESSAGES.get(exc.code.value, exc.code.value)
+    raise AppError(exc.code.value, message, status_code=409, details=exc.details)
 
 
 def _confirm_payload(checkout: Checkout) -> dict:
