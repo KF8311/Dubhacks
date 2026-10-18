@@ -13,15 +13,15 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 18:40 PT
+## Where we are now — 19:00 PT (after the Block 4 B merge)
 
 | Thing | State |
 |---|---|
-| `main` | `06a9e3c` — **everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, the live frontend, and the offline replay. **146 backend / 9 frontend tests pass**, build clean. |
-| Follow-on branch | **None. `main` is the source of truth** — branch from it for the next block. |
+| `main` | **Everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, the live frontend, the offline replay, and the frozen refusal paths. **146 backend / 9 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
+| Follow-on branch | **None. `main` is the source of truth** — branch from it for Block 4 (`a/checkout`, `c/checkout-ui`). `scratch/integration` is stale; do not reuse it. |
 | Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. Checkout/confirm (Task 23) not built yet. |
 | Frontend | Live by default. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI from `data/mock-session.json`. |
-| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** G4 is next. |
+| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** G4 needs Task 23 + the checkout UI; B's guard and refusal tests are ready. |
 | Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup` all merged into `main`. |
 
 **Before anyone starts:** `git checkout main && git pull`. There is nothing left to merge — if you are on an older branch, rebase onto `main` before writing code.
@@ -213,15 +213,25 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page flags.
 
-## 9. Next block — start here
+## 9. Block 4 — G4 checkout · start here
 
-**State:** `main` is fully merged and green. Nothing is blocked on a merge; the only thing between us and G4 is Task 23.
+**State:** everything through G3 is merged and green, and B's half of Block 4 (the refusal paths and the offline replay) is in this merge. G4 is blocked on exactly two things: **Task 23 checkout routes (A)** and **the checkout/receipt screens (C)**.
 
 **First 15 minutes of the block, every person:**
 
 1. `git checkout main && git pull`
-2. Run your baseline: backend `pytest -q` → **146 passed**; frontend `npx vitest run` → **9 passed**.
+2. Run your baseline: backend `pytest -q` → **146 passed**; frontend `npx vitest run` → **9 passed**; `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0.
 3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
+
+**Your next action, in one line:**
+
+| Owner | Next action | Unblocks |
+|---|---|---|
+| **A** | Build `POST /api/checkout` + `POST /api/checkouts/{id}/confirm` on `assert_payable` | C, G4 |
+| **C** | Click through the live flow once and screenshot it, then build the checkout sheet against A's JSON | G1–G3 proof, G4 |
+| **B** | Task 29 VEYZL audit + `README.md`; Devpost technical section | G5 |
+
+**Handoff contract for A → C (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`. C renders `code` and `message` verbatim; the codes and the guard are frozen in `backend/app/payments/payability.py` and `docs/contracts.md` §409. If the JSON shape has to change, say it in the channel before committing.
 
 ### A — checkout backend (G4's critical path)
 
@@ -243,14 +253,22 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 **Proof:** click a trusted listing → passkey → receipt; then click the villain → visible refusal with the server's code.
 
-### B — determinism and the Devpost
+### B — audit, README, Devpost (Block 4 half is done)
 
-1. ✅ **Golden test done** — the villain through the real checks → `danger` → excluded from `recommend()` even when it is the cheapest listing.
-2. ✅ **Task 28 done** — `scripts/replay_offline.py` from repo root: `backend/.venv/Scripts/python.exe scripts/replay_offline.py`. Prints the live demo numbers and exits 1 if they drift. Run it before every rehearsal.
-3. Task 29 VEYZL audit + `README.md` (setup, env vars, demo script, sandbox disclosure).
-4. Devpost technical section: five checks, scoring formula with these real numbers, payability rule, sandbox label.
+Done in this merge:
 
-**Proof:** offline replay and the live run print identical stats; the audit file names one real finding.
+1. ✅ **Refusal paths frozen** — `tests/integration/test_refusal_paths.py` runs the real demo session through `assert_payable`: hero payable, villain `MERCHANT_NOT_TRUSTED`, cap `AMOUNT_EXCEEDS_CAP`, stale `INVESTIGATION_STALE`. `tests/unit/test_payability.py` adds danger, low confidence, missing investigation, currency, the allowlist exemption, and the 30-minute boundary.
+2. ✅ **No fixture text reaches an LLM** — `tests/unit/test_no_llm_path.py` fails if any module imports a generative client or reads the Gemini key outside config.
+3. ✅ **Task 28** — `scripts/replay_offline.py`; run it before every rehearsal. Exit 1 means the demo drifted.
+4. ✅ **Villain golden test** — real checks → `danger` → excluded from `recommend()` even when cheapest.
+
+Remaining in Block 4:
+
+5. Task 29: connect the repo to VEYZL, pick one real finding, fix it, write `docs/veylz-audit.md`.
+6. `README.md`: setup, env vars, demo script, sandbox disclosure, the "why skipped ≠ passed" explanation.
+7. Draft the Devpost technical section now (five checks, scoring formula with the real numbers, payability rule, sandbox label); fill the URL and screenshots after G4.
+
+**Proof:** offline replay exits 0; the audit file names one real finding; the Devpost draft exists with the sandbox disclosure.
 
 ### Demo script (rehearse exactly this)
 
@@ -268,8 +286,9 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 **Gate check before each rehearsal:**
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q        # 123 passed
-cd frontend && npx vitest run && npm run build             # 9 passed, clean
+cd backend && .venv/Scripts/python.exe -m pytest -q                     # 146 passed
+cd frontend && npx vitest run && npm run build                          # 9 passed, clean
+backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```
 
 **Never cut:** scoring (Task 14), the fixtures, the golden tests, the sandbox label, the payability gate, the refusal demo.

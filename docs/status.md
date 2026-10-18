@@ -11,19 +11,19 @@ This is the only file that claims to be current.
 
 | Field | Value |
 |---|---|
-| Gate | **G1 server side and browser wiring are both in place**; G2 and G3 are proven server-side and render through the live SSE client. Next gate is G4 checkout. |
+| Gate | **G1–G3 in place**; G4 is blocked on Task 23 (checkout routes) and the checkout UI. B's refusal paths and the offline replay are merged. |
 | Health | https://sniff-visa-dubhacks.fly.dev/api/health (serves the pre-merge build; redeploy in Block 5) |
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
 | Tests | Backend **146 passed**. Frontend **6 files / 9 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
-| Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is the next build. |
+| Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is the only missing route for G4. |
 | Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
 | Blockers | Task 23 checkout routes; Fly serves the pre-merge build |
-| Branches | **`main` is `06a9e3c` and fully merged** (PRs #1–#11). No follow-on branch is required; branch from `main` for the next block. |
+| Branches | **`main` carries everything through Block 4 for B** (PRs #1–#12). No follow-on branch is required; branch from `main` for Block 4 (`a/checkout`, `c/checkout-ui`). `scratch/integration` is stale. |
 
-Last updated: 2026-10-17 18:40 PT
+Last updated: 2026-10-17 19:00 PT
 
 ## Gate board
 
@@ -33,7 +33,7 @@ Last updated: 2026-10-17 18:40 PT
 | G1 Listings stream to browser | Sat 15:30 | 🟢 server proof + live `EventSource` client wired (browser screenshot still owed) | 9 `listing.found`; `frontend/src/lib/sse.ts` + `useSessionStream` |
 | G2 Full investigation, 5 checks, score | Sat 18:00 | 🟢 server proof; cards render `check.completed` | 45 `check.completed`, villain `0 / danger`, 8 trusted |
 | G3 Recommendation + best pick | Sat 19:30 | 🟢 server proof; `BestPick` + best-pick ring in the grid | pick `lst_tgt_bsp` $179.99, median $374.49, savings $194.50 |
-| G4 Checkout → passkey → receipt | Sat 21:00 | ⬜ | Needs Task 23 (A) and C's checkout sheet |
+| G4 Checkout → passkey → receipt | Sat 21:00 | ⬜ | Needs Task 23 (A) and C's checkout sheet. B's refusal codes and guard are merged. |
 | G5 Devpost draft submitted | Sat 22:30 | ⬜ | Devpost confirmation |
 | G6 Feature freeze | Sun 02:00 | ⬜ | Team agreement |
 | G7 Final submission | Sun 09:50 | ⬜ | Devpost confirmation |
