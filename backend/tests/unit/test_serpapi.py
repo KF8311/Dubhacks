@@ -183,6 +183,53 @@ def test_google_only_results_follow_the_immersive_store(monkeypatch):
     assert listings[0].merchant_domain == "us.puma.com"
 
 
+def test_client_uses_the_provider_timeout(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.core.timeouts import SEARCH_S
+    from app.search.serpapi import SerpAPIProvider
+
+    seen: list[float | None] = []
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {
+                "shopping_results": [
+                    {
+                        "title": "Keychron V5 Max",
+                        "product_link": "https://www.keychron.com/products/v5-max",
+                        "extracted_price": 99.0,
+                    }
+                ]
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args
+            seen.append(kwargs.get("timeout"))
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, *args, **kwargs):
+            del args, kwargs
+            return FakeResponse()
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(SearchSpec(query="mechanical keyboard"))
+    )
+    assert seen == [SEARCH_S - 1.0]
+
+
 def test_source_hostname_is_used_when_product_link_is_google():
     payload = {
         "shopping_results": [

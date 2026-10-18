@@ -84,6 +84,8 @@ At the removed tip the docs claimed **204 backend tests and 39 frontend tests** 
 
 **Recommendation: test and adopt.** Small, isolated, and has a test. The trade-off is explicit: a thin live result set is replaced by the catalog rather than shown as-is.
 
+**Update 2026-10-18:** the "slow query shows the catalog" half of this problem was a separate bug, fixed by the SerpAPI timeout change and then by **D-025** (`docs/decisions.md`). The client had hardcoded a 2.5 s timeout; it now uses the provider timeout, and live mode never falls back to the catalog at all — a slow query waits up to ~22 s and then shows a retry state. That makes this guard's fallback-to-catalog behaviour exactly what D-025 forbids, so adopt it only as a *thin-result* notice, never as a catalog swap.
+
 ### C. Health diagnostics
 
 **Commits:** `ab33e7e`, `1562772`.

@@ -212,3 +212,11 @@ Format:
 - **Why:** Typing "1000 to 1200" was stored as `Answer.text` and ignored (`option_id` only). The remaining filter was max-only, so $200 computers still counted as in budget.
 - **Alternatives considered:** Treat the first number as a max (still shows $200); keep D-022 unfilter on ranges (same $200 junk after a miss).
 - **Consequences:** `SearchSpec.budget_min_cents` is additive. A typed range that matches nothing can yield an empty grid rather than cheap off-range listings. Preset `Under $150` / `$300–$600` chips are unchanged.
+
+## D-025 — Live search waits, then fails honestly; it never swaps in the catalog
+- **Date:** 2026-10-18
+- **Status:** accepted; supersedes the catalog half of D-004 and D-011
+- **Decision:** In live mode the orchestrator calls `search(..., allow_catalog_fallback=False)`. `SEARCH_S` is 11 s (was 5 s) and the SerpAPI client uses `SEARCH_S - 1` = 10 s. If both attempts fail, the session publishes `session.error` `SEARCH_UNAVAILABLE` (recoverable `false`), moves to the `failed` stage, and shows a retry — no catalog listings. Offline (`OFFLINE=1`) is unchanged and still uses the curated catalog.
+- **Why:** A demo answer such as `$300-$600` adds price bounds to the SerpAPI request. When a cold request passed the old 4 s client timeout, the grid silently filled with unrelated headphone-catalog products. A longer spinner followed by "try again" is honest; unrelated products look like a bug on stage.
+- **Alternatives considered:** Keep the catalog fallback but label it loudly (still shows products the user did not ask for); raise only the client timeout without changing the fallback (still swaps on failure); remove the retry (one transient SerpAPI fault would end the demo).
+- **Consequences:** Worst case is two 11 s attempts (~22 s) before the failure state; warm queries return in under a second. `docs/RUN.md` and `docs/status.md` describe the new failure state. The service default remains `allow_catalog_fallback=True` for offline replay and unit tests.

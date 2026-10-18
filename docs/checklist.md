@@ -13,14 +13,14 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **The point: work until 04:00 PT, then freeze.** Nothing new after 04:00. The morning block is deploy and submit only.
 
-## Where we are now — Sun 01:55 PT · kept build `96cf47f` + docs
+## Where we are now — Sun 02:10 PT · kept build `96cf47f` + docs + search timeout fix
 
 | Thing | State |
 |---|---|
-| **Code** | **`96cf47f`** — the build that actually searches what you type: live SerpAPI search, curated-catalog fallback, five checks, deterministic scoring, SSE, recommendation, checkout → passkey → receipt, Gemini copy with template fallback. |
+| **Code** | The build that actually searches what you type: live SerpAPI search (no catalog substitution in live mode, D-025), five checks, deterministic scoring, SSE, recommendation, checkout → passkey → receipt, Gemini copy with template fallback. |
 | **Decision** | The 20 commits after `96cf47f` were removed from `main`. They are parked, not deleted: [`docs/ideas-after-96cf47f.md`](ideas-after-96cf47f.md) lists every one and where it still lives. |
 | **Git** | **`main` is restored** — [PR #34](https://github.com/KF8311/Dubhacks/pull/34) merged as `2d53ca1`; the tree is `96cf47f` plus the archive and docs commits. The 20 removed commits stay reachable on `backup/main-post-96cf47f` and the `origin/restore/*` branches. |
-| **Tests** | Backend **204 passed**. Frontend **39 passed**, `npm run build` clean. [`scripts/replay_offline.py`](../scripts/replay_offline.py) exits 0 with the frozen numbers. Docs that say 187/34 are stale (B's task). |
+| **Tests** | Backend **218 passed**. Frontend **49 passed**, `npm run build` clean. [`scripts/replay_offline.py`](../scripts/replay_offline.py) exits 0 with the frozen numbers. Docs that say 187/34 are stale (B's task). |
 | **Run it** | `.\scripts\dev.cmd` — backend + frontend in one command. Modes and troubleshooting: [`docs/RUN.md`](RUN.md). |
 | **Deploy** | **Fly is the path for this commit** (`fly.toml`, `backend/Dockerfile` copies `data/`). A Vercel Git deploy of this commit is broken — it ships no data. Do not submit `sykes.select`; it runs the removed code. |
 | **Health note** | With `MONGODB_URI` unset, `/api/health` answers `degraded` by design. Read it as "optional store off", not "broken". |
@@ -40,7 +40,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python.exe -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline before you change anything: **204 backend**, **39 frontend**, `npm run build` clean, replay exit 0. If your baseline differs, stop and ask.
+- [ ] Baseline before you change anything: **218 backend**, **49 frontend**, `npm run build` clean, replay exit 0. If your baseline differs, stop and ask.
 - [ ] Start the stack with `.\scripts\dev.cmd` and click the demo path once.
 
 ## 2. Universal — every commit
@@ -75,12 +75,8 @@ Five-minute sync at 02:45 and 03:45: each person says *done / blocked / next*, o
 ### A — search quality, contracts, deploy readiness
 
 1. **Baseline.** Run the suites and replay. Confirm `OFFLINE` is not set in your shell.
-2. **Fix thin live search — top priority.** This is the "it only showed one item" complaint. In [`backend/app/search/service.py`](../backend/app/search/service.py) the live branch accepts any non-empty result set; change it to fall back to the catalog when the live result count is below `min(3, limit)`, exactly as parked commit `c55ce29` does:
-   ```bash
-   git show c55ce29 -- backend/app/search/service.py
-   ```
-   Hand-apply the one-line change and copy its test; do **not** check out the whole file or the whole commit — `c55ce29` also carries unrelated frontend/CORS changes.
-3. **Optional, same window.** If a normal live query still falls back because SerpAPI is slow, raise the client timeout in [`backend/app/search/serpapi.py:217`](../backend/app/search/serpapi.py) from 2.5 s to 4.0 s. The orchestrator's total budget is 5 s, so the fallback still fires. Re-run the live path after changing it.
+2. **Verify live search waits instead of substituting the catalog (D-025).** Live mode now uses a 10 s SerpAPI client timeout inside an 11 s per-attempt budget, retries once, and on failure shows the `failed` stage with a Start over button — never the curated catalog. Re-run `noise cancelling headphones` with a typed `$300-$600` answer and confirm `source: "serpapi"`; then confirm the failure state by starting a backend with an invalid `SERPAPI_KEY`.
+3. **Optional, same window.** If live queries return only one or two results, adopt the `<3` guard from parked commit `c55ce29` (idea **B** in [`ideas-after-96cf47f.md`](ideas-after-96cf47f.md)): fall back to the catalog when the live result count is below `min(3, limit)`. Note this conflicts with D-025 — prefer keeping the thin live grid.
 4. **Sign off the `Question` shape** in [`docs/contracts.md`](contracts.md) — the last G0 item. Read [`questions.py`](../backend/app/sessions/questions.py), confirm the fields the API actually returns, and remove "Not yet in `models.py`" if it is true.
 5. **VEYZL decision by 03:00.** Default is **cut it**: the probe hardening lives in the removed commits and the app is not installed. If it is not installed by 03:00, mark the side track not selected in the Devpost and in [`docs/veylz-audit.md`](veylz-audit.md). Do not spend Block R time on it.
 6. **Prove the kept build over HTTP:** create a session, answer **$300–$600**, confirm 9 listings / 8 trusted / villain red / pick `lst_tgt_bsp`, then checkout → confirm → public receipt. Record the `search.completed` `source` value for a live query and for `OFFLINE=1`.
@@ -92,12 +88,12 @@ Five-minute sync at 02:45 and 03:45: each person says *done / blocked / next*, o
    If Docker is unavailable, say so in `status.md`; the morning deploy becomes higher risk.
 8. **Push.** Morning: `fly deploy` from the repo root, then `smoke_http.py` against the URL.
 
-**Done when:** a typed query returns matching listings (or falls back without a thin grid), `Question` is signed off, the HTTP path and refusal are recorded, and the VEYZL decision is written down.
+**Done when:** a typed query returns live listings, a failed live search shows the retry state instead of the catalog, `Question` is signed off, the HTTP path and refusal are recorded, and the VEYZL decision is written down.
 
 ### B — truth in the docs and the Devpost
 
 1. **Record the revert.** Append a decision to [`docs/decisions.md`](decisions.md): `96cf47f` is the kept build, the later 20 commits are parked in [`ideas-after-96cf47f.md`](ideas-after-96cf47f.md), and this PR restores `main`. Number it after the last entry; do not reuse a number.
-2. **Fix the test counts everywhere** to **204 backend / 39 frontend**: [`README.md`](../README.md#L142), [`docs/devpost.md`](devpost.md#L92), [`docs/status.md`](status.md), and this file. Do not invent a file count; use `pytest -q` and `npx vitest run` output.
+2. **Fix the test counts everywhere** to **218 backend / 49 frontend**: [`README.md`](../README.md#L142), [`docs/devpost.md`](devpost.md#L92), [`docs/status.md`](status.md), and this file. Do not invent a file count; use `pytest -q` and `npx vitest run` output.
 3. **Scrub claims the kept code cannot support.** Anything that depends on the removed commits must go or be reworded: VEYZL probe behaviour beyond the guard that exists at `96cf47f`, Vercel data bundling, host-aware `apiBase`, `sykes.select` CORS, health diagnostics. Start with:
    ```bash
    grep -rn "VEYZL\|Vercel\|sykes.select\|host-aware" README.md docs/devpost*.md docs/status.md
@@ -145,22 +141,24 @@ Help C with the video, then B with the claim scrub. Do **not** start new feature
 ## 6. Block R gates — run at 03:45
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q        # 204 passed
-cd frontend; npx vitest run                                 # 39 passed
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q        # 218 passed
+cd frontend; npx vitest run                                 # 49 passed
 cd frontend; npm run build                                  # clean
 cd ..; backend\.venv\Scripts\python.exe scripts\replay_offline.py   # exit 0
 git ls-files | Select-String -Pattern "\.env"               # only .env.example
 ```
 
-Do **not** run the suite with `OFFLINE=1` exported. `test_ssl_cert.py` and `test_domain_age.py` pass `ctx=None` and read ambient settings, so 13 tests fail for reasons unrelated to the product. The freeze proof is: **204 pass with no `GEMINI_API_KEY`**, plus the replay. Set `OFFLINE` per-process only.
+Do **not** run the suite with `OFFLINE=1` exported. `test_ssl_cert.py` and `test_domain_age.py` pass `ctx=None` and read ambient settings, so 13 tests fail for reasons unrelated to the product. The freeze proof is: **218 pass with no `GEMINI_API_KEY`**, plus the replay. Set `OFFLINE` per-process only.
 
 ## 7. Live blockers
 
 | Blocker | Owner | Impact |
 |---|---|---|
-| Live search can return one or two results, or time out to catalog | A | The exact complaint that caused the revert. Task A2/A3. Until fixed, use short queries and know the fallback. |
+| Live search can return one or two results | A | Thin live grids are shown as-is. Task A3 (the parked `<3` guard) is optional; the timeout half is fixed. |
+| Live search shows the unrelated catalog | **fixed 2026-10-18 (D-025)** | 10 s client timeout inside an 11 s budget, one retry, then `failed` + `SEARCH_UNAVAILABLE`. Never the catalog. |
+| A live demo may wait ~20 s | A | By design. Say "live search is slow" and let the skeletons run; do not switch to `?mock=1` on stage. |
 | Browser has not exercised the kept build | C | The wiring is merged but this exact commit has not been clicked through. Top G1–G4 risk. |
-| Docs say 187/34; the code is 204/39 | B | Judges and teammates read the docs. Fix before submission. |
+| Docs say 187/34; the code is 218/49 | B | Judges and teammates read the docs. Fix before submission. |
 | `Question` shape not frozen | A | Last G0 item; cheap now, expensive at freeze. |
 | Fly URL serves the removed build | A | Deploy in the morning from the repo root. Never submit `sykes.select` — it runs the removed code. |
 | Vercel Git deploy is broken at this commit | A | It ships no `data/`. The fix is parked as idea A. Use Fly. |
@@ -194,8 +192,8 @@ Live page fetching → Reddit → SerpAPI → Mongo → page flags.
 **Gate check before each rehearsal:**
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q        # 204 passed
-cd frontend; npx vitest run; npm run build                  # 39 passed, clean
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q        # 218 passed
+cd frontend; npx vitest run; npm run build                  # 49 passed, clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py  # exit 0
 ```
 
@@ -225,4 +223,7 @@ backend\.venv\Scripts\python.exe scripts\replay_offline.py  # exit 0
 - [x] Offline replay reproduces the live numbers exactly: 9 / 8 / 0 / 1, pick `lst_tgt_bsp`, median $374.49, savings $194.50
 - [x] C's 390 px reflow, `api_key` redaction, immersive merchant resolution, `OFFLINE=1` catalog pinning
 - [x] One-command startup: [`scripts/dev.cmd`](../scripts/dev.cmd) and [`docs/RUN.md`](RUN.md)
+- [x] Live-search timeout fix and honest failure (D-025): the SerpAPI client honors `timeout_s` (10 s) inside an 11 s budget; live mode retries once and then shows a retry state instead of the unrelated catalog ([`orchestrator.py`](../backend/app/sessions/orchestrator.py), [`service.py`](../backend/app/search/service.py), regression tests in [`test_search_service.py`](../backend/tests/unit/test_search_service.py) and [`test_orchestrator.py`](../backend/tests/integration/test_orchestrator.py))
+- [x] Frontend loading and retry states: "Searching live listings…" skeletons while the search runs, and a Start over card on `failed` with no catalog grid ([`App.tsx`](../frontend/src/App.tsx))
+- [x] `scripts\dev.cmd` pins the frontend to `http://localhost:5173` (`--strictPort`) and prints it
 - [x] Post-`96cf47f` work archived with links and a revisit table: [`ideas-after-96cf47f.md`](ideas-after-96cf47f.md)

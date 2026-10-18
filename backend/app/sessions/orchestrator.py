@@ -13,7 +13,7 @@ from app.core.ids import new_id
 from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LISTINGS, SEARCH_S
 from app.domain.enums import SessionStage, TrustStatus, Verdict
 from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
-from app.search.catalog import catalog_covers, load_catalog
+from app.search.catalog import load_catalog
 from app.search.service import search as default_search
 from app.services.llm import narrate
 from app.sessions.events import EventBus
@@ -50,43 +50,46 @@ class SessionOrchestrator:
         # wait_for cancels a live result and the grid goes empty.
         return 12.0 if os.environ.get("VERCEL") else max(SEARCH_S, 8.0)
 
-    async def _search_with_retry(self, session_id: str, spec) -> tuple[list[Listing], str]:
-        """Live search, then one retry. The headphone catalog is last resort."""
-        catalog_hit: tuple[list[Listing], str] | None = None
-        timed_out = False
+    async def _search_with_retry(
+        self, session_id: str, spec
+    ) -> tuple[list[Listing], str] | None:
+        """Live search with one retry. Never substitutes the curated catalog.
+
+        A longer wait is better than unrelated products in the grid: two attempts
+        at the live provider, then an honest failure the user can retry.
+        """
         for _attempt in range(2):
             try:
                 listings, source = await asyncio.wait_for(
-                    self.search(spec, MAX_LISTINGS),
+                    self.search(spec, MAX_LISTINGS, allow_catalog_fallback=False),
                     timeout=self._search_timeout(),
                 )
-            except Exception:  # noqa: BLE001 — retry once, then the catalog
-                timed_out = True
+            except Exception:  # noqa: BLE001 — retry once, then fail
                 continue
-            if source != "catalog":
+            if source == "serpapi":
                 if listings:
                     return listings, source
                 continue
-            catalog_hit = (listings, source)
-        if catalog_hit is not None:
-            if catalog_covers(spec.query):
-                return catalog_hit
-            return [], "serpapi"
-        if timed_out:
-            self.bus.publish(
-                session_id,
-                "session.error",
-                {
-                    "code": "SEARCH_FAILED",
-                    "message": "Search failed; showing catalog listings."
-                    if catalog_covers(spec.query)
-                    else "Search failed for this query.",
-                    "recoverable": True,
-                },
-            )
-        if catalog_covers(spec.query):
-            return load_catalog()[:MAX_LISTINGS], "catalog"
-        return [], "serpapi"
+        self.bus.publish(
+            session_id,
+            "session.error",
+            {
+                "code": "SEARCH_UNAVAILABLE",
+                "message": (
+                    "Live search is taking too long. We did not substitute "
+                    "unrelated products — start over to try again."
+                ),
+                "recoverable": False,
+            },
+        )
+        return None
+
+    def _fail_session(self, session_id: str, session: Session) -> None:
+        session.stage = SessionStage.FAILED
+        session.updated_at = datetime.now(timezone.utc)
+        self.store.update(session)
+        self.bus.publish(session_id, "session.stage", {"stage": session.stage.value})
+        self.bus.close(session_id)
 
     def _active_checks(self) -> list[TrustCheck]:
         if self.checks is None:
@@ -110,18 +113,25 @@ class SessionOrchestrator:
         session.stage = SessionStage.SEARCHING
         self.store.update(session)
         self.bus.publish(session_id, "session.stage", {"stage": session.stage.value})
+        settings = self.config or get_settings()
         self.bus.publish(
             session_id,
             "search.started",
-            {"query": session.search_spec.query, "providers": ["catalog"]},
+            {
+                "query": session.search_spec.query,
+                "providers": ["catalog"] if getattr(settings, "offline", False) else ["serpapi"],
+            },
         )
-        settings = self.config or get_settings()
         if getattr(settings, "offline", False):
             # Replay and refusal tests must stay on the curated catalog even
             # when a search key is present in the environment.
             listings, source = load_catalog()[:MAX_LISTINGS], "catalog"
         else:
-            listings, source = await self._search_with_retry(session_id, session.search_spec)
+            outcome = await self._search_with_retry(session_id, session.search_spec)
+            if outcome is None:
+                self._fail_session(session_id, session)
+                return
+            listings, source = outcome
 
         self.bus.publish(
             session_id,
