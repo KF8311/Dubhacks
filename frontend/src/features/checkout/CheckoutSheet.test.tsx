@@ -17,6 +17,19 @@ const listing = {
   source: "catalog" as const,
 }
 
+test("disables pay when there is no session id", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="trusted"
+      score={92}
+      confidence={0.9}
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /pay/i })).toBeDisabled()
+})
+
 test("disables pay for caution", () => {
   render(
     <CheckoutSheet
@@ -38,6 +51,7 @@ test("enables pay for an allowlisted trusted merchant with a zero score", () => 
       score={0}
       confidence={1}
       allowlisted
+      sessionId="ses_1"
       onComplete={() => undefined}
     />,
   )
@@ -52,6 +66,7 @@ test("keeps pay disabled when a non-allowlisted score is below 70", () => {
       verdict="trusted"
       score={0}
       confidence={1}
+      sessionId="ses_1"
       onComplete={() => undefined}
     />,
   )
@@ -65,11 +80,41 @@ test("enables pay for trusted", () => {
       verdict="trusted"
       score={92}
       confidence={0.9}
+      sessionId="ses_1"
       onComplete={() => undefined}
     />,
   )
   expect(screen.getByRole("button", { name: /pay/i })).toBeEnabled()
   expect(screen.getByText(/Sandbox — simulated Visa Intelligent Commerce flow/)).toBeInTheDocument()
+})
+
+test("enables pay for an allowlisted trusted listing even at score 0", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="trusted"
+      score={0}
+      confidence={1}
+      allowlisted
+      sessionId="ses_1"
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /pay/i })).toBeEnabled()
+})
+
+test("keeps pay disabled for score 0 when not allowlisted", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="trusted"
+      score={0}
+      confidence={1}
+      sessionId="ses_1"
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /pay/i })).toBeDisabled()
 })
 
 test("trusted checkout reaches the receipt", async () => {

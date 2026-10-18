@@ -85,6 +85,20 @@ async def test_budget_filters_out_pricier_listings():
     assert [item.id for item in listings] == ["lst_cheap", "lst_mid"]
 
 
+async def test_budget_that_matches_nothing_keeps_the_catalog():
+    catalog = [_listing("lst_cheap", 9000), _listing("lst_dear", 40000)]
+
+    listings, source = await search(
+        SearchSpec(query="apple juice", budget_max_cents=500),
+        limit=8,
+        provider=StubProvider(error=RuntimeError("down")),
+        catalog=catalog,
+    )
+
+    assert source == "catalog"
+    assert [item.id for item in listings] == ["lst_cheap", "lst_dear"]
+
+
 async def test_respects_limit_on_provider_results():
     provided = [_listing(f"lst_{index}", 1000 + index) for index in range(5)]
 

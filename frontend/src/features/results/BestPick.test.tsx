@@ -11,6 +11,7 @@ test("shows the best pick and savings", () => {
         eligible_ids: ["lst_1"],
         reason: "cheapest trusted",
         no_trusted_option: false,
+        narrative: "Target is the cheapest trusted XM5.",
       }}
       listings={[
         {
@@ -29,4 +30,5 @@ test("shows the best pick and savings", () => {
   )
   expect(screen.getByText(/Sony XM5/)).toHaveClass("break-words")
   expect(screen.getByText(/\$11\.00/)).toBeInTheDocument()
+  expect(screen.getByText(/Target is the cheapest trusted XM5/)).toBeInTheDocument()
 })

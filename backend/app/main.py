@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import Response
@@ -11,12 +13,20 @@ from app.core.config import get_settings
 from app.core.errors import install_error_handlers
 from app.core.ids import new_id
 from app.core.logging import configure_logging
+from app.db.mongo import close_persistence, init_persistence
+
+
+@asynccontextmanager
+async def lifespan(_application: FastAPI):
+    await init_persistence()
+    yield
+    await close_persistence()
 
 
 def create_app() -> FastAPI:
     configure_logging()
     settings = get_settings()
-    application = FastAPI(title="Sniff Visa", version=settings.version)
+    application = FastAPI(title="Sniff Visa", version=settings.version, lifespan=lifespan)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins(),

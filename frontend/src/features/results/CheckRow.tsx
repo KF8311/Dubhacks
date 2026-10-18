@@ -1,7 +1,11 @@
+import { useState } from "react"
+import { explainCheck } from "@/lib/api.ts"
+import { useSessionStore } from "@/store/sessionStore.ts"
 import type { TrustCheckResult, TrustStatus } from "@/lib/types.ts"
 
 type Props = {
   check: TrustCheckResult
+  listingId: string
 }
 
 const statusLabel: Record<TrustStatus, string> = {
@@ -11,12 +15,37 @@ const statusLabel: Record<TrustStatus, string> = {
   skipped: "Skipped",
 }
 
-export function CheckRow({ check }: Props) {
+export function CheckRow({ check, listingId }: Props) {
+  const sessionId = useSessionStore((state) => state.sessionId)
+  const [explanation, setExplanation] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function onExplain() {
+    if (!sessionId || busy) return
+    setBusy(true)
+    try {
+      setExplanation(await explainCheck({ sessionId, listingId, checkId: check.id }))
+    } catch {
+      setExplanation(check.summary)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="flex items-start justify-between gap-3 border-t py-2 text-sm">
       <div>
         <p className="font-medium">{check.name}</p>
         <p className="text-stone-600">{check.summary}</p>
+        {explanation ? <p className="mt-1 text-stone-800">{explanation}</p> : null}
+        <button
+          type="button"
+          className="mt-1 text-xs font-medium text-stone-700 underline"
+          onClick={onExplain}
+          disabled={busy || !sessionId}
+        >
+          {busy ? "Explaining…" : "Explain"}
+        </button>
       </div>
       <p className="shrink-0 font-medium">{statusLabel[check.status]}</p>
     </div>

@@ -65,7 +65,8 @@ Enums:
 ```json
 {"recommended_listing_id": "lst_hero", "median_trusted_cents": 24999,
  "savings_cents": 7000, "eligible_ids": ["lst_hero", "lst_mid"],
- "reason": "Cheapest of 2 trusted options.", "no_trusted_option": false}
+ "reason": "Cheapest of 2 trusted options.", "no_trusted_option": false,
+ "narrative": "Best Buy is the cheapest trusted XM5, $70 under the typical trusted price."}
 ```
 
 Eligibility is `verdict == "trusted"` and `confidence >= 0.6` and (`score >= 70` or `allowlisted`). The pick is the cheapest eligible listing, ties broken by higher score. `median_trusted_cents` is the median price across eligible listings only; `savings_cents` is that median minus the pick. On no eligible listing, `recommended_listing_id` is `null`, `no_trusted_option` is `true`, and `reason` names the closest miss.
@@ -114,7 +115,11 @@ CORS: explicit origins plus `*.vercel.app`. No wildcard with credentials. No coo
 
 ## `POST /api/sessions` → 201
 
-Returns `session_id`, `stage: "clarifying"`, 2–3 `questions`, `expires_at`. Session creation never blocks on the LLM.
+Returns `session_id`, `stage: "clarifying"`, 2–3 `questions`, `expires_at`. Questions come from Gemini when `GEMINI_API_KEY` is set; category templates on timeout, offline, or invalid JSON. Session creation never waits more than 2.5s on the LLM.
+
+## `POST /api/sessions/{session_id}/explain` → 200
+
+Body: `{ "listing_id": "lst_…", "check_id": "ssl_cert" }`. Returns `{ "listing_id", "check_id", "explanation" }`. Lazy, on demand. Falls back to the check `summary`. Raw HTML is stripped before any model call.
 
 ## `POST /api/sessions/{session_id}/answers` → 202
 
@@ -143,7 +148,7 @@ Envelope on every event: `type`, `seq`, `ts`, `session_id`.
 | `check.started` | `listing_id`, `check_id`, `name`, `index` |
 | `check.completed` | `listing_id`, `check` |
 | `listing.scored` | `listing_id`, `score`, `verdict`, `confidence`, `top_reason`, `penalties` |
-| `recommendation.ready` | `recommended_listing_id`, `median_trusted_cents`, `savings_cents`, `eligible_ids` |
+| `recommendation.ready` | `recommended_listing_id`, `median_trusted_cents`, `savings_cents`, `eligible_ids`, `reason`, `no_trusted_option`, `narrative?` |
 | `investigation.complete` | `stats`, `duration_ms` |
 | `session.error` | `code`, `message`, `recoverable`, `listing_id?` |
 

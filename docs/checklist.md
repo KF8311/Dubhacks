@@ -13,16 +13,16 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 18:40 PT · **Block 4 closed, Block 5 starting**
+## Where we are now — 19:55 PT · **Block 4 closed, Block 5 running**
 
 | Thing | State |
 |---|---|
-| `main` | **Everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, and the frozen refusal paths. **153 backend / 22 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
-| Follow-on branch | **None. `main` is the source of truth** — branch from it for Block 5. `scratch/integration` is stale; do not reuse it. |
-| Live API | Sessions create/answers/snapshot/events; **`POST /api/checkout`**, **`POST /api/checkout/{checkout_id}/confirm`**, `GET /api/receipts/{id}`, `GET /api/public/receipts/{share_id}`, `POST /api/demo/reset`. |
-| Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from `data/mock-session.json`. |
-| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is built and merged end to end**; its gate proof (one browser click-through) is the first action of Block 5. |
-| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `integration/block4`, `integration/block4-ui`, `b/block4-refusals` all merged into `main`. `scratch/integration` is stale (main is ahead of it) — do not reuse it. |
+| `main` | **Everything merged** (`9af147a`): scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, the frozen refusal paths, **Gemini questions/narration/explanations (D-017–D-019)**, **the `Repository` protocol with in-memory + Mongo adapters**, and **A's live-search path plus budget parsing (D-021, D-022)**. **184 backend / 13 files · 34 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
+| Follow-on branch | **None pending. `main` is the source of truth** — branch from it. `scratch/integration` is stale; do not reuse it. C has said new `c/web` work is coming; before merging it, run `git fetch origin && git rev-list --count main..origin/c/web`. Expect a possible conflict in `CheckoutSheet.tsx`, where the session guard now lives. |
+| Live API | Sessions create/answers/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm**, **receipts + public share**, `POST /api/demo/reset`. |
+| Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from `data/mock-session.json`. The sheet now refuses to offer payment without a real session id — no more `ses_mock` fallback. |
+| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is built and merged end to end**; its gate proof (one browser click-through) is the first action of Block 5. **G5 is open**: the stories are written, the artifacts are not. |
+| Dead branches | All of them. `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `integration/block4`, `integration/block4-ui`, `b/block4-refusals`, `b/block5-devpost`, `b/block5-veylz-audit`, `b/mongo-ownership` are all contained in `main` (`git rev-list --count main..origin/<branch>` is 0 for every head). `scratch/integration` is stale — do not reuse it. |
 
 **Before anyone starts:** `git checkout main && git pull`. There is nothing left to merge — if you are on an older branch, rebase onto `main` before writing code.
 
@@ -41,7 +41,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **153 passed**; `npx vitest run` → **22 passed**. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **184 passed**; `npx vitest run` → **34 passed**. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -131,9 +131,9 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | `fly deploy` from current `main` so the live app matches the repo. Confirm the health URL and a real session over the public URL. |
-| **B** | Devpost technical section: the five checks, the scoring formula with real numbers, the payability rule, the sandbox disclosure. Fill `docs/status.md` with final numbers. |
-| **C** | Three screenshots — results grid, danger detail, receipt — and one screen recording of the full path. |
+| **A** | ✅ **Merged post-block:** the SerpAPI `source`→domain fallback (D-021), `under_150`-style budget parsing, and the checkout sheet's session guard. ⬜ `fly deploy` from current `main` so the live app matches the repo; `smoke_http.py` against the public URL. **Then Task 29 (D-020):** install the VEYZL app on the repo, run the audit on a PR, fix one finding with a test. |
+| **B** | ✅ Devpost story, README, `docs/devpost-form.md`, and the audit scope/reproduction. ⬜ Fill the form as A's URL and C's screenshots land; final numbers in `status.md`; review A's audit finding. |
+| **C** | Three screenshots — results grid, danger detail, receipt — and one screen recording of the full path. This is the only thing G5 is waiting on from C. |
 
 **Proof:** Devpost draft saved with the URL, the screenshots, and the sandbox label visible in the copy.
 
@@ -141,9 +141,22 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Review B's `Repository` protocol before it merges; confirm no Mongo type leaks into `app/`. |
-| **B** | **Task 27 (D-016)** — `MongoRepository` behind the existing protocol, TTL indexes, caches, redaction, **only if** everything above is green. Otherwise skip: the in-memory adapter is the cut-order survivor. ✅ Replay half already done — `scripts/replay_offline.py` runs a full session in-process with no server and no network: 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`. Exits 1 if those numbers drift. Domain age and SSL now honour `OFFLINE=1` (fixtures still load, nothing opens a socket). |
-| **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path. |
+| **A** | ✅ The protocol no longer leaks Mongo types and `MONGODB_URI` unset stays the default (B's review landed in `8c89260`). **Own the VEYZL fix PR (D-020)** — the only Block 6 code change left. Then freeze: no new features after 02:00. |
+| **B** | **Task 27 review (D-016)** — the protocol review landed in `8c89260`: `Repository` now declares every method both adapters expose, `get_repository()` returns the protocol, and `checkouts.idempotency_key` uses a partial filter so keyless checkouts no longer collide on `null`. The `MONGODB_URI`-unset path is already pinned by `test_empty_or_failed_mongo_selects_memory`. **Still open:** TTL index verification against a real cluster, redaction checks, and the MLH MongoDB claim. Keep the claim only if Atlas is actually exercised; otherwise remove it. |
+| **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path, reduced motion. |
+
+**Block 6 required before freeze:**
+
+- [ ] **A** — `pytest -q` green with **no** `GEMINI_API_KEY` and `OFFLINE=1`; the template fallback is the demo path.
+- [ ] **B** — `scripts/replay_offline.py` exits 0 and prints the frozen numbers.
+- [ ] **C** — `npm run build` clean; `?mock=1` renders the whole flow.
+- [ ] **C** — a pick above the user's stated budget is labelled (D-022); the budget is not described as a hard cap.
+- [ ] **B** — no `.env` or key is tracked (`git ls-files | grep -i env`).
+- [ ] **B** — every claim in `README.md` and `docs/devpost.md` matches the merged code; the generative-AI answer is **Yes**.
+- [ ] **B** — Devpost fields in `docs/devpost-form.md` all filled; VEYZL selected as a Sponsored Side Track.
+- [ ] **A** — a VEYZL check run is visible on a PR and linked from `docs/veylz-audit.md`.
+- [ ] **B** — `docs/status.md` carries the final numbers.
+- [ ] **All** — no new infrastructure without a decision entry.
 
 **Proof:** offline replay produces the same numbers as live; plane-mode demo works.
 **2:00 AM: freeze.** After this, docs and bugfixes only.
@@ -186,6 +199,16 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] C: **Tasks 25–26** — checkout sheet, mandate card, passkey dialog, processing state, receipt page, `/r/:share_id` route (PR #14)
 - [x] Hookup: C's client sends the contracted `mandate` and full passkey assertion, follows `receipt_url` to the public receipt, and renders the server's `PayabilityCode`; `src/lib/api.test.ts` pins every request and response shape against the live routes (PR #14)
 - [x] B: **Task 28** — `app/demo/replay.py` + `scripts/replay_offline.py`. Reports `9 / 8 / 0 / 1`, villain `lst_vln_xm5`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`, identical to the live HTTP run; exits 1 on drift. `SessionOrchestrator` takes an optional `Settings` and domain age + SSL short-circuit on `offline`. 7 new tests.
+- [x] B: refusal messages are human copy, not bare codes; `CheckoutSheet` renders `PayabilityCode` + message (PR #14)
+- [x] B: `README.md` rewritten; `docs/devpost.md` drafted; `docs/veylz-audit.md` scaffolded (PR #17)
+- [x] A: **Gemini** — questions, recommendation narration, on-demand check explanations, 2.5 s timeout, template fallback; trust/check/payment modules still cannot import it (`test_no_llm_path.py`) — D-017–D-019
+- [x] A: **`Repository` protocol** — `InMemoryRepository` + `MongoRepository`, TTL indexes, atomic `transition_checkout`; `MONGODB_URI` unset stays the default (B reviews in Block 6, D-016)
+- [x] C: `c/web` — 1024px layout, reduced motion, purge overlay test; second commit lets allowlisted merchants through checkout (D-015)
+- [x] Merge reconciliation: A's three Gemini decisions were renumbered D-017/D-018/D-019 because D-016 was already Mongo ownership; `README.md` and `docs/devpost.md` corrected to say the model writes copy but never decides
+- [x] B: **Repository review, first pass (`8c89260`)** — `Repository` declares all 17 methods both adapters expose; `get_repository()` is typed with the protocol; `checkouts.idempotency_key` is a partial filter over strings instead of `sparse`, so the many keyless checkouts no longer collide on `null`. Three new tests, watched failing first.
+- [x] B: persistence claim narrowed — only mandates, checkouts, transactions, receipts, and audit events reach Mongo; sessions, listings, and investigations stay in-process, and mock VIC tokens never leave the process (`README.md` honesty notes)
+- [x] **A merged (`8687203`, `9af147a`)** — Google Shopping `source` → merchant domain (D-021, supersedes D-011), `under_150`-style budget parsing, `SERPAPI_KEY` read from the upper-case env name, catalog fallback when a budget matches nothing (D-022), and a checkout sheet that refuses to pay without a real session id
+- [x] Merge fixes: the sheet keeps the D-015 allowlist exemption *and* requires a session; `App.tsx` passes the real id or nothing; the duplicate `allowlisted` prop and the `string | undefined` build error are gone (`npm run build` clean)
 
 ## 6. Gate board
 
@@ -196,7 +219,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | G2 Investigation + score | Sat 18:00 | 🟢 server proof + `check.completed` rendering; browser click-through owed | A + B + C |
 | G3 Recommendation | Sat 19:30 | 🟢 server proof + `BestPick` and best-pick ring; browser click-through owed | A + B + C |
 | G4 Checkout → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through is Block 5's first action | A + C |
-| G5 Devpost draft | Sat 22:30 | ⬜ | B |
+| G5 Devpost draft | Sat 22:30 | 🟡 stories written; URL, screenshots, video, and A's VEYZL check run pending | B |
 | G6 Freeze | Sun 02:00 | ⬜ | all |
 | G7 Submit | Sun 09:50 | ⬜ | all |
 
@@ -208,72 +231,111 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | No browser click-through yet | C | The live wiring is merged but has never rendered in a real browser; one run closes G1–G4 for good. **First action of Block 5.** |
 | "Under $150" empties the trusted set | C | Demo run must answer **$150–$300**; see §9 |
 | Contracts not frozen | A | `Question` shape is a guess; cheap to confirm, expensive to discover at 21:00 |
-| SerpAPI key | A | Catalog only (D-011). Not blocking. |
+| SerpAPI key | A | Catalog-only in the deploy. **D-021 is untested against a real key** — run `scripts/serpapi_spike.py` before claiming live search anywhere. Not blocking. |
+| A budget that matches nothing falls back to the full catalog | B | D-022: a listing above the user's stated budget can be recommended and paid, because the payability cap is the listing price. Say "closest match" on stage or add an over-budget badge. Do not call the budget a hard cap. |
 | Safe Browsing key | B | Static denylist with `source="unavailable"`. Not blocking. |
-| Mongo deferred to Block 6 (D-016) | B | In-memory adapter is the default. Not blocking; the Atlas cluster question is still open. |
+| Mongo deferred to Block 6 (D-016) | B | In-memory is the default; A's `MongoRepository` is merged but unreviewed. Not blocking. |
+| VEYZL check has not run on a PR yet | **A** (D-020) | The app must be installed on `KF8311/Dubhacks` and the project linked before a fix PR opens; without a visible check run the side track is not eligible. B's reproduction is in `docs/veylz-audit.md`. |
+| `GEMINI_API_KEY` absent on Fly | A | The app falls back to templates; the demo still works, but the narration is deterministically worded. Set it only if the fallback copy reads worse on stage. |
+| Local venv missing `motor` | everyone | `pip install motor`; it is in `requirements.txt`. Without it one repository test fails to import. |
 
 ## 8. Cut order
 
 Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page flags.
 
-## 9. Block 5 — G5 Devpost draft · start here
+## 9. Next blocks — start here
 
-**State:** **Block 4 is closed.** A's checkout backend, B's refusal paths and offline replay, and C's checkout sheet and receipt page are merged into `main` (PRs #12–#14), reconciled against the live JSON contract, and green: **153 backend / 22 frontend tests**, `npm run build` clean, offline replay exits 0.
+**State (19:55 PT, `9af147a`):** `main` carries everything from all three people — checkout → confirm → receipt, the live frontend, all five checks, Gemini for questions/narration/explanations, the in-memory + Mongo repositories, A's live-search and budget changes (D-021, D-022), and the offline replay. Green: **184 backend / 13 files · 34 frontend tests**, `npm run build` clean, `replay_offline.py` exits 0.
 
-Two Block 4 items carry over, both small and both first-in-line here:
+**Block 5 is close-out only.** Every text artifact is written: the Devpost story, the field-by-field form map, the technical-claims handoff, the README, the audit scope, and the reproduced reset transcript. What is missing is artifacts that only A and C can produce. Do not start Block 6 work until your Block 5 action is done or explicitly cut.
 
-- **G4's gate proof** — one browser click-through of the merged flow. The build is done; the screenshot is not.
-- **Fly still serves the pre-merge build** — until A redeploys, the public URL does not carry checkout.
+**What changed in the last hour:**
 
-**First 15 minutes of this block, every person:**
-
-1. `git checkout main && git pull`
-2. Run your baseline: backend `pytest -q` → **153 passed**; frontend `npx vitest run` → **22 passed**; `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0.
-3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
+- **A pushed `8687203` at 19:40 and it is now merged.** Live search infers the merchant domain from Google Shopping's `source` (D-021, supersedes D-011), `under_150`-style budget ids parse, an empty budget filter falls back to the catalog (D-022), and the checkout sheet no longer falls back to `ses_mock`. Three conflicts were resolved by hand: the allowlist exemption is kept, a session id is now required, `docs/INDEX.md` points at both Devpost docs, and A's `D-019` was renumbered to `D-021` because that number already belonged to the Gemini model.
+- **B's repository review, first pass landed (`8c89260`).** The protocol now covers all 17 methods, `get_repository()` is typed with it, and the idempotency index no longer treats `null` as a key. Three tests were written failing first.
+- **C merged twice more**: an API-unreachable alert on discovery, and allowlisted merchants render as `Verified` (D-015) on the card, sheet, and receipt.
+- **B merged PR #19**: `docs/devpost-form.md`, the honest Gemini claims, the updated plan, and the `/api/demo/reset` reproduction.
+- **Task 29 (VEYZL) moved to A (D-020).** A owns the repo and therefore the GitHub App install. B's scope, candidate controls, and reproduction stay in `docs/veylz-audit.md` — A picks up at step "install the app".
 
 **Your next action, in one line:**
 
-| Owner | Next action | Unblocks |
+| Owner | Next action | Closes |
 |---|---|---|
-| **A** | `fly deploy` from the repo root, then `backend/scripts/smoke_http.py` against the public URL | G4 on the public URL |
+| **A** | `fly deploy` from the repo root, then `smoke_http.py` against the public URL | G4 on the public URL |
 | **C** | Click the live flow through to a receipt and screenshot the grid + receipt | G1–G4 proof |
-| **B** | Task 29 VEYZL audit + `README.md`; Devpost technical section | G5 |
+| **B** | Fill `docs/devpost-form.md` as A's URL and C's screenshots land; put final numbers in `status.md` | G5 |
+
+**First 15 minutes, every person:**
+
+1. `git checkout main && git pull`
+2. Baseline: backend `pytest -q` → **184 passed**; frontend `npx vitest run` → **34 passed**; `scripts/replay_offline.py` → exit 0. If `motor` is missing, `pip install motor`.
+3. Take your column below. Nobody waits on another column.
 
 **Handoff contract, now live (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`; a declined passkey is `402 PAYMENT_DECLINED`. The confirm path is **`POST /api/checkout/{checkout_id}/confirm`** (singular `checkout`) and takes `{passkey_assertion: {credential_id, client_data}, idempotency_key}`. Confirm returns a **pointer** (`receipt_id`, `receipt_url`); the receipt itself is `GET /api/public/receipts/{share_id}`. Every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label. The frontend's request/response mapping is pinned in `frontend/src/lib/api.test.ts` — if the shape has to change, say it in the channel before committing.
 
-### A — ship the public URL
+### A — public URL, then VEYZL (Block 5 into Block 6)
 
-Block 4's backend is merged. Only deployment remains:
+1. `git checkout main && git pull` — **your `agent_backend` work is merged into `main` now** (`8687203`, reconciled in `9af147a`). Deploying your old branch would drop everyone else's work and deploying before pulling would ship the same stale image as before.
+2. `fly deploy` from the **repo root** (that is where `fly.toml` lives; deploying from `backend/` ships a stale image).
+3. Run `backend/scripts/smoke_http.py` against the public URL: health, session, 9 listings, checkout, confirm, public receipt. **This closes G4's server half.**
+4. **Task 29 (D-020):**
+   - Install the VEYZL GitHub App on `KF8311/Dubhacks`; create/link the project in the VEYZL portal.
+   - Open a PR that carries the fix. PR #19 is already merged; open a new one from the fix branch.
+   - Trigger the audit and capture the report. Until that check run exists, the side track is not eligible.
+   - Reproduce one reported finding, write the failing test, fix it, re-run the audit, and fill §Results in `docs/veylz-audit.md`.
+   - B already reproduced `/api/demo/reset`: unauthenticated POST → `200`, session destroyed. If VEYZL reports the same, the transcript is ready; if VEYZL reports something else, **the tool's finding wins**.
+5. Sign off the `Question` shape in `docs/contracts.md` (the last G0 item).
 
-1. `fly deploy` from the **repo root** (that is where `fly.toml` lives; deploying from `backend/` ships a stale image).
-2. Run `backend/scripts/smoke_http.py` against the public URL: health, session, 9 listings, checkout, confirm, public receipt.
-3. Free-text budget parsing — `"under $300"` currently yields `budget_max_cents: null`. Nice-to-have; skip it if anything above is red.
-4. Close the last contract item: sign off the `Question` shape in `docs/contracts.md` (G0).
+**Proof:** public health URL + checkout and receipt on the public URL; a VEYZL check run visible on a PR; `pytest -q` still 184.
 
-**Proof:** the public health URL plus a checkout and receipt on the public URL; `pytest -q` still 153.
-
-### C — close the gate
+### C — browser proof + screenshots
 
 The screens are merged. This block is about proving them in a real browser:
 
-1. Run `uvicorn app.main:app --port 8000 --workers 1` and `npm run dev`, open `http://localhost:5173`, answer **$150–$300**. Confirm: villain card red with its five rows named, `Best pick` = Target $179.99 with $194.50 savings. **Screenshot it** — that closes G1, G2, G3.
-2. Click **Pay → passkey → receipt** on the best pick. Confirm the receipt shows the score, `4242`, and the sandbox line. **Screenshot that** — that closes G4.
-3. Try the villain and confirm the refusal shows the server's code on screen.
-4. Verify `?mock=1` still renders the whole flow from the mock (the demo fallback).
-5. Polish: render `skipped` as "Could not verify", name the failed checks on a danger card, add the "why this one" panel.
+1. Run `uvicorn app.main:app --port 8000 --workers 1` and `npm run dev`, open `http://localhost:5173`, answer **$150–$300**. Confirm: villain card red with its five rows named, `Best pick` = Target $179.99 with $194.50 savings. **Screenshot it** — closes G1, G2, G3.
+2. Click **Pay → passkey → receipt** on the best pick. Confirm the receipt shows the score, `4242`, and the sandbox line. **Screenshot that** — closes G4.
+3. Try the villain; confirm the refusal shows the server's code on screen.
+4. Verify `?mock=1` still renders the whole flow (the demo fallback), and that killing the API shows the new "search unreachable" alert.
+5. Hand the screenshots to B for the Devpost gallery (3:2, 5 MB max).
 
 **Proof:** three screenshots (grid, receipt, refusal) plus the mock fallback still working.
 
-### B — audit, README, Devpost
+### B — Devpost, final numbers, and the audit review
 
-Block 4's trust half is merged (`test_refusal_paths.py`, `test_no_llm_path.py`, `test_villain_end_to_end.py`, and `api.test.ts` pinning the wire shapes). Remaining:
+The story and the form map are written. Remaining:
 
-1. **Task 29** — connect the repo to VEYZL, pick one real finding, fix it, write `docs/veylz-audit.md`.
-2. `README.md` — setup, env vars, demo script, sandbox disclosure, and the "why skipped ≠ passed" explanation.
-3. **Devpost technical section** — five checks, the scoring formula with the real numbers, the payability rule, the sandbox label. Fill the URL and screenshots after A and C land theirs.
-4. Put the final numbers in `docs/status.md`.
+1. **Devpost** — fill `docs/devpost-form.md` in order as artifacts land: live URL (A), gallery images (C), video (team), VEYZL side-track selection (A's check run). Story: `docs/devpost.md`. Generative-AI answer: **Yes**, with the paragraph in the form map.
+2. **Final numbers** — run `scripts/replay_offline.py`, put its numbers in `docs/status.md`, and confirm the Devpost's `184` / `34` claims match the run.
+3. **Review A's audit finding** before it is written up — B owns the trust/payment claims, A owns the run. If the finding touches the payability gate, check it against D-015 and the refusal tests.
+4. **Never submit a claim the code cannot support.** Sandbox label, synthetic data, no production Visa integration, and the model never decides.
 
-**Proof:** offline replay exits 0; the audit file names one real finding; the Devpost draft exists with the sandbox disclosure and no production-Visa claim.
+**Proof:** the Devpost draft exists with the URL, screenshots, VEYZL track, and sandbox disclosure; every number traced to a command.
+
+## 10. Block 6 — what "moving forward" means (22:30–02:00)
+
+The Block 6 table in §4 is the authority. This is the same work in start order:
+
+| Order | Task | Owner | Done when |
+|---|---|---|---|
+| 1 | Deploy and public smoke | A | `smoke_http.py` passes against Fly |
+| 2 | VEYZL audit + fix PR | A | check run visible; one finding fixed with a test |
+| 3 | Devpost fields filled | B | form has URL, images, video, VEYZL track |
+| 4 | Repository review (D-016) | B | ✅ first pass in `8c89260` — protocol complete, `idempotency_key` null-safe. ⬜ TTL indexes and redaction checked against a real cluster; no Mongo type leaks |
+| 5 | MLH MongoDB claim | B | only if 4 passes **and** Atlas is exercised in the demo; otherwise remove the claim |
+| 6 | Budget honesty (D-022) | C | either an "over budget" badge on a listing above the answer, or "closest match" copy next to the pick — pick one and put it on screen |
+| 7 | Frontend polish | C | `skipped` reads "Could not verify"; mock path green |
+| 8 | Freeze at 02:00 | all | checklist below complete |
+
+**Freeze checklist (G6):**
+
+- [ ] `pytest -q` green with **no** `GEMINI_API_KEY` and `OFFLINE=1`
+- [ ] `replay_offline.py` exits 0 with the frozen numbers
+- [ ] `npm run build` clean; `?mock=1` renders the whole flow
+- [ ] `git ls-files | grep -i env` shows no `.env` and no key
+- [ ] Every README/Devpost claim matches the code (Gemini writes copy, never a verdict)
+- [ ] VEYZL check run linked in `docs/veylz-audit.md`
+- [ ] `docs/status.md` carries the final numbers
+- [ ] No new infrastructure without a decision entry
 
 ### Demo script (rehearse exactly this)
 
@@ -291,8 +353,8 @@ Block 4's trust half is merged (`test_refusal_paths.py`, `test_no_llm_path.py`, 
 **Gate check before each rehearsal:**
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q                     # 153 passed
-cd frontend && npx vitest run && npm run build                          # 22 passed, clean
+cd backend && .venv/Scripts/python.exe -m pytest -q                     # 184 passed
+cd frontend && npx vitest run && npm run build                          # 34 passed, clean
 backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```
 

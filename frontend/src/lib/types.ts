@@ -114,6 +114,7 @@ export interface Recommendation {
   eligible_ids: string[]
   reason: string
   no_trusted_option: boolean
+  narrative?: string | null
 }
 
 export interface SessionStats {

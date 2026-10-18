@@ -20,8 +20,8 @@ type Props = {
   verdict: Verdict
   score: number
   confidence: number
-  sessionId?: string
   allowlisted?: boolean
+  sessionId?: string
   onComplete: (receipt: Receipt) => void
 }
 
@@ -30,13 +30,17 @@ export function CheckoutSheet({
   verdict,
   score,
   confidence,
-  sessionId = "ses_mock",
   allowlisted = false,
+  sessionId,
   onComplete,
 }: Props) {
-  // Allowlisted merchants are trusted at score 0; the server waives the 70-point floor for them.
+  // Allowlisted merchants are trusted at score 0; the server waives the 70-point floor
+  // and the confidence floor for them (payability.py). No session means there is no
+  // investigation for the server to validate, so do not offer to pay at all.
   const payable =
-    verdict === "trusted" && (allowlisted || (score >= 70 && confidence >= 0.6))
+    Boolean(sessionId) &&
+    verdict === "trusted" &&
+    (allowlisted || (score >= 70 && confidence >= 0.6))
   const [phase, setPhase] = useState<"review" | "mandate" | "passkey" | "processing">("review")
   const [checkout, setCheckout] = useState<Checkout | null>(null)
   const [receipt, setReceipt] = useState<Receipt | null>(null)
@@ -49,6 +53,7 @@ export function CheckoutSheet({
   }, [onComplete, receipt])
 
   async function onPay() {
+    if (!sessionId) return
     setFailure(null)
     setBusy(true)
     try {

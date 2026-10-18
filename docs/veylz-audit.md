@@ -2,13 +2,28 @@
 title: VEYZL audit
 type: audit
 updated: 2026-10-17
-owner: B
-status: awaiting tool access
+owner: A
+status: awaiting a check run on PR #19
 ---
 
 # VEYZL audit
 
 Task 29 requires a real audit that finds a missing control, the fix, and evidence. This file records the scope, the method, and the result. **Nothing here is a finding until it is reproduced and written up in §Results.**
+
+**Owner: A** (D-020). A owns `KF8311/Dubhacks` and therefore owns the GitHub App install, the VEYZL project link, the fix PR, and the audit write-up. B scoped the audit, verified the candidate controls, and reproduced finding candidate #2 before the handover; B reviews the final finding, not the day-to-day setup.
+
+## Handoff — what is done, what is not
+
+Done by B:
+- Scope, method, and six candidate controls (below).
+- `docs/devpost-form.md` — the Devpost fields, including that VEYZL is a **Sponsored Side Track**, not a "Sponsor / Special Prize".
+- Candidate #2 reproduced by hand: `POST /api/demo/reset` with no credentials returns `200` and destroys an existing session (`404` after). Transcript in §Results.
+- PR #19 merged with the scaffold. The audit has **not** produced a check run.
+
+A's next three actions:
+1. Confirm the VEYZL GitHub App is installed on `KF8311/Dubhacks` and the portal project points at that repo.
+2. Trigger or wait for the audit on a PR; capture the report.
+3. Reproduce one reported finding, write the failing test, fix it, re-run, and fill §Results.
 
 ## Status
 
@@ -60,12 +75,25 @@ If VEYZL reports something outside this list, the tool's finding wins — this t
 
 ## Results
 
-_Empty until the audit runs._
+_No VEYZL report yet. The PR is open (#19) and the check has not appeared._
+
+### Pre-audit reproduction (not a VEYZL finding yet)
+
+While waiting for the check, I reproduced candidate #2 by hand against the merged code. This is evidence that the gap is real; it is **not** the audit finding until VEYZL reports it and the two agree.
+
+```
+POST /api/sessions                    → 201   ses_6sU6a6_36YA56dyT
+GET  /api/sessions/{id}               → 200
+POST /api/demo/reset   (no headers)   → 200   {"ok": true, "cleared": [...]}
+GET  /api/sessions/{id}               → 404   ← the session is gone
+```
+
+`app/api/routes_health.py:41-55` gates the route only on `settings.demo_mode`, and `app/core/config.py:14` defaults `demo_mode` to `True`. So on the default deploy, any caller can clear every session, checkout, and receipt with one unauthenticated POST. During judging, that is a one-request denial of the demo.
 
 ### Finding 1
 
-- **What:**
-- **Where:**
+- **What:** (pending VEYZL)
+- **Where:** (pending VEYZL)
 - **Reproduction:**
 - **Impact:**
 - **Fix:**
