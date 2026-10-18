@@ -1,6 +1,10 @@
 import { render, screen } from "@testing-library/react"
 import { ReceiptPage, ReceiptView } from "./ReceiptPage.tsx"
 
+beforeEach(() => {
+  window.history.replaceState({}, "", "/?mock=1")
+})
+
 const receipt = {
   id: "rcp_1",
   share_id: "shr_1",

@@ -141,7 +141,7 @@ export async function createCheckout(input: {
   listing_id: string
   max_amount_cents: number
 }): Promise<Checkout> {
-  if (useMock) {
+  if (isMockMode()) {
     await delay(200)
     const listing = mock.snapshot.listings.find((item) => item.id === input.listing_id)
     const score = listing ? mock.snapshot.scores[listing.id] : undefined
@@ -181,7 +181,7 @@ export async function confirmCheckout(
   checkoutId: string,
   input: { client_data: string },
 ): Promise<Receipt> {
-  if (useMock) {
+  if (isMockMode()) {
     await delay(200)
     if (input.client_data === "fail") throw new Error("Payment declined.")
     const listing = mock.snapshot.listings.find((item) => item.id === pendingListingId)
@@ -195,7 +195,7 @@ export async function confirmCheckout(
 }
 
 export async function getReceipt(shareId: string): Promise<Receipt> {
-  if (useMock) {
+  if (isMockMode()) {
     await delay(150)
     const found = receipts.get(shareId)
     if (!found) throw new Error("Receipt not found.")

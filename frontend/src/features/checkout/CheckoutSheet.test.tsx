@@ -1,6 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { CheckoutSheet } from "./CheckoutSheet.tsx"
 
+beforeEach(() => {
+  window.history.replaceState({}, "", "/?mock=1")
+})
+
 const listing = {
   id: "lst_1",
   title: "Sony XM5",
