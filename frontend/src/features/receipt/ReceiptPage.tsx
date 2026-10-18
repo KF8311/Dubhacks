@@ -9,13 +9,19 @@ type ViewProps = {
   receipt: Receipt
 }
 
-function ScoreRing({ score }: { score: number }) {
+function ScoreRing({ score, allowlisted = false }: { score: number; allowlisted?: boolean }) {
   const radius = 36
   const circumference = 2 * Math.PI * radius
-  const filled = (Math.max(0, Math.min(100, score)) / 100) * circumference
+  const shown = allowlisted ? 100 : score
+  const filled = (Math.max(0, Math.min(100, shown)) / 100) * circumference
 
   return (
-    <svg viewBox="0 0 100 100" className="h-28 w-28" role="img" aria-label={`Score ${score}`}>
+    <svg
+      viewBox="0 0 100 100"
+      className="h-28 w-28"
+      role="img"
+      aria-label={allowlisted ? "Verified" : `Score ${score}`}
+    >
       <circle cx="50" cy="50" r={radius} fill="none" stroke="#e7e5e4" strokeWidth="8" />
       <circle
         cx="50"
@@ -28,8 +34,14 @@ function ScoreRing({ score }: { score: number }) {
         strokeLinecap="round"
         transform="rotate(-90 50 50)"
       />
-      <text x="50" y="56" textAnchor="middle" fontSize="22" fontWeight="700">
-        {score}
+      <text
+        x="50"
+        y={allowlisted ? 54 : 56}
+        textAnchor="middle"
+        fontSize={allowlisted ? 13 : 22}
+        fontWeight="700"
+      >
+        {allowlisted ? "Verified" : score}
       </text>
     </svg>
   )
@@ -56,7 +68,13 @@ export function ReceiptView({ receipt }: ViewProps) {
     <article className="space-y-4 rounded-xl border bg-white p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{SANDBOX_LABEL}</p>
       <div className="flex items-center gap-4">
-        <ScoreRing score={receipt.investigation_snapshot.score.score} />
+        <ScoreRing
+          score={receipt.investigation_snapshot.score.score}
+          allowlisted={
+            receipt.investigation_snapshot.allowlisted ||
+            receipt.investigation_snapshot.score.allowlisted === true
+          }
+        />
         <div>
           <h2 className="text-xl font-semibold">{receipt.listing.title}</h2>
           <p className="text-stone-600">{receipt.listing.merchant_name}</p>

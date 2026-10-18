@@ -31,14 +31,18 @@ export function DiscoveryFlow({ onStarted }: Props) {
     if (!trimmed) return
     setQuery(trimmed)
     setError(null)
-    const created = await createSession({ query: trimmed, client_id: "demo" })
-    setSessionId(created.session_id)
-    setQuestions(created.questions)
-    showQuestions(created.questions)
-    setIndex(0)
-    setPicked(null)
-    setFreeText("")
-    setPhase("questions")
+    try {
+      const created = await createSession({ query: trimmed, client_id: "demo" })
+      setSessionId(created.session_id)
+      setQuestions(created.questions)
+      showQuestions(created.questions)
+      setIndex(0)
+      setPicked(null)
+      setFreeText("")
+      setPhase("questions")
+    } catch {
+      setError("The search could not reach the server. Leave this page open and try again.")
+    }
   }
 
   function currentAnswer(): Answer | null {
@@ -107,6 +111,11 @@ export function DiscoveryFlow({ onStarted }: Props) {
         <Button type="submit" disabled={query.trim().length === 0}>
           Find products
         </Button>
+        {error ? (
+          <p className="text-sm text-red-800" role="alert">
+            {error}
+          </p>
+        ) : null}
       </form>
     )
   }
@@ -148,7 +157,11 @@ export function DiscoveryFlow({ onStarted }: Props) {
           }}
         />
       ) : null}
-      {error ? <p className="text-sm text-red-800">{error}</p> : null}
+      {error ? (
+        <p className="text-sm text-red-800" role="alert">
+          {error}
+        </p>
+      ) : null}
       <Button type="button" disabled={!ready} onClick={() => void onNext()}>
         {last ? "See results" : "Next"}
       </Button>

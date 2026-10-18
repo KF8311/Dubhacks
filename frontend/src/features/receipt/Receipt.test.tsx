@@ -57,6 +57,23 @@ test("renders score and amount", () => {
   expect(screen.getByText("Reddit")).toBeInTheDocument()
 })
 
+test("an allowlisted receipt says verified instead of score zero", () => {
+  render(
+    <ReceiptView
+      receipt={{
+        ...receipt,
+        investigation_snapshot: {
+          ...receipt.investigation_snapshot,
+          allowlisted: true,
+          score: { ...receipt.investigation_snapshot.score, score: 0, allowlisted: true },
+        },
+      }}
+    />,
+  )
+  expect(screen.getByRole("img", { name: "Verified" })).toBeInTheDocument()
+  expect(screen.queryByLabelText("Score 0")).not.toBeInTheDocument()
+})
+
 test("unknown share id shows not found", async () => {
   render(<ReceiptPage shareId="missing" />)
   expect(await screen.findByText(/not found/i)).toBeInTheDocument()

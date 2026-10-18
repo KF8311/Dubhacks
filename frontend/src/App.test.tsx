@@ -28,7 +28,7 @@ test("walks discovery into the mock results", async () => {
   expect(await screen.findByText(/You save \$30\.00/, {}, { timeout: 8000 })).toBeInTheDocument()
   expect(screen.getByText("$249.00")).toBeInTheDocument()
   expect(screen.getAllByText("Sony WH-1000XM5").length).toBeGreaterThan(1)
-  expect(screen.getByText(/92\s*·\s*Trusted/)).toBeInTheDocument()
+  expect(screen.getAllByText(/92\s*·\s*Trusted/).length).toBeGreaterThan(0)
   expect(screen.getByText(/12\s*·\s*Danger/)).toBeInTheDocument()
   expect(screen.getAllByText("Best pick").length).toBeGreaterThan(0)
   expect(screen.getByRole("button", { name: /^pay$/i })).toBeEnabled()
