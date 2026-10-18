@@ -1,4 +1,7 @@
-SEARCH_S = 5.0
+# Live search may wait this long between the provider call and the orchestrator
+# cap. SerpAPI cold queries have been measured at 7-20 s, and showing a long
+# spinner beats swapping in unrelated catalog products during a demo.
+SEARCH_S = 11.0
 INVESTIGATION_BUDGET_S = 14.0
 CHECK_CONCURRENCY = 8
 LLM_S = 2.5

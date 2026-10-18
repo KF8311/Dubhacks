@@ -14,7 +14,7 @@ Every supported way to start the product on this machine. The short version is t
 .\scripts\dev.cmd
 ```
 
-That is enough. It starts the backend in its own window, waits until `http://localhost:8000/api/health` answers, then starts the frontend in the current window. Vite prints the URL it chose, normally **http://localhost:5173**.
+That is enough. It starts the backend in its own window, waits until `http://localhost:8000/api/health` answers, then starts the frontend in the current window. The frontend is pinned to **http://localhost:5173/** — open that URL. If the port is busy, Vite exits with `Port 5173 is already in use` instead of silently moving to 5174; close the other Vite window and run the script again.
 
 | Command | What it runs | When to use |
 |---|---|---|
@@ -39,14 +39,16 @@ Stopping:
 
 | | Live (`dev.cmd`) | Offline (`dev.cmd offline`) |
 |---|---|---|
-| Search | SerpAPI on the query you type, catalog fallback | Curated catalog only, query ignored |
+| Search | SerpAPI on the query you type; on failure, a retry state — **never** the catalog | Curated catalog only, query ignored |
 | Network | SerpAPI, Gemini, Safe Browsing, WHOIS/DNS | None, all checks are fixture-backed |
-| Results | Depends on SerpAPI, can be thin or fall back | Always 9 cards, 8 trusted + `Premium Audio Deals` |
+| Results | Depends on SerpAPI; a slow query can take up to ~20 s | Always 9 cards, 8 trusted + `Premium Audio Deals` |
 | Use for | Developing discovery and question generation | Recording, screenshots, judging |
 
 Environment is read from `backend/.env`. The current file has `SERPAPI_KEY` and a Gemini key set, so the default is live.
 
-**Live-search timeout:** the SerpAPI client gets `SEARCH_S - 1.0` = **4.0 s** (`backend/app/search/serpapi.py`), inside a 5 s search budget. If a query is slower than that, the search silently falls back to the curated catalog, so you may see headphones instead of what you typed. The fallback is a demo safety net, not an error. If you want to confirm you are getting live results, query something distinctive (`mechanical keyboard`, `airpods pro`) and check the response's `search.completed` event for `source: "serpapi"`.
+**Live-search timeouts:** the SerpAPI client gets `SEARCH_S - 1.0` = **10.0 s**, inside an **11 s** per-attempt budget (`backend/app/core/timeouts.py`, [`serpapi.py`](../backend/app/search/serpapi.py)). The orchestrator retries once, so a cold query can take about 22 s before it gives up. While that runs, the page shows "Searching live listings…" with skeleton cards.
+
+If both attempts fail, the session ends in the `failed` stage with `SEARCH_UNAVAILABLE` and a **Start over** button. Live mode never substitutes the curated catalog, because unrelated products look like a bug on stage. To confirm you are getting live results, check the `search.completed` event for `source: "serpapi"`.
 
 `DEMO_MODE=1` does **not** force the catalog. Despite the README table, only `OFFLINE` changes search behaviour; `DEMO_MODE` gates `/api/demo/reset` and some page flags.
 
@@ -102,8 +104,8 @@ Runs the real orchestrator end-to-end against the curated catalog and prints the
 ## Tests and build
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q   # 215 pass
-cd frontend; npx vitest run                            # 39 pass
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q   # 218 pass
+cd frontend; npx vitest run                            # 49 pass
 cd frontend; npm run build                             # tsc -b + vite build, must be clean
 ```
 
@@ -128,7 +130,9 @@ curl -X POST http://localhost:8000/api/demo/reset
 
 ## The canonical "it works" walkthrough
 
-1. Stack up, open the frontend.
+Run this in `.\scripts\dev.cmd offline`; the numbers below are the frozen catalog.
+
+1. Stack up, open `http://localhost:5173/`.
 2. Query `noise cancelling headphones`.
 3. Answer $300–$600 / Travel / Noise cancelling.
 4. Expect 9 cards, 8 trusted, `Premium Audio Deals` red.
@@ -142,10 +146,10 @@ curl -X POST http://localhost:8000/api/demo/reset
 |---|---|---|
 | `WinError 10048` on start | Port 8000 already taken | Let `dev.cmd` reuse it, or stop the old backend window |
 | Frontend loads but every call fails | Backend not on 8000, or CORS origin missing | `scripts\dev.cmd check`; confirm `ALLOWED_ORIGINS` lists the frontend origin |
-| Query returns headphones you did not ask for | SerpAPI timed out, catalog fallback fired | Retry with a shorter query; see idea B in `ideas-after-96cf47f.md` |
+| Query returns no results after a long wait | Both live-search attempts failed | Start over and retry; live mode no longer shows the catalog, see D-025 |
 | `?mock=1` shows old-looking data | Mock reads `frontend/src/data/mock-session.json` | That file is the mock; it is not the live flow |
 | Backend window flashes and closes | Import or dependency error | Run the manual command to keep the traceback visible |
-| `npm run dev` starts a second Vite | 5173 is busy | Vite picks the next port; use the URL it prints |
+| `Port 5173 is already in use` | Another Vite is running | Close the old Vite window; the frontend is pinned to 5173 |
 | Tests fail only sometimes | `OFFLINE=1` leaked into the environment | Start a fresh shell, unset `OFFLINE`, rerun |
 
 ## Deploying later
