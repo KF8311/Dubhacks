@@ -42,8 +42,8 @@ test("how it works explains the five checks and the pay rule", () => {
   window.history.replaceState({}, "", "/how")
   render(<App />)
   expect(screen.getByRole("heading", { name: /how sykes checks a store/i })).toBeInTheDocument()
-  expect(screen.getByText(/domain age/i)).toBeInTheDocument()
-  expect(screen.getByText(/safe browsing/i)).toBeInTheDocument()
+  expect(screen.getAllByText(/domain age/i).length).toBeGreaterThan(0)
+  expect(screen.getAllByText(/safe browsing/i).length).toBeGreaterThan(0)
   expect(screen.getByText(/cannot pay a merchant it cannot verify/i)).toBeInTheDocument()
 })
 

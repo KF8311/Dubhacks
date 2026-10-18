@@ -1,11 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScreenSlide } from "@/components/ScreenSlide.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createSession, getSnapshot, submitAnswers } from "@/lib/api.ts"
-import type { Answer, Question } from "@/lib/types.ts"
 import { go } from "@/lib/path.ts"
+import type { Answer, Question } from "@/lib/types.ts"
 import { useSessionStore } from "@/store/sessionStore.ts"
 
 type Props = {
@@ -56,6 +56,12 @@ export function DiscoveryFlow({ onStarted }: Props) {
 
   const question = questions[index]
 
+  useEffect(() => {
+    if (phase === "query") return
+    go("/", { scroll: true })
+    document.getElementById("shop")?.scrollIntoView?.({ block: "start" })
+  }, [phase])
+
   async function onFindProducts() {
     const trimmed = query.trim()
     if (!trimmed) return
@@ -99,6 +105,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
         budgetMaxCents: submitted.search_spec?.budget_max_cents ?? null,
         budgetMinCents: submitted.search_spec?.budget_min_cents ?? null,
       })
+      go("/", { scroll: true })
       onStarted(snapshot.session_id)
     } catch (caught) {
       setPhase("questions")
