@@ -20,7 +20,7 @@ This is the only file that claims to be current.
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is not built yet. |
 | Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
 | Blockers | Task 23 checkout routes; C still renders listings from mock data; Fly serves the pre-merge build |
-| Branches | `main` has PRs #1–#8. `merge/agent-backend` carries A's Tasks 16 + 22 on top of `main` — open for review, not yet merged. |
+| Branches | `main` has PRs #1–#8. **PR #9** (`merge/agent-backend`) carries A's Tasks 16 + 22 plus the catalogue-limit fix — open for review, not yet merged. |
 
 Last updated: 2026-10-17 17:10 PT
 
