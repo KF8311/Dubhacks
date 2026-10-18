@@ -16,14 +16,14 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **133 passed**. Frontend **6 files / 9 tests passed**, `npm run build` clean. |
+| Tests | Backend **146 passed**. Frontend **6 files / 9 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates. Checkout/confirm HTTP (Task 23) is the next build. |
 | Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
 | Blockers | Task 23 checkout routes; Fly serves the pre-merge build |
 | Branches | **`main` is `06a9e3c` and fully merged** (PRs #1–#11). No follow-on branch is required; branch from `main` for the next block. |
 
-Last updated: 2026-10-17 18:15 PT
+Last updated: 2026-10-17 18:40 PT
 
 ## Gate board
 
@@ -60,7 +60,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 |---|---|---|---|---|
 | A | Task 23 checkout/confirm HTTP | 18:00 | 19:30 | Block 4 — the only thing between the demo and G4 |
 | C | Browser verification of the live stream, checkout sheet, receipt page | 17:30 | 19:30 | Tasks 25, 26; `?mock=1` remains the fallback |
-| B | Integration golden test, VEYZL audit, Devpost technical section | 18:05 | 19:30 | Task 28 is done; Task 29 next |
+| B | VEYZL audit, README, Devpost technical section | 18:40 | 19:30 | Block 4 refusal paths are done; Task 29 next |
 
 ## Done since last update
 
@@ -73,6 +73,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] B: **Task 28** — offline replay (`app/demo/replay.py`, `scripts/replay_offline.py`) reproduces the live run with no server and no network; exit 1 on drift
 - [x] B: domain age and SSL honour `OFFLINE=1`; the orchestrator accepts an injected `Settings`
 - [x] B: villain integration golden test — real checks → `danger` → excluded from the pick even when cheapest
+- [x] B: Block 4 refusal paths — real hero pays, real villain refused, stale/cap/currency/coverage pinned, no-LLM source guard
 
 ## Next three actions
 

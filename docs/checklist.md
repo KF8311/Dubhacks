@@ -13,11 +13,11 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 18:15 PT
+## Where we are now — 18:40 PT
 
 | Thing | State |
 |---|---|
-| `main` | `06a9e3c` — **everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, the live frontend, and the offline replay. **133 backend / 9 frontend tests pass**, build clean. |
+| `main` | `06a9e3c` — **everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, the live frontend, and the offline replay. **146 backend / 9 frontend tests pass**, build clean. |
 | Follow-on branch | **None. `main` is the source of truth** — branch from it for the next block. |
 | Live API | `POST /api/sessions`, `POST /api/sessions/{id}/answers`, `GET /api/sessions/{id}`, `GET /api/sessions/{id}/events`. Checkout/confirm (Task 23) not built yet. |
 | Frontend | Live by default. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI from `data/mock-session.json`. |
@@ -41,7 +41,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **133 passed**; `npx vitest run` → 9 passed. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **146 passed**; `npx vitest run` → 9 passed. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -120,7 +120,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Person | Do |
 |---|---|
 | **A** | Mandate → simulated passkey → one-time token → transaction → receipt. Server re-validates: `trusted` ∧ score ≥70 ∧ (allowlisted ∨ ≥3 checks). Atomic transitions, idempotency key, `processor: mock-vic`, `mode: sandbox`. Raw token never stored — SHA-256 and last4 only. |
-| **B** | Freeze golden tests. Verify the refusal paths: danger, low score, low coverage, stale investigation. Confirm no fixture text reaches an LLM. |
+| **B** | ✅ **Done** — golden values frozen: payability constants, the 30-minute stale boundary, and every refusal code. Refusal paths verified against the **real demo data**: villain → `MERCHANT_NOT_TRUSTED`, stale investigation → `INVESTIGATION_STALE`, cap exceeded → `AMOUNT_EXCEEDS_CAP`; the real allowlisted hero pays. No-LLM guard: `test_no_llm_path.py` fails if any module imports a generative client or reads the Gemini key outside config. |
 | **C** | Checkout sheet: cap, sandbox banner, passkey step, disabled when not payable with the server's reason shown. Receipt page: merchant, checks, score, last4 only, sandbox line. |
 
 **Proof:** full click-through on a trusted listing; then attempt the villain and get a visible refusal with the server's code.
@@ -180,6 +180,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] Hookup fix: allowlisted merchants rendered as `0 · Trusted`. `listing.scored` now carries `allowlisted` and the badge reads `Verified · Trusted` (D-015 display consequence).
 - [x] CORS verified for `http://localhost:5173` on both the JSON routes and the SSE stream
 - [x] **All merges landed** — PRs #9, #10, #11 into `main`; `main` is `fa6c2a7` and green
+- [x] B: **Block 4 refusal paths** — real villain/host data through `assert_payable`; danger, low confidence, low coverage, missing investigation, currency, cap, and the 30-minute boundary pinned; no-LLM source guard (`test_refusal_paths.py`, `test_no_llm_path.py`)
 - [x] B: villain integration golden test — real checks → `danger` → excluded from `recommend()` even when cheapest (`tests/integration/test_villain_end_to_end.py`)
 - [x] B: **Task 28** — `app/demo/replay.py` + `scripts/replay_offline.py`. Reports `9 / 8 / 0 / 1`, villain `lst_vln_xm5`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`, identical to the live HTTP run; exits 1 on drift. `SessionOrchestrator` takes an optional `Settings` and domain age + SSL short-circuit on `offline`. 7 new tests.
 
@@ -219,7 +220,7 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 **First 15 minutes of the block, every person:**
 
 1. `git checkout main && git pull`
-2. Run your baseline: backend `pytest -q` → **133 passed**; frontend `npx vitest run` → **9 passed**.
+2. Run your baseline: backend `pytest -q` → **146 passed**; frontend `npx vitest run` → **9 passed**.
 3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
 
 ### A — checkout backend (G4's critical path)
