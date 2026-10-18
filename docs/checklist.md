@@ -9,7 +9,7 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **234 passed**, frontend **54 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **237 passed**, frontend **55 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
 
@@ -80,16 +80,16 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 **Read first:** the explain route currently hides which path answered — [`routes_sessions.py:95-101`](../backend/app/api/routes_sessions.py#L95-L101) imports `explain_check` and returns only `explanation`.
 
-- [ ] Write two failing tests: no model → `("…summary…", "template")`; fake completion → `("The certificate is valid for the domain.", "gemini")`
-- [ ] Run `cd backend; .\.venv\Scripts\python.exe -m pytest tests/unit/test_llm.py -q` and confirm they fail on the missing name
-- [ ] Add `async def explain_check_with_source(check, *, complete=None) -> tuple[str, str]`; keep `explain_check` as a one-line wrapper
-- [ ] Return `"source"` from `POST /api/sessions/{id}/explain`
-- [ ] Frontend test first: `source: "gemini"` renders `AI-generated`, `source: "template"` renders `From evidence`
-- [ ] `api.ts` returns `{ text, source }`; mock mode returns `source: "template"`
-- [ ] Add the `text-xs` chip to `CheckRow`
-- [ ] Add the field to `docs/contracts.md`
+- [x] Write three failing tests: no model → `("ok", "template")`; fake completion → `("The certificate is valid for the domain.", "gemini")`; unusable answer → `("ok", "template")`
+- [x] Run `cd backend; .\.venv\Scripts\python.exe -m pytest tests/unit/test_llm.py -q` and confirm they fail on the missing name
+- [x] Add `async def explain_check_with_source(check, *, complete=None) -> tuple[str, str]`; keep `explain_check` as a one-line wrapper
+- [x] Return `"source"` from `POST /api/sessions/{id}/explain`; update `test_explain_route_uses_llm` to patch the new name
+- [x] Frontend test first: `source: "gemini"` renders `AI-generated`, `source: "template"` renders `From evidence`
+- [x] `api.ts` returns `{ text, source }`; mock mode and a missing field both return `source: "template"`
+- [x] Add the `text-xs` chip to `CheckRow`
+- [x] Add the field to `docs/contracts.md`
 
-**Done when:** with no API key the chip reads `From evidence`, with a key it reads `AI-generated`, and both suites pass.
+**Done when:** with no API key the chip reads `From evidence`, with a key it reads `AI-generated`, and both suites pass. ✅ 2026-10-18 05:20 PT — backend 237, frontend 55, build clean.
 
 #### T2 — Photon text loop (sponsored slot 3, conditional)
 
@@ -197,8 +197,8 @@ Everything else on A's plate is done (see "Already done"). One item remains:
 ## Shared gates — run before calling anything done
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 234 passed
-cd frontend; npx vitest run; npm run build                       # 49 passed, clean
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 237 passed
+cd frontend; npx vitest run; npm run build                       # 55 passed, clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
 ```

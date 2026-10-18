@@ -120,7 +120,9 @@ Returns `session_id`, `stage: "clarifying"`, 2–3 `questions`, `expires_at`. Qu
 
 ## `POST /api/sessions/{session_id}/explain` → 200
 
-Body: `{ "listing_id": "lst_…", "check_id": "ssl_cert" }`. Returns `{ "listing_id", "check_id", "explanation" }`. Lazy, on demand. Falls back to the check `summary`. Raw HTML is stripped before any model call.
+Body: `{ "listing_id": "lst_…", "check_id": "ssl_cert" }`. Returns `{ "listing_id", "check_id", "explanation", "source" }`. Lazy, on demand. Falls back to the check `summary`. Raw HTML is stripped before any model call.
+
+`source` is `"gemini"` only when the model actually produced the sentence; every fallback — no key, offline, timeout, invalid JSON, empty text — returns `"template"`. The UI labels `"gemini"` as `AI-generated` and `"template"` as `From evidence`, and a client that cannot see the field must assume `"template"`.
 
 ## `POST /api/sessions/{session_id}/answers` → 202
 
