@@ -3145,7 +3145,7 @@ Frontend: `VITE_API_BASE_URL` only.
 
 ## Appendix D — Glossary
 
-See the Terms section in `docs/devpost-form.md` and the decision log in `docs/decisions.md`; the standalone glossary was removed on 2026-10-18.
+The standalone glossary was removed with the product spec on 2026-10-18; use `docs/decisions.md` for the terms that are actually enforced.
 
 ## Appendix E — Database Alternatives
 
