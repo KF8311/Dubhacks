@@ -26,7 +26,7 @@ Resolve these with a mentor, a judge, or a two-minute team huddle. When one is a
 
 - [ ] **SerpAPI key:** do we have one? Go/no-go at 1:15 PM Saturday.
 - [x] **Deploy target:** decided — Fly.io always-on 256 MB (D-010). Cloud Run and Render free were the alternatives.
-- [ ] **MongoDB Atlas:** who creates the cluster, and is the IP allowlist `0.0.0.0/0` acceptable for the event?
+- [ ] **MongoDB Atlas (owner: B, D-016):** who creates the cluster, and is the IP allowlist `0.0.0.0/0` acceptable for the event? Not needed until Block 6.
 - [ ] **Gemini key:** do we have quota for 2–3 calls per session, or should templates be the default path?
 - [ ] **Safe Browsing key:** do we have one, or do we ship the static denylist with `source: "unavailable"`?
 

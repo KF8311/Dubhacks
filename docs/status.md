@@ -19,7 +19,7 @@ This is the only file that claims to be current.
 | Tests | Backend **153 passed**. Frontend **9 files / 22 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**. The frontend calls all of them live; `?mock=1` is the fallback. |
-| Owners | A: platform + orchestrator + payments. B: trust + data. C: frontend. |
+| Owners | A: platform + orchestrator + payments. B: trust + data + **Mongo persistence (Task 27, D-016)**. C: frontend. |
 | Blockers | Two Block 5 first actions: A redeploys Fly, C clicks the merged flow through once |
 | Branches | **`main` carries everything through Block 4 for A, B, and C** (PRs #1–#14). No branch is ahead of `main`. Branch from `main` for Block 5. |
 
