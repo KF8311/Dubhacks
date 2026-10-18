@@ -26,8 +26,8 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 | **Title** | Visa: Reimagine Shopping | Locked. The build is the pitch. |
 | Sponsored 1 | **SideShift — Best Startup Idea** | Enter. No build requirement, any stack, $1,500 first. Write the "who pays and how it spreads" paragraph. |
 | Sponsored 2 | **Cloudforce** | Enter. Every entry is a raffle ticket; Most Interesting is a judges' pick. The public receipt share link is the viral hook. |
-| Sponsored 3 | **VEYZL** if the audit app installs, else **Photon** if a channel provisions in under 2h, else leave empty | Decide by 07:00 PT. Both are real integrations — do not claim either without the evidence. |
-| Non-sponsored | **MLH: Best Use of Gemini API** | Task 1 (provenance chip) + the project number from the key owner. |
+| Sponsored 3 | **Photon 2.0** — project `1afb123e` exists; blocked on `account_phone_missing` | Attach a phone in the dashboard's avatar menu, then text the line. Only claim it once a real message round-trips through our backend. **VEYZL** stays unselected. |
+| Non-sponsored | **MLH: Best Use of Gemini API** | Task 1 (provenance chip) + the project number — a public ~12-digit project id, not the key. |
 | Non-sponsored | **MLH: Best Use of MongoDB Atlas** | Proven (D-026). Task 2 makes it load-bearing. |
 | Non-sponsored | **MLH: DEV Writing Challenge** | Task 3 — publish, then link it on Devpost. |
 | Non-sponsored | **DubHacks NEXT**, **MLH Commit Fellowship** | Free entries; the startup paragraph doubles as the NEXT pitch. |

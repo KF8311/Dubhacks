@@ -129,7 +129,7 @@ Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do
 
 > Yes. Gemini 3.5 Flash Lite writes the clarifying questions, the one-line recommendation narration, and on-demand explanations of each trust check. Every call is capped at 2.5 seconds and falls back to a deterministic template, so the demo works with no key and no network. The model never scores, never selects checks, and never touches payability or checkout — those are Python-only, and a build test fails if a trust, check, or payment module imports the LLM. We kept the model out of the decision path deliberately: a trust score you cannot re-derive from evidence is not a trust score.
 
-**Gemini Project Number** — only for the Best Use of Gemini API category. We are not entering it. Leave blank.
+**Gemini Project Number** — required once we tick Best Use of Gemini API. It is the project's **public** identifier (a ~12-digit number), not the API key: MLH uses it to confirm the traffic that hit Gemini this weekend came from this project. The key's owner reads it at `aistudio.google.com/apikey` from the project selector — no rotation needed, and `GEMINI_API_KEY` itself never goes into Devpost, chat, or the repo.
 
 ---
 

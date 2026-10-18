@@ -27,7 +27,7 @@
 - A checkout created before a restart must still confirm after it, or the app must refuse with `INVESTIGATION_STALE` — never a 500.
 - A missing listing id must not make `_get_listing` raise; the catalog fallback stays last.
 - The DEV article must not claim a feature the repo does not have.
-- The Gemini project number must come from the account that owns the key — not a placeholder.
+- The Gemini project number must come from the account that owns the key — not a placeholder. It is a public project id, not a secret; the key itself never leaves the environment.
 
 ---
 
@@ -301,7 +301,7 @@ Add the sponsored three and the non-sponsored list; keep VEYZL out.
 
 - [ ] **Step 3: Get the Gemini project number**
 
-The owner of `GEMINI_API_KEY` opens `aistudio.google.com/apikey`, copies the project **number** (not the key), and pastes it into the Devpost field. Never commit it.
+The owner of `GEMINI_API_KEY` opens `aistudio.google.com/apikey`, reads the project **number** from the project selector (not the key — the number is public and is what MLH uses to verify usage), and pastes it into the Devpost field. No key rotation, and the key itself never appears in chat, docs, or the repo.
 
 - [ ] **Step 4: Update the checklist**
 
