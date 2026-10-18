@@ -52,9 +52,8 @@ data/*.local.json
 frontend/.vercel
 backend/.vercel
 
-# The Vercel function reads fixtures from backend/data. It is committed so a
-# Git deploy has them even if the build step is skipped, and bundle_data.py
-# refreshes it from the repo data/ on every build.
+# Copied onto the FastAPI function during the Vercel build
+backend/data/
 
 # Local secrets — examples stay tracked
 .env

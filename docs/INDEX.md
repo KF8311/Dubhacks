@@ -14,6 +14,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 |---|---|
 | **New to the project** | This page → `project-a-sniff-visa.md` → plan §1–§4 |
 | **Building a task** | `docs/status.md` → `docs/team-split-3.md` → the task in the plan |
+| **Running it locally** | `docs/RUN.md` — one command, live/offline/mock modes, troubleshooting |
 | **Claude / an agent** | `CLAUDE.md` → this page → `docs/status.md` → the plan |
 | **On Cursor** | `AGENTS.md` → `.cursor/rules/project.mdc` → `docs/status.md` |
 | **Reviewing a decision** | `docs/decisions.md` |
@@ -31,13 +32,14 @@ One project, one repository, one source of truth. If a fact is not written here 
 | `docs/superpowers/plans/2026-10-17-sniff-visa.md` | Engineering plan: architecture, API, data model, 30 TDD tasks, schedule, risks | Current |
 | `docs/team-split-3.md` | Three-person ownership map, time-boxed checklists, gates, cuts | Current |
 | `docs/checklist.md` | **Shared team checklist** — universal rules plus one block per person, with completed items ticked | **Work from this** |
-| `docs/REMAINING.md` | One page: the six items left in the whole project, and what happens if the deploy or screenshots do not land | **Read this first when you are lost** |
 | `docs/status.md` | The only file that claims to be current: gate, owners, blockers | **Update every 90 min** |
+| `docs/RUN.md` | Every way to run the product locally, including `scripts\dev.cmd` | Current |
 | `docs/decisions.md` | Append-only decision log with rationale and alternatives | Append-only |
 | `docs/devpost.md` | Devpost draft: title, copy, tech claims, sandbox disclosure, fill-in list | Draft |
 | `docs/devpost-form.md` | The five Devpost steps mapped field by field: limits, required fields, exact copy, which tracks to select | Draft |
 | `docs/devpost-technical-claims.md` | The technical claims A handed to B, each mapped to the file and test that backs it | Draft |
-| `docs/veylz-audit.md` | VEYZL audit: scope, candidate controls, both report ids, and finding 1 with its fix and tests | Finding fixed (D-023); clean re-run owed |
+| `docs/veylz-audit.md` | VEYZL audit: scope, candidate controls, method, and the finding/fix evidence | Awaiting run |
+| `docs/ideas-after-96cf47f.md` | Parked ideas from the commits after `96cf47f`, with links and a revisit checklist | Archive |
 | `docs/open-questions.md` | Unresolved questions for mentors, judges, or the team | Living |
 | `docs/SKILLS.md` | Committed skills and agents, when each fires, who should use it | Current |
 | `.claude/` | The vendored skills and agents themselves | Vendored |

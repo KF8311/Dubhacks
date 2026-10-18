@@ -68,7 +68,7 @@ react, typescript, vite, tailwindcss, zustand, vitest, gemini, mongodb
 
 | Label | Value |
 |---|---|
-| Live demo | `https://sykes.select` — live on Vercel, verified 2026-10-17 23:00 PT |
+| Live demo | `[LIVE URL]` — after A's redeploy |
 | Source | `https://github.com/KF8311/Dubhacks` |
 | Sandbox notice | already in the story; do not add a second link |
 
