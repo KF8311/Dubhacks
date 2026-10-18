@@ -13,16 +13,16 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 18:40 PT · **Block 4 closed, Block 5 starting**
+## Where we are now — 19:10 PT · **Block 4 closed, Block 5 running**
 
 | Thing | State |
 |---|---|
-| `main` | **Everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, and the frozen refusal paths. **153 backend / 22 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
-| Follow-on branch | **None. `main` is the source of truth** — branch from it for Block 5. `scratch/integration` is stale; do not reuse it. |
-| Live API | Sessions create/answers/snapshot/events; **`POST /api/checkout`**, **`POST /api/checkout/{checkout_id}/confirm`**, `GET /api/receipts/{id}`, `GET /api/public/receipts/{share_id}`, `POST /api/demo/reset`. |
+| `main` | **Everything merged** (`3038c6b`): scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, the frozen refusal paths, **Gemini questions/narration/explanations (D-017–D-019)**, and **the `Repository` protocol with in-memory + Mongo adapters**. **177 backend / 26 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
+| Follow-on branch | **None. `main` is the source of truth** — branch from it. `scratch/integration` is stale; do not reuse it. |
+| Live API | Sessions create/answers/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm**, **receipts + public share**, `POST /api/demo/reset`. |
 | Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from `data/mock-session.json`. |
-| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is built and merged end to end**; its gate proof (one browser click-through) is the first action of Block 5. |
-| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `integration/block4`, `integration/block4-ui`, `b/block4-refusals` all merged into `main`. `scratch/integration` is stale (main is ahead of it) — do not reuse it. |
+| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is built and merged end to end**; its gate proof (one browser click-through) is the first action of Block 5. **G5 is open**: the stories are written, the artifacts are not. |
+| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `integration/block4`, `integration/block4-ui`, `b/block4-refusals`, `b/block5-devpost`, `b/block5-veylz-audit`, `b/mongo-ownership` all merged into `main`. `scratch/integration` is stale (main is ahead of it) — do not reuse it. |
 
 **Before anyone starts:** `git checkout main && git pull`. There is nothing left to merge — if you are on an older branch, rebase onto `main` before writing code.
 
@@ -131,9 +131,9 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | `fly deploy` from current `main` so the live app matches the repo. Confirm the health URL and a real session over the public URL. |
-| **B** | Devpost technical section: the five checks, the scoring formula with real numbers, the payability rule, the sandbox disclosure. Fill `docs/status.md` with final numbers. |
-| **C** | Three screenshots — results grid, danger detail, receipt — and one screen recording of the full path. |
+| **A** | `fly deploy` from current `main` so the live app matches the repo. Confirm the health URL and a real session over the public URL. Then `smoke_http.py` against it. This is the only thing G5 is waiting on from A. |
+| **B** | ✅ Devpost story, README, and `docs/devpost-form.md` written. ⬜ Task 29: run VEYZL on a PR, reproduce one finding, fix it with a test, write the before/after. Then fill the Devpost placeholders and `docs/status.md`. |
+| **C** | Three screenshots — results grid, danger detail, receipt — and one screen recording of the full path. This is the only thing G5 is waiting on from C. |
 
 **Proof:** Devpost draft saved with the URL, the screenshots, and the sandbox label visible in the copy.
 
@@ -141,9 +141,19 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 
 | Person | Do |
 |---|---|
-| **A** | Review B's `Repository` protocol before it merges; confirm no Mongo type leaks into `app/`. |
-| **B** | **Task 27 (D-016)** — `MongoRepository` behind the existing protocol, TTL indexes, caches, redaction, **only if** everything above is green. Otherwise skip: the in-memory adapter is the cut-order survivor. ✅ Replay half already done — `scripts/replay_offline.py` runs a full session in-process with no server and no network: 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`. Exits 1 if those numbers drift. Domain age and SSL now honour `OFFLINE=1` (fixtures still load, nothing opens a socket). |
-| **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path. |
+| **A** | Review the merged `Repository` protocol that A built on `agent_backend` — confirm no Mongo type leaks into `app/` and that `MONGODB_URI` unset stays the default. Then freeze: no new features after 02:00. |
+| **B** | **Task 27 review (D-016)** — A's `InMemoryRepository` + `MongoRepository` are now on `main`; B owns the review, the Atlas cluster question, and the MLH MongoDB claim. **Only** if every Block 5 item is green: add TTL index verification, redaction checks, and a `MONGODB_URI`-unset regression test. Otherwise skip — the in-memory adapter is the cut-order survivor. ✅ Replay half already done — 9 listings, 8/0/1, villain `danger`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`, exit 1 on drift. |
+| **C** | Phone-width reflow, loading and error states, `?mock=1` fallback path, reduced motion. |
+
+**Block 6 required before freeze:**
+
+- [ ] Every claim in `README.md` and `docs/devpost.md` matches the merged code — Gemini is in the questions/narration/explain path (D-017–D-019), not in scoring; the devpost's generative-AI answer is **Yes**, not N/A.
+- [ ] `pytest -q` green with **no** `GEMINI_API_KEY` and `OFFLINE=1` — the template fallback is the demo path.
+- [ ] `scripts/replay_offline.py` exits 0 and prints the frozen numbers.
+- [ ] `npm run build` clean; `?mock=1` renders the whole flow.
+- [ ] No `.env` or key is tracked (`git ls-files | grep -i env`).
+- [ ] Devpost fields in `docs/devpost-form.md` all filled; VEYZL selected as a Sponsored Side Track.
+- [ ] `docs/status.md` updated with the final numbers.
 
 **Proof:** offline replay produces the same numbers as live; plane-mode demo works.
 **2:00 AM: freeze.** After this, docs and bugfixes only.
@@ -186,6 +196,12 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 - [x] C: **Tasks 25–26** — checkout sheet, mandate card, passkey dialog, processing state, receipt page, `/r/:share_id` route (PR #14)
 - [x] Hookup: C's client sends the contracted `mandate` and full passkey assertion, follows `receipt_url` to the public receipt, and renders the server's `PayabilityCode`; `src/lib/api.test.ts` pins every request and response shape against the live routes (PR #14)
 - [x] B: **Task 28** — `app/demo/replay.py` + `scripts/replay_offline.py`. Reports `9 / 8 / 0 / 1`, villain `lst_vln_xm5`, pick `lst_tgt_bsp`, median `$374.49`, savings `$194.50`, identical to the live HTTP run; exits 1 on drift. `SessionOrchestrator` takes an optional `Settings` and domain age + SSL short-circuit on `offline`. 7 new tests.
+- [x] B: refusal messages are human copy, not bare codes; `CheckoutSheet` renders `PayabilityCode` + message (PR #14)
+- [x] B: `README.md` rewritten; `docs/devpost.md` drafted; `docs/veylz-audit.md` scaffolded (PR #17)
+- [x] A: **Gemini** — questions, recommendation narration, on-demand check explanations, 2.5 s timeout, template fallback; trust/check/payment modules still cannot import it (`test_no_llm_path.py`) — D-017–D-019
+- [x] A: **`Repository` protocol** — `InMemoryRepository` + `MongoRepository`, TTL indexes, atomic `transition_checkout`; `MONGODB_URI` unset stays the default (B reviews in Block 6, D-016)
+- [x] C: `c/web` — 1024px layout, reduced motion, purge overlay test; second commit lets allowlisted merchants through checkout (D-015)
+- [x] Merge reconciliation: A's three Gemini decisions were renumbered D-017/D-018/D-019 because D-016 was already Mongo ownership; `README.md` and `docs/devpost.md` corrected to say the model writes copy but never decides
 
 ## 6. Gate board
 
@@ -196,7 +212,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | G2 Investigation + score | Sat 18:00 | 🟢 server proof + `check.completed` rendering; browser click-through owed | A + B + C |
 | G3 Recommendation | Sat 19:30 | 🟢 server proof + `BestPick` and best-pick ring; browser click-through owed | A + B + C |
 | G4 Checkout → receipt | Sat 21:00 | 🟡 **build complete and merged**; browser click-through is Block 5's first action | A + C |
-| G5 Devpost draft | Sat 22:30 | ⬜ | B |
+| G5 Devpost draft | Sat 22:30 | 🟡 stories written; URL, screenshots, video, and VEYZL evidence pending | B |
 | G6 Freeze | Sun 02:00 | ⬜ | all |
 | G7 Submit | Sun 09:50 | ⬜ | all |
 
@@ -210,7 +226,10 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | Contracts not frozen | A | `Question` shape is a guess; cheap to confirm, expensive to discover at 21:00 |
 | SerpAPI key | A | Catalog only (D-011). Not blocking. |
 | Safe Browsing key | B | Static denylist with `source="unavailable"`. Not blocking. |
-| Mongo deferred to Block 6 (D-016) | B | In-memory adapter is the default. Not blocking; the Atlas cluster question is still open. |
+| Mongo deferred to Block 6 (D-016) | B | In-memory is the default; A's `MongoRepository` is merged but unreviewed. Not blocking. |
+| VEYZL check has not run on a PR yet | B | The app must be installed and the project created before the fix PR opens; without a visible check run the side track is not eligible. |
+| `GEMINI_API_KEY` absent on Fly | A | The app falls back to templates; the demo still works, but the narration is deterministically worded. Set it only if the fallback copy reads worse on stage. |
+| Local venv missing `motor` | everyone | `pip install motor`; it is in `requirements.txt`. Without it one repository test fails to import. |
 
 ## 8. Cut order
 
@@ -218,7 +237,14 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 ## 9. Block 5 — G5 Devpost draft · start here
 
-**State:** **Block 4 is closed.** A's checkout backend, B's refusal paths and offline replay, and C's checkout sheet and receipt page are merged into `main` (PRs #12–#14), reconciled against the live JSON contract, and green: **153 backend / 22 frontend tests**, `npm run build` clean, offline replay exits 0.
+**State:** **Block 4 is closed and Block 5 is running.** `main` is at `3038c6b` and carries everything from all three people: checkout → confirm → receipt, C's checkout sheet and receipt page, C's responsive/reduced-motion fixes, and A's `agent_backend` work (Gemini questions/narration/explanations, `InMemoryRepository` + `MongoRepository`, health/session hardening). Green on merge: **177 backend / 26 frontend tests**, `npm run build` clean, offline replay exits 0.
+
+**What changed since Block 4 closed, and what it means:**
+
+- **Gemini is now in the app** (D-017–D-019): it writes the clarifying questions, the one-line recommendation narration, and on-demand check explanations. Every call has a 2.5 s timeout and a template fallback. It is **not** in scoring, checks, payability, or checkout — `test_no_llm_path.py` still enforces that.
+- **The Devpost answer to "did you implement a generative AI model or API?" is therefore Yes, not N/A.** `README.md` and `docs/devpost.md` have already been corrected; do not reintroduce "no model anywhere in the request path."
+- **Mongo now exists in the code** (A built Task 27 on `agent_backend`). `MONGODB_URI` unset remains the default. B owns the review and the MLH MongoDB claim in Block 6 (D-016).
+- **C's allowlisted-merchant checkout fix** is merged — a curated merchant at score 0 can pay, matching D-015.
 
 Two Block 4 items carry over, both small and both first-in-line here:
 
@@ -228,7 +254,7 @@ Two Block 4 items carry over, both small and both first-in-line here:
 **First 15 minutes of this block, every person:**
 
 1. `git checkout main && git pull`
-2. Run your baseline: backend `pytest -q` → **153 passed**; frontend `npx vitest run` → **22 passed**; `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0.
+2. Run your baseline: backend `pytest -q` → **177 passed**; frontend `npx vitest run` → **26 passed**; `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0. If `motor` is missing, `pip install motor` (it is in `requirements.txt`).
 3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
 
 **Your next action, in one line:**
@@ -237,7 +263,7 @@ Two Block 4 items carry over, both small and both first-in-line here:
 |---|---|---|
 | **A** | `fly deploy` from the repo root, then `backend/scripts/smoke_http.py` against the public URL | G4 on the public URL |
 | **C** | Click the live flow through to a receipt and screenshot the grid + receipt | G1–G4 proof |
-| **B** | Task 29 VEYZL audit + `README.md`; Devpost technical section | G5 |
+| **B** | Run VEYZL on the fix PR, reproduce one finding, patch it, write `docs/veylz-audit.md`; then fill `docs/devpost-form.md` | G5 |
 
 **Handoff contract, now live (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`; a declined passkey is `402 PAYMENT_DECLINED`. The confirm path is **`POST /api/checkout/{checkout_id}/confirm`** (singular `checkout`) and takes `{passkey_assertion: {credential_id, client_data}, idempotency_key}`. Confirm returns a **pointer** (`receipt_id`, `receipt_url`); the receipt itself is `GET /api/public/receipts/{share_id}`. Every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label. The frontend's request/response mapping is pinned in `frontend/src/lib/api.test.ts` — if the shape has to change, say it in the channel before committing.
 
@@ -250,7 +276,7 @@ Block 4's backend is merged. Only deployment remains:
 3. Free-text budget parsing — `"under $300"` currently yields `budget_max_cents: null`. Nice-to-have; skip it if anything above is red.
 4. Close the last contract item: sign off the `Question` shape in `docs/contracts.md` (G0).
 
-**Proof:** the public health URL plus a checkout and receipt on the public URL; `pytest -q` still 153.
+**Proof:** the public health URL plus a checkout and receipt on the public URL; `pytest -q` still 177.
 
 ### C — close the gate
 
@@ -264,16 +290,21 @@ The screens are merged. This block is about proving them in a real browser:
 
 **Proof:** three screenshots (grid, receipt, refusal) plus the mock fallback still working.
 
-### B — audit, README, Devpost
+### B — audit, Devpost, final numbers
 
 Block 4's trust half is merged (`test_refusal_paths.py`, `test_no_llm_path.py`, `test_villain_end_to_end.py`, and `api.test.ts` pinning the wire shapes). Remaining:
 
-1. **Task 29** — connect the repo to VEYZL, pick one real finding, fix it, write `docs/veylz-audit.md`.
-2. `README.md` — setup, env vars, demo script, sandbox disclosure, and the "why skipped ≠ passed" explanation.
-3. **Devpost technical section** — five checks, the scoring formula with the real numbers, the payability rule, the sandbox label. Fill the URL and screenshots after A and C land theirs.
+1. **Task 29 — VEYZL.** VEYZL is a GitHub App that audits a PR against EU AI Act / NIST AI RMF / ISO 42001 controls and posts a check. The side track (Cloudforce) is $500 + lifetime pro, and judging wants a real audit on a PR plus evidence the finding changed the build.
+   - Confirm the GitHub App is installed on `KF8311/Dubhacks` and the project exists in the VEYZL portal.
+   - Open the **fix PR** — it must be the PR that carries the finding's fix, not a throwaway.
+   - Reproduce the finding by hand first; an unreproduced finding is not a finding.
+   - Write the failing test, fix it, re-run the audit, record before/after in `docs/veylz-audit.md`.
+   - Candidates already scoped in that file; `/api/demo/reset` (unauthenticated while `demo_mode` defaults true) is the strongest.
+2. `README.md` — done, including the corrected Gemini paragraph.
+3. **Devpost** — story done in `docs/devpost.md`; field-by-field map in `docs/devpost-form.md`. Select **Visa: Reimagine Shopping** as the title track and **VEYZL** as a sponsored side track; answer the generative-AI question **Yes** with the paragraph in `devpost-form.md`.
 4. Put the final numbers in `docs/status.md`.
 
-**Proof:** offline replay exits 0; the audit file names one real finding; the Devpost draft exists with the sandbox disclosure and no production-Visa claim.
+**Proof:** offline replay exits 0; the audit file names one real finding with a test that pins the fix; the Devpost draft exists with the sandbox disclosure and no production-Visa claim.
 
 ### Demo script (rehearse exactly this)
 
@@ -291,8 +322,8 @@ Block 4's trust half is merged (`test_refusal_paths.py`, `test_no_llm_path.py`, 
 **Gate check before each rehearsal:**
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q                     # 153 passed
-cd frontend && npx vitest run && npm run build                          # 22 passed, clean
+cd backend && .venv/Scripts/python.exe -m pytest -q                     # 177 passed
+cd frontend && npx vitest run && npm run build                          # 26 passed, clean
 backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```
 

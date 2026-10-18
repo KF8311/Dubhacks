@@ -65,7 +65,7 @@ trusted ≥ 70 · caution ≥ 40 · danger < 40
 fewer than 3 completed checks → score capped at 69
 ```
 
-There is **no model anywhere in the request path**. A build test fails if any generative client is imported or an API key is read outside config. This was a deliberate trade: a trust score you cannot re-derive from evidence is not a trust score, and judges — like users — should be able to check the math.
+**The score is deterministic, and a model never decides anything.** Gemini Flash Lite writes the clarifying questions, the recommendation narration, and on-demand check explanations — each call capped at 2.5 seconds and falling back to a template. It never scores, never selects checks, and never sees a verdict it can change. Scoring, checks, payability, and checkout are Python-only, and a build test fails if any trust, check, or payment module imports the LLM. This was a deliberate trade: a trust score you cannot re-derive from evidence is not a trust score, and judges — like users — should be able to check the math.
 
 **The payment is a sandboxed Visa Intelligent Commerce flow.** Mandate → passkey → token → transaction → receipt, with the same state machine and idempotency a real integration needs, and visible honesty about what is simulated.
 
@@ -109,6 +109,7 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 
 `python` · `fastapi` · `pydantic` · `uvicorn` · `httpx` · `beautifulsoup4` · `python-whois` · `pytest`
 `react` · `typescript` · `vite` · `tailwindcss` · `zustand` · `vitest`
+`gemini` · `mongodb`
 
 ## Sandbox disclosure (required copy — keep it visible)
 

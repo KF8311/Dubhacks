@@ -16,14 +16,15 @@ This is the only file that claims to be current.
 | Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc` (D-010, D-012, D-013). Render is backup. |
 | Contracts | `docs/contracts.md` carries domain types, `Recommendation`, SSE ordering, and checkout/confirm JSON. `listing.scored` now also carries `allowlisted` so the UI does not render a curated merchant as "0". |
 | SerpAPI | No `SERPAPI_KEY`. Catalog-only until a live query confirms merchant domains (D-011). |
-| Tests | Backend **153 passed**. Frontend **10 files / 23 tests passed**, `npm run build` clean. |
+| Tests | Backend **177 passed**. Frontend **11 files / 26 tests passed**, `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
-| Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**. The frontend calls all of them live; `?mock=1` is the fallback. |
-| Owners | A: platform + orchestrator + payments. B: trust + data + **Mongo persistence (Task 27, D-016)**. C: frontend. |
-| Blockers | A redeploys Fly; C clicks the merged flow through once; B has Task 29 (VEYZL) left |
-| Branches | **`main` carries everything** (PRs #1–#17, plus C's `c/web` merged directly). No branch is ahead of `main`. Branch from `main` for Block 5. |
+| Routes | Sessions create/answer/snapshot/events/**explain**, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**, **repository swap (Task 27)**. The frontend calls all of them live; `?mock=1` is the fallback. |
+| Owners | A: platform + orchestrator + payments. B: trust + data + **Mongo review (Task 27, D-016)** + VEYZL + Devpost. C: frontend. |
+| Blockers | A redeploys Fly; C clicks the merged flow through once; B runs the VEYZL audit on the fix PR and fills `docs/devpost-form.md` |
+| Branches | **`main` carries everything** (PRs #1–#17, plus `c/web` and `agent_backend` merged directly). No branch is ahead of `main`. Branch from `main`. |
+| Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-17 19:05 PT
+Last updated: 2026-10-17 19:15 PT
 
 ## Gate board
 
@@ -58,9 +59,9 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 
 | Owner | Task | Started | Expected | Notes |
 |---|---|---|---|---|
-| A | Fly redeploy from repo root; free-text budget parsing | 18:25 | 20:00 | Turns commits into a public URL |
+| A | Fly redeploy from repo root; smoke the public URL | 18:25 | 20:00 | Turns commits into a public URL |
 | C | Browser click-through + screenshot of the merged checkout sheet and receipt page | 18:25 | 20:00 | Tasks 25–26 merged in PR #14; `?mock=1` remains the fallback |
-| B | Devpost draft, README, VEYZL audit | 18:40 | 22:00 | ✅ `docs/devpost.md`, `README.md`, and the `docs/veylz-audit.md` scaffold; Task 29 blocked on tool access |
+| B | VEYZL audit, Devpost, final numbers | 18:40 | 22:30 | ✅ Devpost, README, `docs/devpost-form.md`, audit scaffold; ⬜ the audit run and the fix PR |
 
 ## Done since last update
 
@@ -81,13 +82,16 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] B: `docs/devpost.md` drafted with every number checked against the code; placeholders only for the URL, video, and screenshots
 - [x] B: `README.md` rewritten — setup, env vars, API table, demo script, tests, offline replay, and the honesty notes (sandbox, no model in the path, in-memory store)
 - [x] B: `docs/veylz-audit.md` scaffolded — scope, method, and six candidate controls; no finding is claimed until one is reproduced (PR #17)
-- [x] C: `c/web` merged — 1024px layout, reduced-motion support, purge overlay test (10 files / 23 tests)
+- [x] Merge reconciliation: A's three Gemini decisions were renumbered D-017/D-018/D-019 (D-016 was already Mongo ownership); `README.md` and `docs/devpost.md` corrected — the model writes copy, never a verdict
+- [x] A: **Gemini 3.5 Flash Lite** for questions, narration, and on-demand explanations; trust/check/payment modules still cannot import it
+- [x] A: **`Repository` protocol** — in-memory + Mongo adapters, TTL indexes; `MONGODB_URI` unset remains the default
+- [x] C: `c/web` — responsive layout, reduced motion, allowlisted merchants through checkout (D-015)
 
 ## Next three actions
 
 1. C opens `npm run dev` against `uvicorn` on :8000, jumps on `?mock=1` to prove the fallback, then clicks the live flow once — villain red, best pick `lst_tgt_bsp`, Pay → passkey → receipt — and **screenshots it**.
 2. A redeploys Fly from the **repo root** so the live URL carries checkout and receipts, then runs `backend/scripts/smoke_http.py` against it.
-3. B starts Task 29 (VEYZL audit + README) and the Devpost technical section.
+3. B opens the VEYZL fix PR, runs the audit, reproduces one finding, and fixes it with a test; then fills `docs/devpost-form.md`.
 
 ## Demo trap to avoid
 
@@ -102,6 +106,9 @@ Picking **"Under $150"** filters the catalog to the villain alone and ends in `n
 | SerpAPI key unavailable | yes | Catalog-only per D-011 |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | Browser never exercised the live flow | **yes** | Wiring is merged; C must click through it once |
+| Devpost overstates the role of the model | **was yes** | Corrected after A's Gemini merge: the model writes copy, never a verdict; the generative-AI answer is **Yes** |
+| `GEMINI_API_KEY` unset on Fly | likely | Templates are the fallback, so the demo still runs; set the key only if the template copy reads worse on stage |
+| Local venv lacks `motor` | **yes** | `pip install motor`; one repository test otherwise fails to import |
 
 ## Cut list in effect
 
