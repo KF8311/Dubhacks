@@ -1,8 +1,0 @@
-{
-  "note": "Synthetic threat list. Stands in for Google Safe Browsing when no API key is configured. None of these merchants are real.",
-  "domains": [
-    "premium-audio-deals.shop",
-    "audiophile-outlet.shop",
-    "headphone-bargains.top"
-  ]
-}

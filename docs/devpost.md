@@ -89,7 +89,7 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 - A score anyone can audit: every deduction names the check and the evidence.
 - A payment moment that puts the human in the loop with a passkey.
 - A receipt that turns a private checkout into a public trust signal.
-- A test suite that treats the demo script as a contract: **204 backend and 39 frontend tests**, plus an offline replay that must reproduce the live numbers exactly.
+- A test suite that treats the demo script as a contract: **187 backend and 34 frontend tests**, plus an offline replay that must reproduce the live numbers exactly.
 
 ## What we learned
 
@@ -117,7 +117,7 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 
 ## Fill before submitting
 
-- [x] `https://sykes.select` — live on Vercel (runs live search; the video uses the curated local catalog)
+- [ ] `[LIVE URL]` — the Fly app after A's redeploy
 - [ ] `[REPO URL]`
 - [ ] `[VIDEO]` — the 3-minute path: question → stream → villain → pick → refusal → receipt
 - [ ] `[SCREENSHOT: results grid]`, `[SCREENSHOT: danger detail]`, `[SCREENSHOT: receipt]`
