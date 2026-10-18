@@ -9,7 +9,7 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **231 passed**, frontend **49 passed**, `npm run build` clean, replay exit 0. Nothing has been clicked through in a browser on this build.
+**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **232 passed**, frontend **49 passed**, `npm run build` clean, replay exit 0. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Run it:** `.\scripts\dev.cmd` → open **http://localhost:5173/**. Offline: `.\scripts\dev.cmd offline`. Details: [`RUN.md`](RUN.md).
 
@@ -17,28 +17,25 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 
 ---
 
-## A — search, contracts, deploy
+## A — deploy only
 
-- [ ] **Give `Question` a backend model.** `backend/app/domain/models.py` has no `Question`; the API returns plain dicts from `questions.py` while `frontend/src/lib/types.ts` and [`contracts.md`](contracts.md#L81) define a shape. Add the pydantic model (including `allow_free_text`) and return typed objects, or freeze the dict shape in the contract — the two must agree. Remove the "Not yet in `models.py`" caveat either way.
-- [ ] **Exercise the Mongo repository adapter against Atlas.** Set `MONGODB_URI`, create a session → answer → read the snapshot, and confirm `/api/health` reports the DB as available. This result decides the MLH claim for B. If Atlas cannot be reached, drop the claim.
-- [ ] **Remove the live secrets from `frontend/.env`.** Keep only `VITE_API_BASE_URL` and `VITE_USE_MOCK`; delete `SERPAPI_KEY`, `GEMINI_API_KEY`, `RECEIPT_SIGNING_SECRET`, `MONGODB_URI`, and the rest. Vite only exposes `VITE_*`, so nothing leaks today, but a prefix rename would ship a key in the client bundle. Confirm `git ls-files | Select-String "\.env"` shows only `.env.example` files.
-- [ ] **Prove live search on the running stack.** Create a session on `dev.cmd` with `noise cancelling headphones` + `$300–$600`; confirm `search.completed` has `source: "serpapi"`. Then point a backend at an invalid `SERPAPI_KEY` and confirm the `failed` stage with `SEARCH_UNAVAILABLE` — never the catalog.
-- [ ] **Docker sanity** — this is what Fly runs:
-  ```powershell
-  docker build -f backend/Dockerfile -t sniff-visa .
-  docker run --rm -p 8080:8080 --env-file backend/.env sniff-visa
-  ```
-- [ ] **Deploy:** `fly deploy` from the repo root, then warm the app and run the smoke script:
-  ```powershell
-  backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://<app>.fly.dev
-  ```
+Everything else on A's plate is done (see "Already done"). One item remains:
 
-**Done when:** the contract and model agree, the Atlas answer is recorded, the env files hold no live keys, live and failed searches are both observed on the running stack, and the public URL serves this build with a passing smoke run.
+- [ ] **Deploy to Fly.** The CLI is not installed and there are no credentials on this machine, so this needs an interactive login first:
+  ```powershell
+  iwr https://fly.io/install.ps1 -useb | iex
+  fly auth login
+  fly deploy
+  backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://sniff-visa-dubhacks.fly.dev
+  ```
+  Then warm the app (health + one session) and confirm `search.completed` reports `source: "serpapi"`. The Docker image already builds and serves the whole path locally, so this is a packaging/auth step, not a code step.
+
+**Done when:** the public URL serves this build and `smoke_http.py` passes against it.
 
 ## B — docs, claims, Devpost
 
 - [ ] **VEYZL: cut it.** The app is not installed and the probe work lives in the parked commits. Mark the side track **not selected** in [`devpost-form.md`](devpost-form.md) and note the decision in [`veylz-audit.md`](veylz-audit.md). Do not claim it.
-- [ ] **MLH MongoDB claim follows A's Atlas result.** Keep the checkbox in [`devpost-form.md`](devpost-form.md) only if the adapter ran against Atlas; otherwise remove it. In-memory is the default and `degraded` with Mongo off is expected.
+- [ ] **Drop the MLH MongoDB claim.** A found `MONGODB_URI` unset and the adapter has not run against Atlas, so remove the checkbox from [`devpost-form.md`](devpost-form.md). In-memory is the default and `degraded` with Mongo off is expected.
 - [ ] **Claim scrub.** `README.md` describes the Vercel path and the embedded bundle makes it plausible again — verify it against a real deploy before claiming it, or reword it to "Fly is the deploy path". Remove or qualify the VEYZL reference in `README.md`.
 - [ ] **Pre-fill the Devpost.** [`devpost.md`](devpost.md) and [`devpost-form.md`](devpost-form.md) are drafted; fill every field that does not need the URL, screenshots, or video. The generative-AI answer is **Yes**.
 - [ ] **Fill the artifacts and submit.** URL from A, three screenshots and the video from C, then the final submit and the confirmation capture.
@@ -66,7 +63,7 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 ## Shared gates — run before calling anything done
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 231 passed
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 232 passed
 cd frontend; npx vitest run; npm run build                       # 49 passed, clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
@@ -103,6 +100,11 @@ Live page fetching → Reddit → SerpAPI → Mongo → page flags.
 - [x] `skipped` copy reads "Could not verify"
 - [x] Over-budget pick is labelled "closest trusted match above that budget" (D-022)
 - [x] Embedded data bundle: a deploy no longer needs an on-disk `data/` directory
-- [x] Test counts in `README.md`, `devpost.md`, `status.md` updated to 231/49
+- [x] Test counts in `README.md`, `devpost.md`, `status.md` updated to 232/49
+- [x] `Question` / `QuestionOption` are backend models and the contract matches (`allow_free_text` included)
+- [x] `frontend/.env` holds only `VITE_API_BASE_URL` and `VITE_USE_MOCK`; only `.env.example` files are tracked
+- [x] Live search proven over HTTP: `noise cancelling headphones` + `$300–$600` → `source: "serpapi"`; invalid key → `SEARCH_UNAVAILABLE`, stage `failed`, zero listings
+- [x] Docker image builds and the container serves health, live search, and checkout → confirm → public receipt (`smoke_http.py` passes)
+- [x] Mongo/Atlas result recorded: not exercised (`MONGODB_URI` unset) → MLH claim drops
 - [x] Five trust checks, deterministic scoring, recommendation, checkout → passkey → receipt, public share, refusal paths
 - [x] Offline replay reproduces the frozen numbers: 9 listings, 8 trusted, 1 danger, pick `lst_tgt_bsp`, median $374.49, savings $194.50

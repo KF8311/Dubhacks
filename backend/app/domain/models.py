@@ -12,6 +12,19 @@ class Evidence(BaseModel):
     url: str | None = None
 
 
+class QuestionOption(BaseModel):
+    id: str
+    label: str
+
+
+class Question(BaseModel):
+    id: str
+    prompt: str
+    kind: Literal["single_select", "multi_select", "free_text"] = "single_select"
+    options: list[QuestionOption] = Field(default_factory=list)
+    allow_free_text: bool = False
+
+
 class TrustCheckResult(BaseModel):
     id: CheckId
     name: str

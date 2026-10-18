@@ -104,7 +104,7 @@ Runs the real orchestrator end-to-end against the curated catalog and prints the
 ## Tests and build
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q   # 231 pass
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q   # 232 pass
 cd frontend; npx vitest run                            # 49 pass
 cd frontend; npm run build                             # tsc -b + vite build, must be clean
 ```

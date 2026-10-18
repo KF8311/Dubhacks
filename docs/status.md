@@ -15,18 +15,19 @@ This is the only file that claims to be current.
 | Code | **`96cf47f`** plus the merged `c/web` work, D-025, and the embedded data bundle — live SerpAPI search with an honest failure state (no catalog substitution in live mode), non-audio queries no longer answered with the headphone catalog, product-specific clarifying questions, five checks, deterministic scoring, SSE, recommendation, checkout → passkey → receipt, Gemini copy with template fallback. |
 | Branch | **`main` is restored** — [PR #34](https://github.com/KF8311/Dubhacks/pull/34) merged as `2d53ca1`; [#37](https://github.com/KF8311/Dubhacks/pull/37) (timeout) and [#39](https://github.com/KF8311/Dubhacks/pull/39) (D-025) are merged, and the `c/web` + embedded-data updates are integrated. The 20 removed commits stay reachable on `backup/main-post-96cf47f` and the `origin/restore/*` branches. |
 | Parked work | Every removed commit with links and a revisit table: [`ideas-after-96cf47f.md`](ideas-after-96cf47f.md). Nothing was deleted. |
-| Health | https://sniff-visa-dubhacks.fly.dev/api/health — **serves an older build**. Deploy in the morning from the repo root. Do not submit `sykes.select`; it runs the removed code. |
-| Deploy | **Fly.io** org `dubhacks`, app `sniff-visa-dubhacks`, region `sjc`. Vercel Git deploy is broken at this commit (no `data/` shipped); fix is parked as idea A. |
-| Contracts | `Question` shape is the last open G0 item ([`contracts.md`](contracts.md#L81)). Everything else is frozen. |
+| Health | https://sniff-visa-dubhacks.fly.dev/api/health — **serves an older build**. The image now builds and runs locally (see Deploy), but the Fly CLI and credentials are not on this machine. Do not submit `sykes.select`; it runs the removed code. |
+| Deploy | **Docker proven:** `docker build -f backend/Dockerfile -t sniff-visa .` builds and the container serves health, a live search (`source: "serpapi"`), and the full checkout → confirm → public receipt path. **Fly is blocked on `flyctl` + `fly auth login`** on this machine. The embedded data bundle means a packaged function no longer needs an on-disk `data/`. |
+| Contracts | `Question` is now a backend model (`Question`, `QuestionOption` in `models.py`, `allow_free_text` included); [`contracts.md`](contracts.md#L81) matches the code. Everything is frozen. |
+| Data | **Mongo/Atlas was not exercised** — `MONGODB_URI` is unset. The adapter stays implemented but unproven; the MLH claim should be dropped unless Atlas is connected. |
 | Search | Live SerpAPI path with a **10 s client timeout inside an 11 s per-attempt budget**, one retry. **Live mode never substitutes the catalog** (D-025): a slow query shows "Searching live listings…" for up to ~22 s, then the `failed` stage with `SEARCH_UNAVAILABLE` and a Start over button. Verified: `noise cancelling headphones` + `$300-$600` → live listings; a bad key → `SEARCH_UNAVAILABLE`, stage `failed`, zero catalog products. Offline mode is unchanged. |
-| Tests | Backend **231 passed**. Frontend **49 passed** (15 files), `npm run build` clean. |
+| Tests | Backend **232 passed**. Frontend **49 passed** (15 files), `npm run build` clean. |
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0; 9 listings, 8 trusted, 1 danger, pick `lst_tgt_bsp`, median $374.49, savings $194.50. |
 | Run | `.\scripts\dev.cmd` (live) · `.\scripts\dev.cmd offline` · `.\scripts\dev.cmd mock` · `.\scripts\dev.cmd check`. Details: [`RUN.md`](RUN.md). |
 | Owners | A: search quality + contracts + deploy. B: docs truth + Devpost. C: browser proof + copy fixes. |
-| Blockers | A fixes thin search and signs off `Question`; C clicks the kept build through; B corrects the stale counts and claims before submit. |
+| Blockers | Fly deploy needs the CLI and login; C has not clicked the kept build through in a browser; B corrects the remaining claims and fills the Devpost. |
 | Model | **Gemini 3.5 Flash Lite** writes questions, narration, and check explanations (D-017–D-019), 2.5 s timeout, template fallback. It never scores, selects checks, or touches payability. |
 
-Last updated: 2026-10-18 03:40 PT
+Last updated: 2026-10-18 04:05 PT
 
 ## Gate board
 
