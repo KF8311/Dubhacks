@@ -284,13 +284,15 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 - **B merged PR #19**: `docs/devpost-form.md`, the honest Gemini claims, the updated plan, and the `/api/demo/reset` reproduction.
 - **Task 29 (VEYZL) moved to A (D-020).** A owns the repo and therefore the GitHub App install. B's scope, candidate controls, and reproduction stay in `docs/veylz-audit.md` — A picks up at step "install the app".
 
-**Your next action, in one line:**
+**Block 5 is not done — only its text is.** C's Block 6 UI work landed early, which makes the repo *look* finished, but G5 is gated on three artifacts only A and C can produce. Here is each person's path through Block 5 into Block 6:
 
-| Owner | Next action | Closes |
-|---|---|---|
-| **A** | `fly deploy` from the repo root, then `smoke_http.py` against the public URL | G4 on the public URL |
-| **C** | Click the live flow through to a receipt (answer **$300–$600**) and screenshot the grid + receipt. Her Block 6 UI work is already merged — only the artifacts are missing | G1–G4 proof + G5 screenshots |
-| **B** | Fill `docs/devpost-form.md` as A's URL and C's screenshots land; put final numbers in `status.md` | G5 |
+| Owner | Now — Block 5 (due 22:30) | Then — Block 6 (freeze 02:00) | Done when |
+|---|---|---|---|
+| **A** | `fly deploy` from the repo root, then `smoke_http.py` against the public URL | Install the VEYZL GitHub App, run the audit on a PR, reproduce one finding and fix it with a test ([D-020](decisions.md), scope in [`veylz-audit.md`](veylz-audit.md)); only then re-add `VEYZL Audit` as a required check. Sign off the `Question` shape (last G0 item) | Public URL carries checkout → receipt; a VEYZL check run is visible on a PR and linked from the audit doc; `pytest -q` still 187 |
+| **C** | Browser click-through at **$300–$600**: grid (villain red, best pick), Pay → passkey → receipt, villain refusal. Three screenshots + one recording, handed to B | `skipped` renders as **"Could not verify"** ([`CheckRow.tsx`](../frontend/src/features/results/CheckRow.tsx) still says "Skipped"); an over-budget badge or "closest match" copy for [D-022](decisions.md) | Screenshots in the Devpost gallery; both copy changes visible in the running app; `npm run build` clean |
+| **B** (you) | Pre-fill everything in [`devpost-form.md`](devpost-form.md) that does not need an artifact: story sections, Built with, repo link, generative-AI answer, tracks. Then drop in the live URL and gallery as they land; put replay numbers in [`status.md`](status.md) | TTL/index check against a real cluster — **if it does not happen, remove the MLH MongoDB Atlas claim and the checkbox**; review A's finding against the payability tests | Form complete with URL, images, video, VEYZL track; every number traced to a command |
+
+**Nobody waits on another column.** A and C each have one artifact to produce; B can fill ~90% of the form today, because only the live URL, the five images, and the video depend on them.
 
 **First 15 minutes, every person:**
 
