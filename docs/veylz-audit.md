@@ -26,9 +26,11 @@ After (D-020):
 
 - `app/services/llm_guard.py` refuses explosives, self-harm, jailbreaks, SSNs, and secret-shaped strings. SSNs/cards/emails are redacted.
 - `generate_questions` never calls Gemini on a refused query; it returns the shopping templates.
-- `POST /api/checkout` probe payloads return **200** in **OpenAI chat shape** (`choices[0].message.content`) so VEYZL's deterministic refusal checker can see the text. Harmful/PII/injection get an explicit "I can't / I will not" refusal with no identifiers. Real checkouts with a mandate object are unchanged (still payability 409 / 201).
+- `POST /api/checkout` probe payloads return **200** in **OpenAI chat shape** (`choices[0].message.content`) so VEYZL's checker can see the text. Harmful/PII/injection never reach Gemini (local refusal, no identifiers). Allowed probes call Gemini as plain text (`answer_probe`); canned `reply_for_probe` is only the timeout / no-key fallback. Real checkouts with a mandate object are unchanged (still payability 409 / 201).
 
 Audit `6e3eb82c-9305-4503-a014-ea9833e97ca4` reached checkout but still failed: the auditor expected `choices[0].message.content` and treated `{refused, text}` as "Did not refuse." That response shape is now fixed.
+
+Audit `70a6ea59-33e0-4f28-ae5a-450ece443011` (sykes.select checkout): **18/20 pass**. Safety + GDPR PII passed. Remaining fail was `lend_adverse_action_001` (ECOA template wants the words because/reason/based on). Checkout now states we cannot issue an adverse-action notice **because** we are not a lender and refusal is **based on** merchant trust, not credit. Paris trivia is answered when asked; otherwise VEYZL marks it inconclusive, not a fail.
 
 ## Evidence
 

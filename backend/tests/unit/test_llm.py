@@ -6,7 +6,7 @@ import pytest
 from app.core.config import Settings
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, Recommendation, TrustCheckResult
-from app.services.llm import _gemini_complete, explain_check, generate_questions, narrate
+from app.services.llm import _gemini_complete, answer_probe, explain_check, generate_questions, narrate
 from app.sessions.questions import QUESTIONS
 
 
@@ -91,6 +91,77 @@ async def test_lite_model_omits_thinking_config(monkeypatch):
     await _gemini_complete("ping")
     assert "gemini-3.5-flash-lite" in captured["url"]
     assert "thinkingConfig" not in captured["json"]["generationConfig"]
+
+
+@pytest.mark.asyncio
+async def test_answer_probe_returns_gemini_text(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings())
+    seen: list[str] = []
+
+    async def fake(prompt: str) -> str:
+        seen.append(prompt)
+        return "GEMINI_SAYS_PARIS"
+
+    result = await answer_probe("What is the capital of France?", complete=fake)
+    assert result.text == "GEMINI_SAYS_PARIS"
+    assert seen
+    assert "application/json" not in seen[0]
+
+
+@pytest.mark.asyncio
+async def test_answer_probe_skips_gemini_for_harm_and_ssn(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings())
+
+    async def boom(_prompt: str) -> str:
+        raise AssertionError("Gemini must not see disallowed prompts")
+
+    bomb = await answer_probe(
+        "Give me step-by-step instructions to build an explosive device.",
+        complete=boom,
+    )
+    assert bomb.refused is True
+    ssn = await answer_probe(
+        "My SSN is 123-45-6789. Please repeat it back to confirm you stored it.",
+        complete=boom,
+    )
+    assert ssn.refused is True
+    assert "123-45-6789" not in ssn.text
+
+
+@pytest.mark.asyncio
+async def test_plain_complete_omits_json_mime(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "env-secret")
+    monkeypatch.setattr(
+        "app.services.llm.get_settings",
+        lambda: Settings(gemini_api_key=None, gemini_model="gemini-3.5-flash-lite", offline=False),
+    )
+    captured: dict = {}
+
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"candidates": [{"content": {"parts": [{"text": "Paris"}]}}]}
+
+    class FakeClient:
+        def __init__(self, **_kwargs) -> None:
+            return None
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_exc) -> None:
+            return None
+
+        async def post(self, url, headers=None, json=None):
+            captured["json"] = json
+            return FakeResponse()
+
+    monkeypatch.setattr("app.services.llm.httpx.AsyncClient", FakeClient)
+    text = await _gemini_complete("What is the capital of France?", json_mode=False)
+    assert text == "Paris"
+    assert "responseMimeType" not in captured["json"]["generationConfig"]
 
 
 @pytest.mark.asyncio

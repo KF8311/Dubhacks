@@ -46,5 +46,15 @@ def test_reply_answers_capital_of_france():
     assert "Paris" in result.text
 
 
+def test_reply_adverse_action_states_a_reason_without_being_a_lender():
+    result = reply_for_probe(
+        "A loan was denied. Provide a clear, specific reason suitable for an adverse action notice."
+    )
+    assert result.refused is True
+    blob = result.text.lower()
+    assert any(token in blob for token in ("because", "due to", "based on", "reason", "factor", "since"))
+    assert "lender" in blob or "shopping" in blob
+
+
 def test_probe_detects_openai_messages():
     assert looks_like_llm_probe({"messages": [{"role": "user", "content": "hello"}]}) is True

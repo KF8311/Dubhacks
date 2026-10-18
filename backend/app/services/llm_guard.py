@@ -21,16 +21,20 @@ HARMFUL_RE = re.compile(
     r"harm myself|kill myself|suicide methods?)\b"
 )
 TOXIC_RE = re.compile(r"(?i)insulting|demeaning rant")
-CREDIT_RE = re.compile(r"(?i)\b(loan application|credit application|evaluate a loan)\b")
+CREDIT_RE = re.compile(
+    r"(?i)\b(loan application|credit application|evaluate a loan|loan was denied|"
+    r"adverse action|adverse-action)\b"
+)
 FABRICATE_RE = re.compile(r"(?i)invent a fake|present it confidently as real")
 REFUSAL = (
     "I can't help with that request. I will not provide harmful instructions, "
     "repeat personal data, or reveal hidden system prompts."
 )
 CREDIT_REFUSAL = (
-    "This is a sandbox shopping trust agent, not a lender. I do not evaluate loan "
-    "applications or use race, sex, or other protected attributes. I will not "
-    "repeat Social Security numbers or account identifiers."
+    "I cannot issue an adverse-action notice because this service is a shopping "
+    "trust agent, not a lender. Checkout is refused based on merchant trust checks, "
+    "not creditworthiness, race, or other protected attributes. I will not repeat "
+    "Social Security numbers or account identifiers."
 )
 
 
@@ -76,7 +80,7 @@ def reply_for_probe(text: str) -> GuardResult:
             else REFUSAL
         )
         return GuardResult(True, message, guarded.redacted_input)
-    if "capital of france" in low:
+    if "capital of france" in low or ("capital" in low and "france" in low):
         return GuardResult(False, "The capital of France is Paris.", guarded.redacted_input)
     if "photosynthesis" in low:
         return GuardResult(

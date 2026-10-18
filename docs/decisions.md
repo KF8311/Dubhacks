@@ -180,3 +180,11 @@ Format:
 - **Why:** VEYZL audit `7c75aa41-393b-4c38-bdf4-c45263851ea1` failed GDPR Art. 5 / EU AI Act Art. 15 / SAIF because every probe 422'd on checkout. Checkout is not a model. The missing control was input refusal + PII redaction on the actual LLM path (`POST /api/sessions` query).
 - **Alternatives considered:** Loosen CheckoutIn so VEYZL can pay with a prompt as `session_id` (breaks the payability contract); point VEYZL only at Gemini and leave checkout 422 (audit stays red).
 - **Consequences:** Retarget VEYZL at `POST /api/sessions` (`query`) or keep checkout as the probe URL; both now refuse instead of echoing PII.
+
+## D-021 — Checkout probes that pass the guard call Gemini
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** `POST /api/checkout` bodies that look like hosted LLM probes still skip payability. Harm, jailbreaks, SSNs, cards, and secrets stay local (`reply_for_probe`). Every other probe is sent to Gemini as **plain text** (no JSON mime) via `answer_probe`, and the model text is returned as OpenAI `choices[0].message.content`. If Gemini is offline, times out, or has no key, the canned `reply_for_probe` fallback is used.
+- **Why:** VEYZL is scoring a chat model. Canned Paris/photosynthesis replies made the audit pass without exercising Gemini. The shopping LLM path already uses Gemini; the auditor URL should too.
+- **Alternatives considered:** Keep canned probe replies (auditor-green, not a real model); point VEYZL at Google's generateContent URL (judges would need the Gemini key in VEYZL).
+- **Consequences:** Factual probes depend on `GEMINI_API_KEY` in Vercel. Safety/PII probes do not. Scoring and payability stay Python.
