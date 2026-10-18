@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { MandateCard } from "@/features/checkout/MandateCard.tsx"
 import { TrustBadge } from "@/features/results/TrustBadge.tsx"
 import { PasskeyDialog } from "@/features/checkout/PasskeyDialog.tsx"
+import { PhonePayLink } from "@/features/checkout/PhonePayLink.tsx"
 import { ProcessingState } from "@/features/checkout/ProcessingState.tsx"
 import { ApiError, confirmCheckout, createCheckout } from "@/lib/api.ts"
 import { formatCents } from "@/lib/format.ts"
@@ -105,8 +106,9 @@ export function CheckoutSheet({
         </div>
       ) : null}
       {phase === "mandate" && checkout ? (
-        <div className="mt-3">
+        <div className="mt-3 space-y-3">
           <MandateCard mandate={checkout.mandate} onContinue={() => setPhase("passkey")} />
+          <PhonePayLink checkoutId={checkout.id} />
         </div>
       ) : null}
       {phase === "passkey" ? (

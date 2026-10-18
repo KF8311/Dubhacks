@@ -9,7 +9,7 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **243 passed**, frontend **55 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Current state:** `a/atlas-durable` carries the kept build (`96cf47f`), D-025, the `c/web` fixes, the embedded data bundle, and D-034–D-036 (real merchant links, flip cards, phone pay). Backend **258 passed**, frontend **71 passed** (18 files), `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; the live pens demo is proven over HTTP, nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
 
@@ -226,8 +226,8 @@ Everything else on A's plate is done (see "Already done"). Two items remain:
 ## Shared gates — run before calling anything done
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 243 passed
-cd frontend; npx vitest run; npm run build                       # 55 passed, clean
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 258 passed
+cd frontend; npx vitest run; npm run build                       # 71 passed (18 files), clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
 ```
@@ -246,6 +246,21 @@ Do **not** run the suite with `OFFLINE=1` exported; 13 tests read ambient settin
 | 6 | Purge danger | villain card disappears |
 | 7 | Checkout | sandbox banner, passkey, receipt |
 | 8 | Optional refusal | try the villain; server refuses with a code |
+
+## Live pens demo (the one to show off)
+
+The demo query is **`TUL pens at Office Depot`** (D-034). Measured over HTTP on `a/atlas-durable`: **ready in 3.2–5.1 s**, 9 listings (5 Office Depot + 4 eBay), **8 of 9 on the merchant's own product page**, best pick the Office Depot TUL BP Series Retractable Ballpoint Pens at **$12.49**, checkout `201`, `GET /api/checkout/{id}` `200`. If the flow asks a budget question, answer above **$12.49** (or skip); a lower cap filters the pen out. A bare `pens` query does not surface Office Depot in the top 9 — say "at Office Depot".
+
+| Step | Action | Expected |
+|---|---|---|
+| 1 | Query `TUL pens at Office Depot` | 9 cards; most labelled `officedepot.com` |
+| 2 | Hover or tab to a card | It **flips**; the back shows the merchant, badge, `N passed · N warning · N failed` |
+| 3 | Click the best pick's link | Opens the real product page on officedepot.com |
+| 4 | Checkout | Sandbox banner, mandate, then the **"Pay on your phone"** link |
+| 5 | Copy the link, open it on the phone | `/pay/<checkout_id>` shows merchant, amount, trust badge, `Approve with passkey` |
+| 6 | Approve on the phone | Lands on `/r/<share_id>`, the same receipt the desktop would have produced |
+
+**Phone on the LAN:** start Vite with `--host` (`npx vite --host`) and Uvicorn with `--host 0.0.0.0`; open the **LAN IP** (`http://192.168.x.x:5173/`) on the computer too, because `apiBase()` uses `window.location.hostname` (D-036). Opening via `localhost` on the desktop and then the raw IP on the phone means the phone's page still calls the right API, but the copied link inherits whichever host is in the address bar — use the IP so both devices agree.
 
 ## Cut list
 
@@ -276,3 +291,6 @@ Live page fetching → Reddit → SerpAPI → Mongo → page flags.
 - [x] `/api/health` reports `offline`, and `dev.cmd` refuses to reuse an offline backend for a live run — the trap that made a live demo silently serve the catalog
 - [x] Search is localized to **Seattle, Washington, United States** (`SERPAPI_LOCATION`, override with `SERPAPI_GL` / `SERPAPI_HL`). The market goes in SerpAPI's `location` parameter, never appended to `q`. Verified live: `location=Seattle%2C+Washington%2C+United+States` on the request, ready in 10.9 s.
 - [x] A bodyless text bridge exists (`dub-spectrum/src/agent.ts`): numbered budget question → answers → poll → pick, price, merchant, reason, `product_url`. 9 unit tests; not yet exercised by a real text.
+- [x] **Real merchant links** (D-034): one immersive lookup per listing, concurrent, 3.5 s cap; a store's URL is used only when its host exactly equals the listing's merchant host, so a marketplace reselling the item (the DoorDash case) cannot relabel a listing. `office depot`, `staples`, and `jetpens` are known sources. Verified: `TUL pens at Office Depot` → 8/9 real links, best pick's `officedepot.com` URL.
+- [x] **Cards flip to site stats** (D-035): hover/focus reveals merchant, badge, `passed · warning · failed`, and the top reason (or "Checks are still running."). Off on touch and under reduced motion.
+- [x] **Pay on your phone** (D-036): `GET /api/checkout/{id}` read-only summary + `/pay/<id>` page; the mandate step copies/shares the link. `apiBase()` follows the page hostname so a LAN phone reaches Uvicorn.

@@ -43,8 +43,7 @@ export function ProductCard({
   const initial = listing.merchant_name.slice(0, 1).toUpperCase()
   const link = productLink(listing)
 
-  const thumb = imageFailed ? (
-    <div
+  const thumb = imageFailed ? (    <div
       className="flex size-16 shrink-0 items-center justify-center rounded-md bg-[var(--ink)] text-lg font-semibold text-[var(--paper)]"
       aria-hidden="true"
     >
@@ -87,6 +86,11 @@ export function ProductCard({
     </>
   )
 
+  const passed = checks.filter((check) => check.status === "passed").length
+  const warnings = checks.filter((check) => check.status === "warning").length
+  const failed = checks.filter((check) => check.status === "failed").length
+  const waiting = checks.length === 0
+
   return (
     <Card
       className={cn(
@@ -95,18 +99,48 @@ export function ProductCard({
         onSelect && !expanded ? "shelf-row" : null,
       )}
     >
-      {onSelect ? (
-        <button
-          type="button"
-          className="flex w-full items-start gap-3 px-4"
-          aria-pressed={selected}
-          onClick={onSelect}
-        >
-          {body}
-        </button>
-      ) : (
-        <div className="flex items-start gap-3 px-4">{body}</div>
-      )}
+      <div className="flip-card min-w-0">
+        <div className="flip-inner">
+          <div className="flip-face flip-front">
+            {onSelect ? (
+              <button
+                type="button"
+                className="flex w-full items-start gap-3 px-4"
+                aria-pressed={selected}
+                onClick={onSelect}
+              >
+                {body}
+              </button>
+            ) : (
+              <div className="flex items-start gap-3 px-4">{body}</div>
+            )}
+          </div>
+          <div className="flip-face flip-back" data-testid="site-stats">
+            <div className="space-y-1 px-4">
+              <p className="font-heading text-sm font-semibold">Site stats</p>
+              <p className="text-xs text-muted-foreground">
+                {listing.merchant_name} · {listing.merchant_domain}
+              </p>
+              <TrustBadge
+                score={score?.score}
+                verdict={score?.verdict}
+                allowlisted={score?.allowlisted}
+              />
+              {waiting ? (
+                <p className="text-xs text-muted-foreground">Checks are still running.</p>
+              ) : (
+                <p className="text-xs">
+                  {passed} passed · {warnings} warning{warnings === 1 ? "" : "s"} · {failed}{" "}
+                  failed
+                </p>
+              )}
+              {score?.top_reason ? (
+                <p className="line-clamp-2 text-xs text-muted-foreground">{score.top_reason}</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
       {link ? (
         <a
           href={link.href}

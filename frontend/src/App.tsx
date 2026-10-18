@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/EmptyState.tsx"
 import { ErrorBanner } from "@/components/ErrorBanner.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CheckoutSheet } from "@/features/checkout/CheckoutSheet.tsx"
+import { PayPage } from "@/features/checkout/PayPage.tsx"
 import { ReceiptPage, ReceiptView } from "@/features/receipt/ReceiptPage.tsx"
 import type { Receipt } from "@/lib/types.ts"
 import { DiscoveryFlow } from "@/features/discovery/DiscoveryFlow.tsx"
@@ -24,6 +25,11 @@ function shareIdFromPath(): string | null {
   return match ? decodeURIComponent(match[1]) : null
 }
 
+function payIdFromPath(): string | null {
+  const match = window.location.pathname.match(/^\/pay\/([^/]+)\/?$/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 function usePath(): string {
   const [path, setPath] = useState(currentPath)
   useEffect(() => {
@@ -37,10 +43,18 @@ function usePath(): string {
 export default function App() {
   const path = usePath()
   const shareId = shareIdFromPath()
+  const payId = payIdFromPath()
   if (shareId) {
     return (
       <AppShell>
         <ReceiptPage shareId={shareId} />
+      </AppShell>
+    )
+  }
+  if (payId) {
+    return (
+      <AppShell>
+        <PayPage checkoutId={payId} />
       </AppShell>
     )
   }

@@ -190,6 +190,53 @@
   }
 }
 
+/* A product ticket turns over on hover or keyboard focus to show its site
+   stats. Both faces share one grid cell so the card keeps the taller face's
+   height and nothing clips during the rotation. */
+.flip-card {
+  perspective: 1200px;
+}
+
+.flip-inner {
+  display: grid;
+  transition: transform 420ms ease;
+  transform-style: preserve-3d;
+}
+
+.flip-face {
+  grid-area: 1 / 1;
+  min-width: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+  pointer-events: none;
+}
+
+.flip-card:focus-within .flip-inner,
+.flip-card:hover .flip-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card:focus-within .flip-back,
+.flip-card:hover .flip-back {
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .flip-card:hover .flip-inner {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition: none;
+  }
+}
+
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {

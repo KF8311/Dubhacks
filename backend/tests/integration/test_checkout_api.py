@@ -249,3 +249,58 @@ def test_a_checkout_can_be_confirmed_after_the_registry_is_cleared():
     )
     assert r.status_code == 200
     assert r.json()["receipt_id"].startswith("rcp_")
+
+
+def test_a_checkout_can_be_read_on_a_phone(monkeypatch):
+    client = TestClient(create_app())
+    sid, listing = _setup(client, monkeypatch)
+    co = client.post(
+        "/api/checkout",
+        json={
+            "session_id": sid,
+            "listing_id": listing["id"],
+            "mandate": {"max_amount_cents": 50000, "currency": "USD", "expires_in_seconds": 600},
+        },
+    ).json()
+
+    r = client.get(f"/api/checkout/{co['checkout_id']}")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["checkout_id"] == co["checkout_id"]
+    assert body["stage"] == "awaiting_passkey"
+    assert body["amount_cents"] == listing["price_cents"]
+    assert body["merchant"] == {"name": listing["merchant_name"], "domain": "bestbuy.com"}
+    assert body["listing"]["title"] == listing["title"]
+    assert body["trust_snapshot"]["verdict"] == "trusted"
+    assert body["sandbox_label"].startswith("Sandbox")
+    assert body["receipt_url"] is None
+
+
+def test_reading_an_unknown_checkout_is_404():
+    client = TestClient(create_app())
+    r = client.get("/api/checkout/chk_missing")
+    assert r.status_code == 404
+    assert r.json()["error"]["code"] == "CHECKOUT_NOT_FOUND"
+
+
+def test_a_paid_checkout_reads_back_its_receipt_url(monkeypatch):
+    client = TestClient(create_app())
+    sid, listing = _setup(client, monkeypatch)
+    co = client.post(
+        "/api/checkout",
+        json={
+            "session_id": sid,
+            "listing_id": listing["id"],
+            "mandate": {"max_amount_cents": 50000, "currency": "USD", "expires_in_seconds": 600},
+        },
+    ).json()
+    client.post(
+        f"/api/checkout/{co['checkout_id']}/confirm",
+        json={
+            "passkey_assertion": {"credential_id": "mock", "client_data": "phone"},
+            "idempotency_key": "phone-once",
+        },
+    )
+    body = client.get(f"/api/checkout/{co['checkout_id']}").json()
+    assert body["stage"] == "captured"
+    assert body["receipt_url"].startswith("/r/shr_")

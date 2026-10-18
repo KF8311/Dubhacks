@@ -382,6 +382,238 @@ async def test_serpapi_client_uses_the_provider_timeout(monkeypatch):
     assert captured["timeout"] == 4.0
 
 
+def test_office_depot_is_a_known_source():
+    payload = {
+        "shopping_results": [
+            {
+                "title": "TUL Gel Pens",
+                "product_link": "https://www.google.com/search?ibp=oshop&q=pens",
+                "source": "Office Depot",
+                "extracted_price": 9.99,
+                "product_id": "tul1",
+            }
+        ]
+    }
+    listings = listings_from_payload(payload, spec=SearchSpec(query="pens"), limit=8)
+    assert listings[0].merchant_domain == "officedepot.com"
+
+
+def test_google_listing_gets_the_merchant_product_page(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.search.serpapi import SerpAPIProvider
+
+    class FakeResponse:
+        def __init__(self, payload: dict) -> None:
+            self.payload = payload
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del timeout
+            if params is not None:
+                return FakeResponse(
+                    {
+                        "shopping_results": [
+                            {
+                                "title": "TUL Gel Pens",
+                                "product_link": (
+                                    "https://www.google.com/search?ibp=oshop&q=pens"
+                                ),
+                                "source": "Office Depot",
+                                "extracted_price": 9.99,
+                                "product_id": "tul1",
+                                "serpapi_immersive_product_api": (
+                                    "https://serpapi.com/search.json"
+                                    "?engine=google_immersive_product&page_token=xyz"
+                                ),
+                            }
+                        ]
+                    }
+                )
+            assert "api_key=test-key" in url
+            return FakeResponse(
+                {
+                    "product_results": {
+                        "stores": [
+                            {
+                                "name": "Google",
+                                "link": "https://www.google.com/shopping/product/1",
+                                "extracted_price": 9.99,
+                            },
+                            {
+                                "name": "Office Depot",
+                                "link": "https://www.officedepot.com/a/products/1/TUL-Gel-Pens/",
+                                "extracted_price": 9.99,
+                            },
+                        ]
+                    }
+                }
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    listings = asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(SearchSpec(query="pens"))
+    )
+    assert len(listings) == 1
+    assert listings[0].merchant_domain == "officedepot.com"
+    assert listings[0].product_url == "https://www.officedepot.com/a/products/1/TUL-Gel-Pens/"
+
+
+def test_a_store_for_another_merchant_does_not_override_the_link(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.search.serpapi import SerpAPIProvider
+
+    class FakeResponse:
+        def __init__(self, payload: dict) -> None:
+            self.payload = payload
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, timeout
+            if params is not None:
+                return FakeResponse(
+                    {
+                        "shopping_results": [
+                            {
+                                "title": "BIC Pens",
+                                "product_link": "https://www.google.com/search?ibp=oshop&q=pens",
+                                "source": "Walmart",
+                                "extracted_price": 7.98,
+                                "product_id": "bic1",
+                                "serpapi_immersive_product_api": (
+                                    "https://serpapi.com/search.json"
+                                    "?engine=google_immersive_product&page_token=abc"
+                                ),
+                            }
+                        ]
+                    }
+                )
+            return FakeResponse(
+                {
+                    "product_results": {
+                        "stores": [
+                            {
+                                "name": "Office Depot",
+                                "link": "https://www.officedepot.com/a/products/9/BIC/",
+                                "extracted_price": 6.99,
+                            }
+                        ]
+                    }
+                }
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    listings = asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(SearchSpec(query="pens"))
+    )
+    assert listings[0].merchant_domain == "walmart.com"
+    assert listings[0].product_url == "https://www.google.com/search?udm=28&q=pens"
+
+
+def test_a_marketplace_reselling_the_merchant_does_not_supply_the_link(monkeypatch):
+    import asyncio
+
+    import httpx
+
+    from app.search.serpapi import SerpAPIProvider
+
+    class FakeResponse:
+        def __init__(self, payload: dict) -> None:
+            self.payload = payload
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return self.payload
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            del args, kwargs
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args) -> None:
+            return None
+
+        async def get(self, url, params=None, timeout=None):
+            del url, timeout
+            if params is not None:
+                return FakeResponse(
+                    {
+                        "shopping_results": [
+                            {
+                                "title": "TUL Fine Liner Pens",
+                                "product_link": "https://www.google.com/search?ibp=oshop&q=tul",
+                                "source": "Office Depot",
+                                "extracted_price": 6.99,
+                                "product_id": "tul-fine",
+                                "serpapi_immersive_product_api": (
+                                    "https://serpapi.com/search.json"
+                                    "?engine=google_immersive_product&page_token=abc"
+                                ),
+                            }
+                        ]
+                    }
+                )
+            return FakeResponse(
+                {
+                    "product_results": {
+                        "stores": [
+                            {
+                                "name": "DoorDash - Office Depot",
+                                "link": "https://www.doordash.com/product/tul-pens/123",
+                                "extracted_price": 6.99,
+                            }
+                        ]
+                    }
+                }
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", FakeClient)
+    listings = asyncio.run(
+        SerpAPIProvider(api_key="test-key").search(SearchSpec(query="tul pens"))
+    )
+    assert listings[0].merchant_domain == "officedepot.com"
+    assert listings[0].product_url == "https://www.google.com/search?udm=28&q=tul"
+
+
 def test_google_links_route_to_the_results_page_instead_of_a_catalog_token():
     payload = {
         "shopping_results": [

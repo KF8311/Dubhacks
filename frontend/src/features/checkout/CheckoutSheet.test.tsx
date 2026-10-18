@@ -117,6 +117,22 @@ test("keeps pay disabled for score 0 when not allowlisted", () => {
   expect(screen.getByRole("button", { name: /pay/i })).toBeDisabled()
 })
 
+test("the mandate offers a link to finish payment on a phone", async () => {
+  render(
+    <CheckoutSheet
+      listing={{ ...listing, id: "lst_bestbuy_xm5" }}
+      verdict="trusted"
+      score={92}
+      confidence={1}
+      sessionId="ses_mock"
+      onComplete={() => undefined}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: /^pay$/i }))
+  expect(await screen.findByText(/pay on your phone/i)).toBeInTheDocument()
+  expect(screen.getByTestId("pay-url")).toHaveTextContent("/pay/chk_mock")
+})
+
 test("trusted checkout reaches the receipt", async () => {
   const onComplete = vi.fn()
   render(

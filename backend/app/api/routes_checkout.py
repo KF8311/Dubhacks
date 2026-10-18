@@ -229,6 +229,57 @@ async def create_checkout(request: Request):
     }
 
 
+@router.get("/api/checkout/{checkout_id}")
+async def get_checkout(checkout_id: str) -> dict:
+    """Read a checkout by its id so a phone can finish payment.
+
+    The id is the capability: it is random, carries no account or card data,
+    and only exposes what the payer needs to see before approving.
+    """
+    repo = get_repository()
+    checkout = await repo.get_checkout(checkout_id)
+    if checkout is None:
+        raise AppError("CHECKOUT_NOT_FOUND", "Checkout not found.", status_code=404)
+    listing = await _get_listing(checkout.listing_id)
+    investigation = await _get_investigation(checkout.session_id, checkout.listing_id)
+    receipt = await repo.get_receipt_for_checkout(checkout.id)
+    return {
+        "checkout_id": checkout.id,
+        "stage": checkout.stage.value,
+        "amount_cents": checkout.amount_cents,
+        "currency": checkout.currency,
+        "merchant": (
+            {"name": listing.merchant_name, "domain": listing.merchant_domain}
+            if listing is not None
+            else None
+        ),
+        "listing": (
+            {
+                "id": listing.id,
+                "title": listing.title,
+                "image_url": listing.image_url,
+                "product_url": listing.product_url,
+            }
+            if listing is not None
+            else None
+        ),
+        "trust_snapshot": (
+            {
+                "score": investigation.score.score,
+                "verdict": investigation.score.verdict.value,
+                "confidence": investigation.score.confidence,
+                "allowlisted": investigation.allowlisted,
+                "investigation_id": investigation.id,
+            }
+            if investigation is not None
+            else None
+        ),
+        "sandbox_label": SANDBOX,
+        "expires_at": checkout.expires_at.isoformat().replace("+00:00", "Z"),
+        "receipt_url": f"/r/{receipt.share_id}" if receipt is not None else None,
+    }
+
+
 @router.post("/api/checkout/{checkout_id}/confirm")
 async def confirm_checkout(checkout_id: str, body: ConfirmIn) -> dict:
     repo = get_repository()

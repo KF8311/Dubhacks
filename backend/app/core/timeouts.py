@@ -2,6 +2,9 @@
 # cap. SerpAPI cold queries have been measured at 7-20 s, and showing a long
 # spinner beats swapping in unrelated catalog products during a demo.
 SEARCH_S = 11.0
+# One immersive lookup per listing runs concurrently; a slow one must not hold
+# the grid. Anything slower keeps its Google Shopping link, which still works.
+IMMERSIVE_STORE_S = 3.5
 INVESTIGATION_BUDGET_S = 14.0
 CHECK_CONCURRENCY = 8
 LLM_S = 2.5

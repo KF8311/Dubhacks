@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { ProductCard } from "./ProductCard.tsx"
+import type { TrustCheckResult } from "@/lib/types.ts"
 
 const listing = {
   id: "lst_1",
@@ -77,4 +78,65 @@ test("a missing check stays a skeleton row", () => {
   expect(screen.getAllByRole("generic").length).toBeGreaterThan(0)
   expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(5)
   expect(screen.queryByText("Domain age")).not.toBeInTheDocument()
+})
+
+const checks: TrustCheckResult[] = [
+  {
+    id: "domain_age",
+    name: "Domain age",
+    status: "passed",
+    severity: 0,
+    summary: "Registered in 1998.",
+    evidence: [],
+    source: "live",
+    duration_ms: 12,
+  },
+  {
+    id: "ssl_cert",
+    name: "SSL certificate",
+    status: "warning",
+    severity: 0.5,
+    summary: "Certificate expires soon.",
+    evidence: [],
+    source: "live",
+    duration_ms: 9,
+  },
+  {
+    id: "safe_browsing",
+    name: "Safe Browsing",
+    status: "failed",
+    severity: 1,
+    summary: "Flagged.",
+    evidence: [],
+    source: "live",
+    duration_ms: 8,
+  },
+]
+
+test("the ticket turns over to site stats with a pass/warning/fail tally", () => {
+  render(
+    <ProductCard
+      listing={listing}
+      checks={checks}
+      score={{
+        score: 45,
+        verdict: "caution",
+        confidence: 0.8,
+        penalties: [],
+        fatal_flags: [],
+        top_reason: "One check failed.",
+        scoring_version: "1.0",
+      }}
+      isBest={false}
+    />,
+  )
+  expect(screen.getByText("Site stats")).toBeInTheDocument()
+  expect(screen.getByText("1 passed · 1 warning · 1 failed")).toBeInTheDocument()
+  expect(screen.getByText("One check failed.")).toBeInTheDocument()
+})
+
+test("the back of the ticket says when checks are still running", () => {
+  render(<ProductCard listing={listing} checks={[]} isBest={false} />)
+  expect(screen.getByText("Site stats")).toBeInTheDocument()
+  expect(screen.getByText("Checks are still running.")).toBeInTheDocument()
 })
