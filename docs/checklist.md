@@ -108,8 +108,8 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 #### T3 — DEV Writing Challenge
 
-- [ ] Draft [`devpost-article.md`](devpost-article.md) (new), 1,200–1,800 words: the problem (agents can pay anyone) → the decision (deterministic scoring, the LLM has no vote) → the honest failure ([D-025](decisions.md#L216)) → the two bugs only a real database found ([D-026](decisions.md#L224): naive datetimes, empty idempotency key) → what we would build next
-- [ ] Every number traced to [`status.md`](status.md); no invented feature
+- [x] Draft [`devpost-article.md`](devpost-article.md) — 1,214 words, every number checked against the replay and the code: the problem (agents can pay anyone) → the decision (deterministic scoring, the LLM has no vote) → the honest failure ([D-025](decisions.md#L216)) → the two bugs only a real database found ([D-026](decisions.md#L224): naive datetimes, empty idempotency key) → what we would build next
+- [x] Every number traced to [`status.md`](status.md) and [`scoring.py`](../backend/app/trust/scoring.py); no invented feature
 - [ ] Publish on DEV, tags `hackathon` `ai` `python` `mongodb`
 - [ ] Add the URL to `docs/devpost-form.md` and the Devpost links field
 
