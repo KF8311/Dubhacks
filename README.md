@@ -6,7 +6,7 @@ Built for the Visa "Reimagine Shopping" track at DubHacks '26.
 
 > **Sandbox notice.** The payment flow is simulated and labeled everywhere. This is a prototype, not a Visa production integration. All shoppers, merchants, and cards are synthetic; no real PII or card numbers are used.
 
-**Status:** planning complete, implementation starts 12:30 PM Saturday. Current state lives in [`docs/status.md`](docs/status.md).
+**Status:** see [`docs/status.md`](docs/status.md). VEYZL finding and fix: [`docs/veylz-audit.md`](docs/veylz-audit.md).
 
 ## Docs
 
@@ -26,16 +26,20 @@ Start at [`docs/INDEX.md`](docs/INDEX.md).
 
 ## Quick start
 
-Nothing to run yet — the repo is docs-only until the hackathon clock starts.
-
 ```bash
-# backend (once scaffolded)
-cd backend && uvicorn app.main:app --reload --workers 1
-cd backend && pytest -q
+# backend
+cd backend
+copy .env.example .env   # then set GEMINI_API_KEY and SERPAPI_KEY
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\uvicorn.exe app.main:app --reload --workers 1
 
-# frontend (once scaffolded)
-cd frontend && npm install && npm run dev
+# frontend
+cd frontend
+copy .env.example .env   # VITE_API_BASE_URL=http://127.0.0.1:8000 locally
+npm install && npm run dev
 ```
+
+Offline demo without a server: `backend/.venv/Scripts/python.exe scripts/replay_offline.py`.
 
 ## Ground rules
 

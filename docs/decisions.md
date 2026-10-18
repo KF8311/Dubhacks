@@ -172,3 +172,11 @@ Format:
 - **Why:** `gemini-3.8-flash` exceeds the 2.5s session-create budget (timeouts / 503), so questions, narration, and explain always fell back to templates. Lite returned in under 1s on this key.
 - **Alternatives considered:** Keep 3.8 and raise the timeout (violates the plan's 2.5s cap); `gemini-flash-lite-latest` (alias, less reproducible).
 - **Consequences:** Override with `GEMINI_MODEL` if a judge laptop still has 2.5/3.8 access. Templates remain the fallback.
+
+## D-020 — LLM guard on Gemini and on mis-aimed checkout probes
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** Free-form prompts that look like jailbreaks, self-harm, explosives, SSNs, or secrets never reach Gemini. `POST /api/checkout` still requires a mandate object for real payments; if `mandate` is a string (VEYZL probe shape), the handler returns HTTP 200 `{refused: true}` instead of 422.
+- **Why:** VEYZL audit `7c75aa41-393b-4c38-bdf4-c45263851ea1` failed GDPR Art. 5 / EU AI Act Art. 15 / SAIF because every probe 422'd on checkout. Checkout is not a model. The missing control was input refusal + PII redaction on the actual LLM path (`POST /api/sessions` query).
+- **Alternatives considered:** Loosen CheckoutIn so VEYZL can pay with a prompt as `session_id` (breaks the payability contract); point VEYZL only at Gemini and leave checkout 422 (audit stays red).
+- **Consequences:** Retarget VEYZL at `POST /api/sessions` (`query`) or keep checkout as the probe URL; both now refuse instead of echoing PII.

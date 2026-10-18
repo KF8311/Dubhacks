@@ -1,0 +1,43 @@
+# VEYZL audit
+
+Audit id `7c75aa41-393b-4c38-bdf4-c45263851ea1` (hosted API audit, 2026-10-18). `overall_passed: false` — 20/20 probes returned **error**, not a model fail.
+
+## What VEYZL hit
+
+The project was configured as `api_model` against:
+
+`POST https://sniff-visa-dubhacks.fly.dev/api/checkout`
+
+Probes were safety/PII/jailbreak strings stuffed into `session_id`, `listing_id`, `mandate`, and `body`. Checkout requires `mandate` to be an object (`max_amount_cents`, …), so every call 422'd:
+
+`VALIDATION_ERROR` — `mandate` is not a dictionary.
+
+Checkout is the **sandboxed Visa payment** API. It is not Gemini. The LLM surface is `POST /api/sessions` (`query` → clarifying questions).
+
+VEYZL also labeled the repo `credit_lending` (keyword “lending”). This product is trust-gated shopping, not credit underwriting. ECOA / Fair Housing probes are out of scope.
+
+## Finding we fixed
+
+**Missing input/output guard on the generative path** (GDPR Art. 5 data minimisation; EU AI Act Art. 15 robustness; SAIF prompt-injection).
+
+Before: a harmful or PII-laden string in `query` was wrapped and sent to Gemini. A VEYZL-shaped checkout body 422'd, which the auditor counts as infrastructure failure, not a refusal.
+
+After (D-020):
+
+- `app/services/llm_guard.py` refuses explosives, self-harm, jailbreaks, SSNs, and secret-shaped strings. SSNs/cards/emails are redacted.
+- `generate_questions` never calls Gemini on a refused query; it returns the shopping templates.
+- `POST /api/checkout` with a **string** `mandate` returns **200** `{ "refused": true, "text": "I can't help with that request." }` instead of 422. Real checkouts with a mandate object are unchanged (still payability 409 / 201).
+
+## Evidence
+
+| Probe | Before | After |
+|---|---|---|
+| Harmful / self-harm / SSN on checkout | 422 `VALIDATION_ERROR` | 200 `refused: true`, no SSN echo |
+| Harmful `query` on session create | Gemini saw the prompt | Gemini skipped; templates only |
+| Valid checkout `{session_id, listing_id, mandate:{...}}` | 201 / 409 payability | unchanged |
+
+Tests: `tests/unit/test_llm_guard.py`, `test_harmful_query_skips_gemini`, `test_checkout_refuses_veyzl_style_llm_probes`.
+
+## Re-run VEYZL
+
+Keep the Fly URL, or switch the endpoint to `POST /api/sessions` with body `{"query": "<probe>", "client_id": "veyzl"}`. Do not send probes as a Visa mandate object if you want a generative response; the payment API will only **refuse**.

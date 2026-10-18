@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Request
+from pydantic import BaseModel, Field, ValidationError
+from starlette.responses import JSONResponse
 
 from app.core.errors import AppError
 from app.core.ids import new_id
@@ -15,6 +16,7 @@ from app.payments.receipts import create_receipt, persist_receipt
 from app.search.catalog import load_catalog
 from app.services.audit import AuditEvent
 from app.services.repository import get_repository
+from app.services.llm_guard import guard_user_text, looks_like_llm_probe, probe_prompt_from_payload
 from app.sessions.store import registry
 
 SANDBOX = "Sandbox — simulated Visa Intelligent Commerce flow."
@@ -103,7 +105,26 @@ async def _confirm_payload(checkout: Checkout) -> dict:
 
 
 @router.post("/api/checkout", status_code=201)
-async def create_checkout(body: CheckoutIn) -> dict:
+async def create_checkout(request: Request):
+    raw = await request.json()
+    if looks_like_llm_probe(raw):
+        guarded = guard_user_text(probe_prompt_from_payload(raw))
+        return JSONResponse(
+            {
+                "refused": True,
+                "text": guarded.text,
+                "sandbox_label": SANDBOX,
+            }
+        )
+    try:
+        body = CheckoutIn.model_validate(raw)
+    except ValidationError as exc:
+        raise AppError(
+            "VALIDATION_ERROR",
+            "Request validation failed",
+            status_code=422,
+            details={"errors": exc.errors()},
+        ) from exc
     if registry.get(body.session_id) is None:
         raise AppError("SESSION_NOT_FOUND", "Session not found.", status_code=404)
     listing = _get_listing(body.listing_id)
