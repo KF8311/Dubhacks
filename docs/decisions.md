@@ -109,6 +109,14 @@ Format:
 - **Alternatives considered:** Blocking on the key (rejected: the catalog covers the demo query).
 - **Consequences:** The demo is deterministic and offline-safe. Search quality is unchanged until a key appears.
 
+## D-019 — Google Shopping `source` can supply the merchant domain
+- **Date:** 2026-10-17
+- **Status:** accepted
+- **Decision:** If SerpAPI `product_link` is a Google host, map a known `source` (Target, Walmart, eBay, …) to that retailer's domain and keep the listing.
+- **Why:** Live Google Shopping results for this key only return `google.com` product links. Dropping them sent every query, including spaced ones like "apple juice", back to the headphone catalog.
+- **Alternatives considered:** Keep D-011 drop-if-Google (catalog-only forever); extra SerpAPI product API round-trips (too slow for the 5s search budget).
+- **Consequences:** Unknown sellers are still dropped. Trust checks run on the inferred retailer domain, not Google.
+
 ## D-012 — Fly.io is the API host; `sniff-visa-dubhacks`
 - **Date:** 2026-10-17
 - **Status:** accepted

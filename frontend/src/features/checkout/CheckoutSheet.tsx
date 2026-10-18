@@ -19,6 +19,7 @@ type Props = {
   verdict: Verdict
   score: number
   confidence: number
+  allowlisted?: boolean
   sessionId?: string
   onComplete: (receipt: Receipt) => void
 }
@@ -28,10 +29,15 @@ export function CheckoutSheet({
   verdict,
   score,
   confidence,
-  sessionId = "ses_mock",
+  allowlisted = false,
+  sessionId,
   onComplete,
 }: Props) {
-  const payable = verdict === "trusted" && score >= 70 && confidence >= 0.6
+  const payable =
+    Boolean(sessionId) &&
+    verdict === "trusted" &&
+    confidence >= 0.6 &&
+    (score >= 70 || allowlisted)
   const [phase, setPhase] = useState<"review" | "mandate" | "passkey" | "processing">("review")
   const [checkout, setCheckout] = useState<Checkout | null>(null)
   const [receipt, setReceipt] = useState<Receipt | null>(null)

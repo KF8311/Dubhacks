@@ -20,6 +20,26 @@ GOOGLE_HOSTS = frozenset(
     }
 )
 
+# Google Shopping often omits a store URL and only names the seller in `source`.
+KNOWN_SOURCES = {
+    "amazon": "amazon.com",
+    "best buy": "bestbuy.com",
+    "bestbuy": "bestbuy.com",
+    "costco": "costco.com",
+    "cvs": "cvs.com",
+    "ebay": "ebay.com",
+    "hy-vee": "hy-vee.com",
+    "hyvee": "hy-vee.com",
+    "instacart": "instacart.com",
+    "kroger": "kroger.com",
+    "sams club": "samsclub.com",
+    "sam's club": "samsclub.com",
+    "target": "target.com",
+    "walgreens": "walgreens.com",
+    "walmart": "walmart.com",
+    "whole foods": "wholefoodsmarket.com",
+}
+
 
 def merchant_host(url: str) -> str:
     if not url:
@@ -39,6 +59,19 @@ def _product_url(item: dict) -> str:
     return ""
 
 
+def domain_from_source(source: str) -> str:
+    raw = (source or "").strip().lower()
+    if not raw:
+        return ""
+    head = raw.split("-", 1)[0].strip()
+    if head in KNOWN_SOURCES:
+        return KNOWN_SOURCES[head]
+    for name, domain in KNOWN_SOURCES.items():
+        if raw.startswith(name) or f" {name} " in f" {raw} ":
+            return domain
+    return ""
+
+
 def _price_cents(item: dict) -> int | None:
     raw = item.get("extracted_price")
     if raw is None:
@@ -54,7 +87,11 @@ def listing_from_shopping_result(item: dict) -> Listing | None:
     product_url = _product_url(item)
     domain = merchant_host(product_url)
     if not domain or domain in GOOGLE_HOSTS:
-        return None
+        domain = domain_from_source(str(item.get("source") or ""))
+        if not domain:
+            return None
+        product_id = str(item.get("product_id") or item.get("title") or "item")
+        product_url = f"https://{domain}/item/{listing_id(product_id)}"
     price_cents = _price_cents(item)
     if price_cents is None:
         return None

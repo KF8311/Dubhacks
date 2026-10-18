@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from app.domain.models import Answer, SearchSpec
 
 QUESTIONS: list[dict] = [
@@ -46,12 +48,21 @@ async def generate_questions(query: str) -> list[dict]:
     return await llm_questions(query, fallback=QUESTIONS)
 
 
+def _budget_max_cents(option_id: str | None) -> int | None:
+    if not option_id:
+        return None
+    if option_id.isdigit():
+        return int(option_id) * 100
+    match = re.search(r"(\d+)", option_id)
+    if match:
+        return int(match.group(1)) * 100
+    return None
+
+
 def build_search_spec(query: str, answers: list[Answer]) -> SearchSpec:
     by_id = {item.question_id: item for item in answers}
     budget_option = (by_id.get("q_budget") or Answer(question_id="q_budget")).option_id
-    budget_max_cents = None
-    if budget_option and budget_option.isdigit():
-        budget_max_cents = int(budget_option) * 100
+    budget_max_cents = _budget_max_cents(budget_option)
     use = (by_id.get("q_use") or Answer(question_id="q_use")).option_id
     category = "audio" if use else None
     return SearchSpec(query=query, budget_max_cents=budget_max_cents, category=category)

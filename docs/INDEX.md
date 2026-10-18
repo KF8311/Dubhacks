@@ -17,7 +17,7 @@ One project, one repository, one source of truth. If a fact is not written here 
 | **Claude / an agent** | `CLAUDE.md` → this page → `docs/status.md` → the plan |
 | **On Cursor** | `AGENTS.md` → `.cursor/rules/project.mdc` → `docs/status.md` |
 | **Reviewing a decision** | `docs/decisions.md` |
-| **Writing the Devpost or video** | `project-a-sniff-visa.md` §10–§11 → `docs/status.md` |
+| **Writing the Devpost or video** | `docs/devpost-technical-claims.md` → `project-a-sniff-visa.md` §10–§11 → `docs/status.md` |
 | **Debugging the demo** | Plan §9 (fallbacks), §16 (risk register), `docs/status.md` |
 
 ## The document set

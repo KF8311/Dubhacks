@@ -23,6 +23,31 @@ def test_maps_merchant_product_url_to_domain():
     assert listings[0].id.startswith("lst_")
 
 
+def test_google_shopping_link_uses_known_retailer_source():
+    payload = {
+        "shopping_results": [
+            {
+                "title": "Market Pantry 100% Apple Juice",
+                "product_link": "https://www.google.com/shopping/product/1",
+                "source": "Target",
+                "extracted_price": 3.69,
+                "product_id": "juice1",
+            },
+            {
+                "title": "Tree Top Apple Juice",
+                "product_link": "https://www.google.com/shopping/product/2",
+                "source": "Walmart - Deslepinky Goods",
+                "extracted_price": 14.95,
+                "product_id": "juice2",
+            },
+        ]
+    }
+    listings = listings_from_payload(payload, spec=SearchSpec(query="apple juice"), limit=8)
+    assert [item.merchant_domain for item in listings] == ["target.com", "walmart.com"]
+    assert listings[0].title.startswith("Market Pantry")
+    assert listings[0].price_cents == 369
+
+
 def test_rejects_google_hosted_and_empty_domains():
     payload = {
         "shopping_results": [
