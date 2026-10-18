@@ -36,6 +36,19 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+test("shows an alert and stays on the search when the API is unreachable", async () => {
+  vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("Failed to fetch"))
+
+  render(<DiscoveryFlow onStarted={() => undefined} />)
+  fireEvent.change(screen.getByPlaceholderText(/what are you looking for/i), {
+    target: { value: "headphones" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find products/i }))
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(/could not reach the server/i)
+  expect(screen.getByText(/what do you want to buy/i)).toBeInTheDocument()
+})
+
 test("renders questions from the mock session", async () => {
   window.history.replaceState({}, "", "/?mock=1")
 
