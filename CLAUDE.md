@@ -12,9 +12,8 @@ A trust-gated shopping agent for the Visa "Reimagine Shopping" track at DubHacks
 2. `docs/status.md` — what is true right now
 3. `docs/superpowers/plans/2026-10-17-sniff-visa.md` — architecture, contracts, 30 tasks
 4. `docs/team-split-3.md` — ownership and the time-boxed checklist
-5. `project-a-sniff-visa.md` — the product spec
-6. `docs/decisions.md` — decisions already made; do not re-litigate without a new entry
-7. `docs/SKILLS.md` — the skills and agents committed under `.claude/`
+5. `docs/decisions.md` — decisions already made; do not re-litigate without a new entry
+6. `docs/SKILLS.md` — the skills and agents committed under `.claude/`
 
 ## Skills and agents
 

@@ -38,7 +38,7 @@ Last updated: 2026-10-18 03:40 PT
 | G3 Recommendation | Sun 03:00 | 🟡 same — pick and savings on screen | pick `lst_tgt_bsp`, median $374.49, savings $194.50 |
 | G4 Checkout → receipt | Sun 03:15 | 🟡 server path proven; browser click-through owed | live HTTP checkout → confirm → public receipt |
 | G5 Devpost draft | Sun 03:45 | 🟡 text written; URL, screenshots, video pending | `docs/devpost-form.md` |
-| G6 Freeze | Sun 04:00 | ⬜ | §6 gates in the checklist |
+| G6 Freeze | Sun 04:00 | ⬜ | Shared gates in the checklist |
 | G7 Submit | Sun 09:50 | ⬜ | Devpost confirmation |
 
 ## Proof of the kept build
@@ -103,4 +103,4 @@ The demo run must answer **$300–$600**. Measured: `Under $150` → 1 card (the
 
 ## Cut list in effect
 
-Live page fetching → Reddit → SerpAPI → Mongo → page flags. See [`checklist.md`](checklist.md) §8.
+Live page fetching → Reddit → SerpAPI → Mongo → page flags. See [`checklist.md`](checklist.md).
