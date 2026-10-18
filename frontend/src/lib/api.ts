@@ -4,6 +4,7 @@ import { isMockMode } from "@/lib/mockMode.ts"
 import type {
   Answer,
   Checkout,
+  CheckoutSummary,
   CreateSessionResponse,
   Listing,
   Receipt,
@@ -265,7 +266,9 @@ export async function confirmCheckout(
   if (isMockMode()) {
     await delay(200)
     if (input.client_data === "fail") throw new Error("Payment declined.")
-    const listing = mock.snapshot.listings.find((item) => item.id === pendingListingId)
+    const listing =
+      mock.snapshot.listings.find((item) => item.id === pendingListingId) ??
+      mock.snapshot.listings[0]
     if (!listing) throw new Error("Checkout expired.")
     return buildReceipt(listing, checkoutId)
   }
@@ -289,4 +292,42 @@ export async function getReceipt(shareId: string): Promise<Receipt> {
     return found
   }
   return request<Receipt>(`/api/public/receipts/${shareId}`)
+}
+
+/**
+ * Read a checkout by id. The id is the capability — it lets the phone that
+ * opens the pay link see the merchant, amount, and trust snapshot without
+ * knowing anything about the session or account on the other device.
+ */
+export async function getCheckout(checkoutId: string): Promise<CheckoutSummary> {
+  if (isMockMode()) {
+    await delay(150)
+    const listing = mock.snapshot.listings[0]
+    const score = mock.snapshot.scores[listing.id]
+    pendingListingId = listing.id
+    return {
+      checkout_id: checkoutId,
+      stage: "awaiting_passkey",
+      amount_cents: listing.price_cents,
+      currency: listing.currency,
+      merchant: { name: listing.merchant_name, domain: listing.merchant_domain },
+      listing: {
+        id: listing.id,
+        title: listing.title,
+        image_url: listing.image_url,
+        product_url: listing.product_url,
+      },
+      trust_snapshot: {
+        score: score.score,
+        verdict: score.verdict,
+        confidence: score.confidence,
+        allowlisted: score.allowlisted === true,
+        investigation_id: "inv_mock",
+      },
+      sandbox_label: "Sandbox — simulated Visa Intelligent Commerce flow.",
+      expires_at: new Date(Date.now() + 600_000).toISOString(),
+      receipt_url: null,
+    }
+  }
+  return request<CheckoutSummary>(`/api/checkout/${checkoutId}`)
 }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 import time
 from datetime import datetime, timezone
@@ -14,13 +15,17 @@ from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LIS
 from app.domain.enums import SessionStage, TrustStatus, Verdict
 from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
 from app.search.catalog import load_catalog
+from app.search.provider import SearchQuotaExhausted
 from app.search.service import search as default_search
 from app.services.llm import narrate
+from app.services.repository import get_repository
 from app.sessions.events import EventBus
 from app.sessions.store import SessionRegistry
 from app.trust.allowlist import Allowlist, load_allowlist
 from app.trust.recommendation import recommend
 from app.trust.scoring import score_investigation
+
+logger = logging.getLogger(__name__)
 
 
 def _load_allowlist() -> Allowlist:
@@ -65,6 +70,22 @@ class SessionOrchestrator:
                     self.search(spec, MAX_LISTINGS, allow_catalog_fallback=False),
                     timeout=self._search_timeout(),
                 )
+            except SearchQuotaExhausted:
+                # The plan has no searches left. Retrying cannot help, and
+                # "taking too long" would hide the one cause the user can fix.
+                self.bus.publish(
+                    session_id,
+                    "session.error",
+                    {
+                        "code": "SEARCH_QUOTA_EXHAUSTED",
+                        "message": (
+                            "Live search quota is used up. Add a fresh search key, "
+                            "then start over."
+                        ),
+                        "recoverable": False,
+                    },
+                )
+                return None
             except Exception:  # noqa: BLE001 — retry once, then fail
                 continue
             # An empty live result is worth one retry; a provider still running
@@ -145,6 +166,19 @@ class SessionOrchestrator:
         )
         session.listing_ids = [item.id for item in listings]
         self.store.replace_listings(session_id, listings)
+        # Persist them too: the registry dies with the process, and the checkout
+        # path must still find the listing after a restart.
+        repo = get_repository()
+        for listing in listings:
+            try:
+                await repo.save_listing(listing)
+            except Exception:  # noqa: BLE001 — a store write must never freeze the session
+                logger.warning(
+                    "listing persist failed; continuing in memory",
+                    exc_info=True,
+                    extra={"listing_id": listing.id},
+                )
+                break
         session.stage = SessionStage.INVESTIGATING
         self.store.update(session)
         self.bus.publish(session_id, "session.stage", {"stage": session.stage.value})
@@ -264,23 +298,10 @@ class SessionOrchestrator:
                 },
             )
 
-        if allowlisted:
-            for check in checks:
-                result = TrustCheckResult(
-                    id=check.id,
-                    name=check.display_name,
-                    status=TrustStatus.SKIPPED,
-                    severity=0,
-                    summary="Allowlisted merchant; checks skipped.",
-                    source="allowlist",
-                )
-                results.append(result)
-                self.bus.publish(
-                    session_id,
-                    "check.completed",
-                    {"listing_id": listing.id, "check": result.model_dump(mode="json")},
-                )
-        elif checks:
+        # The allowlist exempts a merchant from the score floor (D-015); it does
+        # not exempt the page from inspection. Every listing gets the same five
+        # checks, so the counter never shows "skipped" for a real store (D-043).
+        if checks:
             async for result in run_checks(target, checks, ctx=ctx, timeout_s=6.0):
                 results.append(result)
                 self.bus.publish(
@@ -301,6 +322,14 @@ class SessionOrchestrator:
             created_at=datetime.now(timezone.utc),
         )
         self.store.attach_investigation(session_id, inv)
+        try:
+            await get_repository().save_investigation(inv)
+        except Exception:  # noqa: BLE001 — same rule: memory keeps the session alive
+            logger.warning(
+                "investigation persist failed; continuing in memory",
+                exc_info=True,
+                extra={"investigation_id": inv.id},
+            )
         self.bus.publish(
             session_id,
             "listing.scored",

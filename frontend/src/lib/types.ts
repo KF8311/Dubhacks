@@ -174,6 +174,31 @@ export interface Checkout {
   mandate: Mandate
 }
 
+/** What the phone sees at /pay/<checkout_id> before approving. */
+export interface CheckoutSummary {
+  checkout_id: string
+  stage: CheckoutStage
+  amount_cents: number
+  currency: string
+  merchant: { name: string; domain: string } | null
+  listing: {
+    id: string
+    title: string
+    image_url: string
+    product_url: string
+  } | null
+  trust_snapshot: {
+    score: number
+    verdict: Verdict
+    confidence: number
+    allowlisted: boolean
+    investigation_id: string
+  } | null
+  sandbox_label: string
+  expires_at: string
+  receipt_url: string | null
+}
+
 export interface InvestigationSnapshot {
   id: string
   listing_id: string

@@ -10,7 +10,7 @@ from app.domain.enums import CheckoutStage
 from app.domain.models import Checkout, Investigation, Listing
 from app.payments.mandates import create_mandate
 from app.payments.memory import store
-from app.payments.mock_vic import authorize, consume_token, issue_token
+from app.payments.mock_vic import authorize, consume_token, ensure_token, issue_token
 from app.payments.payability import MandateDraft, PayabilityError, assert_payable
 from app.payments.receipts import create_receipt, persist_receipt
 from app.search.catalog import load_catalog
@@ -50,18 +50,29 @@ class ConfirmIn(BaseModel):
     idempotency_key: str
 
 
-def _get_listing(listing_id: str) -> Listing | None:
+async def _get_listing(listing_id: str) -> Listing | None:
+    """Registry first, then the database, then the bundled catalog.
+
+    The last two steps are what let an already-created checkout be confirmed
+    after the process that created it has restarted.
+    """
     found = registry.listing_by_id(listing_id)
     if found is not None:
         return found
+    stored = await get_repository().get_listing(listing_id)
+    if stored is not None:
+        return stored
     for item in load_catalog():
         if item.id == listing_id:
             return item
     return None
 
 
-def _get_investigation(session_id: str, listing_id: str) -> Investigation | None:
-    return registry.investigation_for(session_id, listing_id)
+async def _get_investigation(session_id: str, listing_id: str) -> Investigation | None:
+    found = registry.investigation_for(session_id, listing_id)
+    if found is not None:
+        return found
+    return await get_repository().get_investigation_for(session_id, listing_id)
 
 
 # The code is the machine contract; the message is what the checkout sheet shows.
@@ -128,10 +139,10 @@ async def create_checkout(request: Request):
         ) from exc
     if registry.get(body.session_id) is None:
         raise AppError("SESSION_NOT_FOUND", "Session not found.", status_code=404)
-    listing = _get_listing(body.listing_id)
+    listing = await _get_listing(body.listing_id)
     if listing is None:
         raise AppError("LISTING_NOT_FOUND", "Listing not found.", status_code=404)
-    investigation = _get_investigation(body.session_id, body.listing_id)
+    investigation = await _get_investigation(body.session_id, body.listing_id)
     if investigation is None:
         raise AppError("INVESTIGATION_STALE", "Investigation not found.", status_code=409)
 
@@ -158,8 +169,10 @@ async def create_checkout(request: Request):
     except ValueError as exc:
         raise AppError("AMOUNT_EXCEEDS_CAP", str(exc), status_code=409) from exc
 
+    checkout_id = new_id("chk")
+    issued = await issue_token(checkout_id, listing.merchant_domain)
     checkout = Checkout(
-        id=new_id("chk"),
+        id=checkout_id,
         session_id=body.session_id,
         listing_id=listing.id,
         investigation_id=investigation.id,
@@ -168,10 +181,10 @@ async def create_checkout(request: Request):
         currency=listing.currency,
         stage=CheckoutStage.AWAITING_PASSKEY,
         idempotency_key=None,
+        token_id=issued.token_id,
         created_at=now,
         expires_at=now + timedelta(minutes=5),
     )
-    issued = await issue_token(checkout.id, listing.merchant_domain)
     repo = get_repository()
     await repo.save_mandate(mandate)
     await repo.save_checkout(checkout)
@@ -216,6 +229,57 @@ async def create_checkout(request: Request):
     }
 
 
+@router.get("/api/checkout/{checkout_id}")
+async def get_checkout(checkout_id: str) -> dict:
+    """Read a checkout by its id so a phone can finish payment.
+
+    The id is the capability: it is random, carries no account or card data,
+    and only exposes what the payer needs to see before approving.
+    """
+    repo = get_repository()
+    checkout = await repo.get_checkout(checkout_id)
+    if checkout is None:
+        raise AppError("CHECKOUT_NOT_FOUND", "Checkout not found.", status_code=404)
+    listing = await _get_listing(checkout.listing_id)
+    investigation = await _get_investigation(checkout.session_id, checkout.listing_id)
+    receipt = await repo.get_receipt_for_checkout(checkout.id)
+    return {
+        "checkout_id": checkout.id,
+        "stage": checkout.stage.value,
+        "amount_cents": checkout.amount_cents,
+        "currency": checkout.currency,
+        "merchant": (
+            {"name": listing.merchant_name, "domain": listing.merchant_domain}
+            if listing is not None
+            else None
+        ),
+        "listing": (
+            {
+                "id": listing.id,
+                "title": listing.title,
+                "image_url": listing.image_url,
+                "product_url": listing.product_url,
+            }
+            if listing is not None
+            else None
+        ),
+        "trust_snapshot": (
+            {
+                "score": investigation.score.score,
+                "verdict": investigation.score.verdict.value,
+                "confidence": investigation.score.confidence,
+                "allowlisted": investigation.allowlisted,
+                "investigation_id": investigation.id,
+            }
+            if investigation is not None
+            else None
+        ),
+        "sandbox_label": SANDBOX,
+        "expires_at": checkout.expires_at.isoformat().replace("+00:00", "Z"),
+        "receipt_url": f"/r/{receipt.share_id}" if receipt is not None else None,
+    }
+
+
 @router.post("/api/checkout/{checkout_id}/confirm")
 async def confirm_checkout(checkout_id: str, body: ConfirmIn) -> dict:
     repo = get_repository()
@@ -229,8 +293,8 @@ async def confirm_checkout(checkout_id: str, body: ConfirmIn) -> dict:
     if checkout.stage == CheckoutStage.DECLINED:
         raise AppError("PAYMENT_DECLINED", "Payment was declined.", status_code=402)
 
-    listing = _get_listing(checkout.listing_id)
-    investigation = _get_investigation(checkout.session_id, checkout.listing_id)
+    listing = await _get_listing(checkout.listing_id)
+    investigation = await _get_investigation(checkout.session_id, checkout.listing_id)
     mandate = await repo.get_mandate(checkout.mandate_id)
     if listing is None or investigation is None or mandate is None:
         raise AppError("INVESTIGATION_STALE", "Checkout is missing investigation state.", status_code=409)
@@ -242,7 +306,14 @@ async def confirm_checkout(checkout_id: str, body: ConfirmIn) -> dict:
         _raise_payability(exc)
 
     declined = body.passkey_assertion.client_data == "fail"
-    token_id = store.token_by_checkout[checkout.id]
+    token_id = store.token_by_checkout.get(checkout.id) or checkout.token_id
+    if token_id is None:
+        raise AppError(
+            "INVESTIGATION_STALE", "Checkout is missing its payment token.", status_code=409
+        )
+    # The simulator's token table is in memory; a checkout that outlived the
+    # process still owns the token it was issued.
+    ensure_token(token_id, checkout.id)
     txn = await authorize(checkout.amount_cents, token_id, declined=declined)
     if declined:
         await repo.transition_checkout(

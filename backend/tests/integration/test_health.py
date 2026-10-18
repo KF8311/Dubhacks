@@ -22,7 +22,17 @@ def test_health_returns_200_even_without_db(monkeypatch):
     assert body["db"] == "unavailable"
     assert "version" in body
     assert "demo_mode" in body
+    assert body["offline"] is False
     assert "uptime_s" in body
+
+
+def test_health_reports_offline_mode(monkeypatch):
+    from app.core.config import Settings
+
+    monkeypatch.setattr("app.api.routes_health.get_settings", lambda: Settings(offline=True))
+    client = TestClient(create_app())
+    body = client.get("/api/health").json()
+    assert body["offline"] is True
 
 
 def test_demo_reset_ok_in_demo_mode():

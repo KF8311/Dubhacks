@@ -161,7 +161,7 @@ test("walks discovery into the mock results", async () => {
   expect(screen.getAllByText("$249.00").length).toBeGreaterThan(0)
   expect(screen.getAllByText("Sony WH-1000XM5").length).toBeGreaterThan(1)
   expect(screen.getAllByText(/92\s*·\s*Trusted/).length).toBeGreaterThan(0)
-  expect(screen.getByText(/12\s*·\s*Danger/)).toBeInTheDocument()
+  expect(screen.getAllByText(/12\s*·\s*Danger/).length).toBeGreaterThan(0)
   expect(screen.getAllByText("Best pick").length).toBeGreaterThan(0)
   expect(screen.queryByText(/^Investigation$/)).not.toBeInTheDocument()
   expect(screen.getByRole("heading", { name: /what we found for/i })).toBeInTheDocument()

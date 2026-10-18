@@ -1,7 +1,7 @@
 ---
 title: Devpost form map
 type: submission
-updated: 2026-10-17
+updated: 2026-10-18
 owner: B
 ---
 
@@ -92,24 +92,29 @@ Mostly judge-facing.
 
 **Sponsor / Special Prizes** — checkboxes. Our selections:
 
-- [ ] **Visa: Reimagine Shopping**
+- [x] **Visa: Reimagine Shopping**
 - [x] **[MLH] Best Use of MongoDB Atlas** — Atlas is connected and proven (D-026)
 
 Note: VEYZL is **not** in this list. It lives in Sponsored Side Tracks below. Do not look for it here.
 
 **\* Title Track** — exactly one, appears in the gallery.
 
-- [ ] **Visa: Reimagine Shopping**
+- [x] **Visa: Reimagine Shopping**
 
-**Sponsored Side Tracks** — at most three, appear in the gallery.
+**Sponsored Side Tracks** — at most three, appear in the gallery. The slate is D-028.
 
-- [ ] **VEYZL** — the $500 + lifetime-pro track; requires the audit PR evidence in `docs/veylz-audit.md`
-- [ ] CloudForce — optional; no stated criteria beyond the listing, so skip unless we have a reason
+- [x] **SideShift — Best Startup Idea** — no build requirement; the pitch is [`devpost.md#who-pays`](devpost.md#who-pays)
+- [x] **CloudForce** — entry is a raffle ticket; Most Interesting is a judges' pick
+- [ ] **Photon 2.0** — conditional: tick only after a real text round-trips through the backend. Project `1afb123e` is blocked on `account_phone_missing`. If it slips, leave this blank.
+- [ ] **VEYZL** — the $500 + lifetime-pro track; requires the audit PR evidence in `docs/veylz-audit.md`. **Not selected** (D-028).
 
 **Non-Sponsored Side Tracks** — unlimited.
 
 - [x] **MLH: Best Use of MongoDB Atlas** — Atlas persists the payment path; health reports `db: ok`
-- [ ] DubHacks Next — only if eligible
+- [ ] **MLH: Best Use of Gemini API** — tick once the project number is in the field below
+- [ ] **MLH: DEV Writing Challenge** — tick once the article is published and the URL is pasted
+- [x] DubHacks Next — eligible; the same startup paragraph serves both
+- [x] **MLH Commit Fellowship** — free entry
 
 **\* Team Member 1–4 Discord usernames** — double-check spelling and capitalization. Fill from the team, not from memory.
 

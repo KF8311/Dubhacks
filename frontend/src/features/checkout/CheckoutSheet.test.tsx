@@ -117,6 +117,91 @@ test("keeps pay disabled for score 0 when not allowlisted", () => {
   expect(screen.getByRole("button", { name: /pay/i })).toBeDisabled()
 })
 
+test("the mandate offers a link to finish payment on a phone", async () => {
+  render(
+    <CheckoutSheet
+      listing={{ ...listing, id: "lst_bestbuy_xm5" }}
+      verdict="trusted"
+      score={92}
+      confidence={1}
+      sessionId="ses_mock"
+      onComplete={() => undefined}
+    />,
+  )
+  fireEvent.click(screen.getByRole("button", { name: /^pay$/i }))
+  expect(await screen.findByText(/pay on your phone/i)).toBeInTheDocument()
+  expect(screen.getByTestId("pay-url")).toHaveTextContent("/pay/chk_mock")
+})
+
+test("the review texts the pay link to the phone", async () => {
+  const original = globalThis.fetch
+  const calls: { url: string; body: string }[] = []
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    calls.push({ url: String(input), body: String(init?.body ?? "") })
+    return { ok: true, status: 200, json: async () => ({ ok: true }) } as Response
+  }) as typeof fetch
+
+  try {
+    render(
+      <CheckoutSheet
+        listing={{ ...listing, id: "lst_bestbuy_xm5" }}
+        verdict="trusted"
+        score={92}
+        confidence={1}
+        sessionId="ses_mock"
+        onComplete={() => undefined}
+      />,
+    )
+    fireEvent.click(screen.getByRole("button", { name: /send to phone/i }))
+    expect(await screen.findByText(/sent to your phone/i)).toBeInTheDocument()
+    expect(screen.queryByTestId("pay-url")).not.toBeInTheDocument()
+    const sent = calls.find((call) => call.url.endsWith("/send"))
+    expect(sent).toBeDefined()
+    expect(sent?.body).toContain("/pay/chk_mock")
+  } finally {
+    globalThis.fetch = original
+  }
+})
+
+test("keeps the copyable link when the phone bridge is down", async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = (async () => {
+    throw new Error("bridge offline")
+  }) as typeof fetch
+
+  try {
+    render(
+      <CheckoutSheet
+        listing={{ ...listing, id: "lst_bestbuy_xm5" }}
+        verdict="trusted"
+        score={92}
+        confidence={1}
+        sessionId="ses_mock"
+        onComplete={() => undefined}
+      />,
+    )
+    fireEvent.click(screen.getByRole("button", { name: /send to phone/i }))
+    expect(await screen.findByText(/could not text your phone/i)).toBeInTheDocument()
+    expect(screen.getByTestId("pay-url")).toHaveTextContent("/pay/chk_mock")
+  } finally {
+    globalThis.fetch = original
+  }
+})
+
+test("send to phone stays disabled when the listing cannot be paid", () => {
+  render(
+    <CheckoutSheet
+      listing={listing}
+      verdict="danger"
+      score={10}
+      confidence={1}
+      sessionId="ses_1"
+      onComplete={() => undefined}
+    />,
+  )
+  expect(screen.getByRole("button", { name: /send to phone/i })).toBeDisabled()
+})
+
 test("trusted checkout reaches the receipt", async () => {
   const onComplete = vi.fn()
   render(

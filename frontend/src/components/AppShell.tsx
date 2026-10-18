@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useState } from "react"
 import { BrandMark } from "@/components/BrandMark.tsx"
+import { DealAlerts } from "@/features/results/DealAlerts.tsx"
 import { SANDBOX_LABEL } from "@/features/checkout/CheckoutSheet.tsx"
 import { currentPath, go, scrollToId, withSearch } from "@/lib/path.ts"
 
@@ -27,8 +28,8 @@ function NavLink({
       aria-current={current ? "page" : undefined}
       className={
         current
-          ? "font-semibold text-foreground"
-          : "text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          ? "rounded-full bg-[var(--paper)] px-3 py-1.5 font-semibold text-foreground shadow-[0_6px_16px_-14px_rgb(23_37_30/70%)]"
+          : "rounded-full px-3 py-1.5 text-muted-foreground hover:bg-[var(--marigold-wash)] hover:text-foreground"
       }
       onClick={(event) => {
         event.preventDefault()
@@ -44,56 +45,16 @@ function NavLink({
   )
 }
 
-export function AppShell({ children, bleed = false, spy = false }: Props) {
-  const [section, setSection] = useState(currentPath)
-
-  useEffect(() => {
-    const onPop = () => setSection(currentPath())
-    window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
-  }, [])
-
-  useEffect(() => {
-    if (!spy) return
-    const nodes = [
-      ["shop", "/"],
-      ["how", "/how"],
-      ["about", "/about"],
-    ] as const
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const hit = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-        if (!hit?.target.id) return
-        const next = nodes.find(([id]) => id === hit.target.id)?.[1]
-        if (!next || next === currentPath()) return
-        window.history.replaceState({}, "", withSearch(next))
-        setSection(next)
-      },
-      { rootMargin: "-45% 0px -45% 0px", threshold: [0.1, 0.25, 0.5] },
-    )
-    for (const [id] of nodes) {
-      const node = document.getElementById(id)
-      if (node) observer.observe(node)
-    }
-    return () => observer.disconnect()
-  }, [spy])
-
-  function goSection(path: string) {
-    go(path, { scroll: false })
-    setSection(path)
-    const id = path === "/how" ? "how" : path === "/about" ? "about" : "shop"
-    scrollToId(id)
-  }
-
+export function AppShell({ children }: Props) {
+  // The phone-facing pages keep a single job: approving or showing a receipt.
+  const showDealAlerts = !/^\/(pay|r)\//.test(currentPath())
   return (
     <div className="app-canvas min-h-screen text-left text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-20 border-b border-border bg-[color-mix(in_srgb,var(--paper)_92%,transparent)] backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6">
           <a
             href={withSearch("/")}
-            className="min-w-0"
+            className="inline-flex min-w-0 items-center rounded-full bg-[var(--paper)] px-3 py-1.5 shadow-[0_10px_24px_-20px_rgb(23_37_30/60%)] ring-1 ring-[color-mix(in_srgb,var(--ink)_10%,transparent)]"
             onClick={(event) => {
               event.preventDefault()
               if (spy) {
@@ -105,11 +66,19 @@ export function AppShell({ children, bleed = false, spy = false }: Props) {
           >
             <BrandMark />
           </a>
-          <nav className="flex items-center gap-4 text-sm" aria-label="Sykes">
-            <NavLink to="/" label="Shop" section={section} onSection={spy ? goSection : undefined} />
-            <NavLink to="/how" label="How it works" section={section} onSection={spy ? goSection : undefined} />
-            <NavLink to="/about" label="About" section={section} onSection={spy ? goSection : undefined} />
-          </nav>
+          <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-x-4 gap-y-2">
+            <nav className="flex items-center gap-4 text-sm" aria-label="Sykes">
+              <NavLink to="/" label="Shop" />
+              <NavLink to="/how" label="How it works" />
+              <NavLink to="/about" label="About" />
+            </nav>
+            {showDealAlerts ? (
+              <div className="flex items-center gap-3">
+                <span className="hidden h-6 w-px bg-border sm:block" aria-hidden="true" />
+                <DealAlerts />
+              </div>
+            ) : null}
+          </div>
         </div>
         <p className="mx-auto max-w-6xl px-4 pb-2 text-xs text-muted-foreground sm:px-6">
           {SANDBOX_LABEL}

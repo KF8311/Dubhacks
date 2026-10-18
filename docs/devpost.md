@@ -98,6 +98,14 @@ The client sends **only** a session id, a listing id, and a cap. It never sends 
 - **The demo needs a villain and a hero.** One scam store and one safe pick turn an abstract trust system into a story with a decision in it.
 - **Skipped is the hard case.** Most trust products quietly treat missing data as neutral. Ours refuses to.
 
+## Who pays
+
+The shopper never pays, and that is the point: a trust check a buyer has to think about is a check they will skip. Our customer is the operator of the agent doing the buying — a shopping assistant, a browser agent, a procurement tool — because that operator is the one whose reputation burns when its agent pays a thief. We charge per gated checkout, a few cents each, with an enterprise tier above a volume threshold.
+
+Merchants do not pay to be scored. A system where the merchant can buy a better score is precisely the problem we are solving. But they benefit: a verified listing converts better with agents that refuse unverified ones, so the badge becomes worth earning and sellers bring themselves into the program.
+
+That is how it spreads. Every agent that embeds the gate turns each checkout it *refuses* into a proof point, and every receipt is a public, shareable record of a verified purchase (`/r/…`), so each transaction advertises the layer. Visa already sits in the middle of every card authorization; this is the missing check that runs before one.
+
 ## What's next
 
 - Real Visa Intelligent Commerce integration against the Token Service and Payment Passkey APIs.

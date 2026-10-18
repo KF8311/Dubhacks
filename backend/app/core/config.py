@@ -31,6 +31,11 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("SERPAPI_KEY", "serpapi_key"),
     )
+    # Google Shopping is geolocated: the same query prices and stocks
+    # differently in Seattle than in a default (often East Coast) market.
+    serpapi_location: str = "Seattle, Washington, United States"
+    serpapi_gl: str = "us"
+    serpapi_hl: str = "en"
     google_safe_browsing_key: str | None = None
     receipt_signing_secret: str = "dev-only-change-me"
     version: str = "0.9.0"

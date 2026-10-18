@@ -22,11 +22,11 @@ test("renders title, merchant, and formatted price", () => {
     />,
   )
   expect(screen.getAllByText("Sony XM5").length).toBeGreaterThan(0)
-  expect(screen.getAllByText("Best Buy").length).toBeGreaterThan(0)
+  expect(screen.getAllByText(/Best Buy/).length).toBeGreaterThan(0)
   expect(screen.getAllByText(/\$249\.00/).length).toBeGreaterThan(0)
 })
 
-test("opening a listing shows its checks without stacking every card open", () => {
+test("picking an item slides its site stats over and back", () => {
   render(
     <ResultsGrid
       listings={[
@@ -57,8 +57,17 @@ test("opening a listing shows its checks without stacking every card open", () =
       scores={{}}
     />,
   )
-  expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(5)
-  fireEvent.click(screen.getByRole("button", { name: /bose qc/i }))
+  const track = document.querySelector("[data-view]")
+  expect(track).toHaveAttribute("data-view", "items")
+  expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(0)
+
+  fireEvent.click(screen.getByRole("button", { name: /show checks for bose qc/i }))
+  expect(track).toHaveAttribute("data-view", "stats")
+  expect(track?.className).toContain("-translate-x-1/2")
   expect(screen.getAllByText("Bose QC").length).toBeGreaterThan(1)
   expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(5)
+
+  fireEvent.click(screen.getByRole("button", { name: /back to items/i }))
+  expect(track).toHaveAttribute("data-view", "items")
+  expect(document.querySelectorAll("[data-slot='skeleton']")).toHaveLength(0)
 })

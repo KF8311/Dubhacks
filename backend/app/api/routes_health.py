@@ -34,6 +34,9 @@ def health() -> dict:
         "db": db,
         "version": settings.version,
         "demo_mode": settings.demo_mode,
+        # Offline serves the bundled catalog; live mode must not reuse such a
+        # backend, or the demo silently shows canned listings.
+        "offline": settings.offline,
         "uptime_s": int(time.monotonic() - _started_at),
     }
 

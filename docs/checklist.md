@@ -9,7 +9,9 @@ owner: everyone
 
 Open work only, split A / B / C. Everything proven is in [`status.md`](status.md) and the "Already done" list at the bottom. [`team-split-3.md`](team-split-3.md) is the long-term ownership map; this file is what is left right now.
 
-**Current state:** `main` has the kept build (`96cf47f`), D-025, the `c/web` fixes, and the embedded data bundle. Backend **237 passed**, frontend **55 passed**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
+**Blocker (2026-10-18): the SerpAPI key has 0 searches left** (Free Plan, 250 used this month). Live search fails in ~0.2 s with the new `SEARCH_QUOTA_EXHAUSTED` message for any query SerpAPI has not cached. **Get a fresh key before a live rehearsal** — put it in `backend/.env` as `SERPAPI_KEY` (never commit it, never paste it into chat) and restart the backend. Cached queries such as `TUL pens at Office Depot` still resolve; use **Skip questions** so the query stays exact.
+
+**Current state:** `a/atlas-durable` carries the kept build (`96cf47f`), D-025, the `c/web` fixes, the embedded data bundle, and D-034–D-045 (real merchant links, one marigold edge, phone pay, quota error, skippable questions, Send to phone, a two-column results screen with item cards that flip to safety and carry Visit and Send, an automatic pay-link text through the local bridge, five checks on every listing including allowlisted merchants, smooth hover scale on the landing and question buttons, **deal-alert opt-in by Y/N text in the header**, and **a sliding shop sequence with a slide-over site-stats panel**). Backend **264 passed**, frontend **82 passed** (19 files), bridge **27**, `npm run build` clean, replay exit 0. Atlas is connected and proven. A's code and local proofs are done; the live pens demo is proven over HTTP, nothing has been clicked through in a browser on this build, and Fly is not deployed yet.
 
 **Baseline re-run 2026-10-18 05:05 PT** (before starting the track tasks):
 
@@ -25,6 +27,28 @@ Open work only, split A / B / C. Everything proven is in [`status.md`](status.md
 **Run it:** `.\scripts\dev.cmd` → open **http://localhost:5173/**. Offline: `.\scripts\dev.cmd offline`. Details: [`RUN.md`](RUN.md).
 
 **Rules that still apply:** one owner per file (`models.py`, `types.ts`, and `contracts.md` belong to A; docs and Devpost to B; frontend source to C). Tests pass before a task is ticked, and every commit carries your name only.
+
+---
+
+## Next block — scheduled for A and B (08:15–10:15 PT, 2026-10-18)
+
+C is on the visual pass. These two lanes are unblocked without C; neither waits for the other.
+
+### A — check evidence and deploy
+
+- [x] **A1 · Regression test for D-043** (done 08:20). [`test_orchestrator.py`](../backend/tests/integration/test_orchestrator.py) now runs an allowlisted Best Buy listing through five stub checks, asserts every check ran once, the investigation holds five results, the score reports `allowlisted`, and five `check.completed` events were published. Backend **264 passed**.
+- [x] **A2 · Triage the `page_flags` skip** (done 08:20). The live fetch still times out against Office Depot on this network (`httpx.ReadTimeout` after 8 s), so no bounded change makes the page readable here. The runner's 6 s ceiling maps the timeout to `skipped` with source `unavailable`; [`test_page_flags.py`](../backend/tests/unit/test_page_flags.py) pins that an unread page is never a pass. Keep it honest and documented in [`status.md`](status.md).
+- [ ] **A3 · Fly deploy** (blocked on `fly auth login`). Follow [T6](#t6--fly-deploy-the-real-demo-url). Set `MONGODB_URI`, `SERPAPI_KEY`, and `GEMINI_API_KEY` as Fly secrets (never commit them). Done when public `/api/health` reports `db: "ok"` and `scripts/smoke_http.py` passes against the URL.
+- [ ] **A4 · Vercel fallback** (only if A3 is still blocked at 09:30). Follow [T7](#t7--personal-vercel-deploy-fallback-frontend--api-in-one-project); a frontend-only deploy is acceptable if it points at a reachable backend.
+
+### B — docs truth and Devpost
+
+- [ ] **B1 · Claim scrub for D-043, D-044, and the design pass** (45 min). Check every claim in `README.md`, [`devpost.md`](devpost.md), [`devpost-form.md`](devpost-form.md), and [`status.md`](status.md): five checks run on every listing; allowlisted cards read **Verified**; flip faces carry their own tint; landing and question buttons scale on hover; deal alerts require a Y/N reply and the bridge stores no phone number. Remove any statement that checks are skipped for allowlisted merchants.
+- [ ] **B2 · Pre-fill the Devpost and tracks** (45 min). Fill every field that does not need the URL, screenshots, or video. Mark VEYZL **not selected**; Photon stays conditional until a real text round-trips. The sandbox disclosure stays exact.
+- [ ] **B3 · DEV Writing Challenge** (30 min). Publish T3 if a DEV account exists; otherwise trim to 1,200 words and hand the draft to C for screenshots.
+- [ ] **B4 · Gemini project number** (15 min). Get the public AI Studio project number and add it to the form. If it cannot be found before submission, leave the Gemini slot out rather than claiming it.
+
+**Sync at 10:15 PT:** A reports test and deploy state; B reports scrubbed claims and form completeness; C reports design deltas and artifacts.
 
 ---
 
@@ -51,11 +75,13 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 | # | Task | Time box | Status | Cut rule |
 |---|---|---|---|---|
 | **T0** | **Video + three screenshots** | must exist by 08:30 PT | not started | **never cut** — the only artifact that blocks submission outright |
-| T1 | Gemini provenance chip | 60 min | not started | none — smallest visible win |
+| T1 | Gemini provenance chip | 60 min | ✅ done 05:10 | none — smallest visible win |
 | T2 | Photon text loop | 75 min | blocked on a number | no reply within 10 min of setup → leave slot 3 empty |
-| T3 | DEV article | 60 min | not started | trim to 1,200 words; never describe a feature we do not have |
-| T4 | Atlas payment-path durability | 90 min | not started | abandon at 90 min — the Atlas claim already stands on D-026 |
-| T5 | Slate, SideShift paragraph, project number | 30 min | partly done | none |
+| T3 | DEV article | 60 min | ✅ drafted; publish pending a DEV account | trim to 1,200 words; never describe a feature we do not have |
+| T4 | Atlas payment-path durability | 90 min | ✅ done 05:30 | abandon at 90 min — the Atlas claim already stands on D-026 |
+| T5 | Slate, SideShift paragraph, project number | 30 min | ✅ 05:25 — D-028 + paragraph done; project number still needs the AI Studio owner | none |
+| T6 | **Fly deploy** (backend + frontend) | 45 min | blocked on `flyctl` + `fly auth login` | if Fly will not deploy by 08:15, use T7 and say "personal Vercel" on stage |
+| T7 | **Personal Vercel deploy** (fallback) | 30 min | not started | frontend-only if the services build fails; point it at the Fly or local backend |
 
 #### T0 — Artifacts (blocks the submission)
 
@@ -98,13 +124,14 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 **Read first:** [Spectrum quickstart](https://photon.codes/docs/spectrum-ts/introduction) · [iMessage provider](https://photon.codes/docs/spectrum-ts/providers/imessage) · [create-user / shared numbers](https://photon.codes/docs/api-reference/users/create-user) · dashboard at [photon.co/beta](https://photon.co/beta)
 
 - [ ] Avatar menu → attach a number; confirm the project leaves `account_phone_missing`
-- [ ] `bun create spectrum-project@latest dub --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --providers imessage --yes`
-- [ ] `SPECTRUM_PROJECT_SECRET` lives only in the scaffold's gitignored `.env` — never in this repo or chat
-- [ ] `bun start`, text the line, confirm the `echo:` reply — **this is the go/no-go**
-- [ ] Replace the echo: text → `POST /api/sessions` → answers → results → reply with the top trusted pick and its one-line reason
+- [x] Scaffolded at `../dub-spectrum` with `bun create spectrum-project@latest dub-spectrum --projectId 1afb123e-969b-47e3-b2af-de11d64d6901 --platforms imessage --yes`. The flag is `--platforms` now, not `--providers`. **The Cloud step in the scaffolder fails on Windows** (`spawn npx ENOENT` — Bun cannot start the `.cmd` shim), so the project id is written by hand and the secret is fetched with `bunx @photon-ai/cli@latest projects secret --project …` after `login`.
+- [x] `PROJECT_SECRET` lives only in the scaffold's gitignored `.env` — never in this repo or chat
+- [x] Authenticated (`bunx @photon-ai/cli@latest login`, user's account) and fetched the secret with `projects secret --project 1afb123e-969b-47e3-b2af-de11d64d6901 --json` into the gitignored `.env` — no secret in the repo or chat.
+- [ ] `bun start` is running (`Spectrum started`, provider `imessage`). **The go/no-go is now a real text**: the echo loop is gone, so the line should answer with the budget question, then the pick. Any reply within 10 minutes of the first text counts as a pass; silence after a text fails slot 3.
+- [x] Bridge lives at **`Dubhacks/dub-spectrum`** (moved inside the repo; `.env`, `node_modules`, and logs stay gitignored). Flow is **pick first, questions after**: text → strip the polite framing ("hey can you find me …" becomes "…") → create session → submit empty answers → poll until `ready`/`no_trusted_option`/`failed` → reply with the top trusted pick, price, merchant, one-line reason, **and `listing.product_url`** → then a refinement menu (1 cheaper, 2 better quality, 3 something else, or `new: <product>`). A greeting alone asks what to shop for instead of searching for "hi". 15 unit tests; `bun simulate.ts` proved the network path end to end against the real backend. Only the live text is unproven.
 - [ ] Capture one real round trip for the video
 
-**Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-027, and stop.
+**Done when:** a text from a phone gets a trust-checked pick computed by our backend. Otherwise mark slot 3 empty, note it in D-028, and stop.
 
 #### T3 — DEV Writing Challenge
 
@@ -128,43 +155,69 @@ Implementation plan: [`superpowers/plans/2026-10-18-track-submissions.md`](super
 
 **Read first:** [`status.md:21`](status.md#L21) — sessions, listings and investigations are still registry-only. That sentence is what this task deletes.
 
-- [ ] Failing test: `MongoRepository` round-trips a listing through `get_listing`
-- [ ] Add `get_listing` to the protocol and both adapters
-- [ ] Failing test: the orchestrator leaves a listing and an investigation in the repository
-- [ ] Write through after `replace_listings` and `attach_investigation`
-- [ ] Add `get_investigation_for(session_id, listing_id)` to both adapters, with its test
-- [ ] Make `_get_listing` / `_get_investigation` async with registry → repository → catalog, and update the four call sites
-- [ ] Restart-survival test: clear the registry, confirm the checkout, expect a `rcp_` receipt
-- [ ] Prove it over HTTP against Atlas and record the ids in `docs/status.md`
+- [x] Failing test: `MongoRepository` round-trips a listing through `get_listing`
+- [x] Add `get_listing` to the protocol and both adapters
+- [x] Failing test: the orchestrator leaves a listing and an investigation in the repository
+- [x] Write through after `replace_listings` and `attach_investigation`
+- [x] Add `get_investigation_for(session_id, listing_id)` to both adapters, with its test
+- [x] Make `_get_listing` / `_get_investigation` async with registry → repository → catalog, and update the four call sites
+- [x] Restart-survival test: clear the registry, reset the token simulator, confirm the checkout, expect a `rcp_` receipt
+- [x] **Found a second gap:** the real restart returned a 500 — `store.token_by_checkout[...]` raised `KeyError` because the simulator's token table is in memory. `Checkout` now carries `token_id`, confirm re-registers it, and a checkout with no token refuses with 409 (D-027)
+- [x] Prove it over HTTP against Atlas and record the ids in [`status.md`](status.md): `chk_dzr98nwVykDASG4L` → `rcp_ZSgCEO8uD7hwhCjs` across a real process restart
 
-**Done when:** a checkout created before a backend restart still confirms after it. **Cut at 90 minutes.**
+**Done when:** a checkout created before a backend restart still confirms after it. ✅ 2026-10-18 05:30 PT
 
 #### T5 — Slate, startup paragraph, project number
 
-- [ ] Append D-027 to [`decisions.md`](decisions.md#L224) (after D-026): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
-- [ ] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT)
+- [x] Append D-028 to [`decisions.md`](decisions.md) (after D-027): title, the three sponsored slots (Photon conditional), non-sponsored list, what was rejected and why
+- [x] Write the SideShift paragraph — who pays, what they pay, how it spreads (also serves DubHacks NEXT). Canonical copy: [`devpost.md`](devpost.md#who-pays)
 - [ ] Read the Gemini **project number** from the [AI Studio project selector](https://aistudio.google.com/apikey) (public id, not the key) and paste it into the Devpost field at [`devpost-form.md:132`](devpost-form.md#L132)
 - [ ] Tick the sponsored and non-sponsored checkboxes in [`devpost-form.md`](devpost-form.md); VEYZL stays unticked
 
 **Done when:** the slate is recorded, the form's category boxes match it, and no claim in the form lacks evidence in the repo.
 
----
+#### T6 — Fly deploy (the real demo URL)
 
-## A — deploy only
-
-Everything else on A's plate is done (see "Already done"). One item remains:
-
-- [ ] **Deploy to Fly.** The CLI is not installed and there are no credentials on this machine, so this needs an interactive login first:
+- [ ] Install the CLI and log in — **interactive; the user runs these in their own terminal**:
   ```powershell
   iwr https://fly.io/install.ps1 -useb | iex
   fly auth login
-  fly secrets set MONGODB_URI="<the same Atlas URI as backend/.env>" SERPAPI_KEY="<...>" GEMINI_API_KEY="<...>"
-  fly deploy
-  backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://sniff-visa-dubhacks.fly.dev
   ```
-  Then warm the app (health + one session) and confirm `search.completed` reports `source: "serpapi"`. The Docker image already builds and serves the whole path locally, so this is a packaging/auth step, not a code step.
+- [ ] Set the secrets (values come from `backend/.env`; never paste them into chat or the repo):
+  ```powershell
+  fly secrets set MONGODB_URI="<atlas uri>" SERPAPI_KEY="<key>" GEMINI_API_KEY="<key>"
+  ```
+- [ ] `fly deploy` from the repo root, then warm it:
+  `backend\.venv\Scripts\python.exe backend\scripts\smoke_http.py https://sniff-visa-dubhacks.fly.dev`
+- [ ] Confirm `GET /api/health` reports `{"status":"ok","db":"ok"}` and one live query reports `source: "serpapi"`.
 
 **Done when:** the public URL serves this build and `smoke_http.py` passes against it.
+
+#### T7 — Personal Vercel deploy (fallback, frontend + `/api` in one project)
+
+The repo already carries a [`vercel.json`](../vercel.json) with two services — `frontend` (Vite) and `backend` (FastAPI) — and a `/api/(.*)` rewrite to the backend. It targets **Vercel Services**, which is the part most likely to fail; treat this as a fallback, not the demo URL.
+
+- [ ] Log in with the user's own account: `npx vercel login` (or import `KF8311/Dubhacks` in the Vercel dashboard).
+- [ ] Deploy from the **repo root**, not `frontend/`: `npx vercel --prod`
+- [ ] Add the env vars in the project settings for **Production and Preview**: `MONGODB_URI`, `SERPAPI_KEY`, `GEMINI_API_KEY`.
+- [ ] Open the deployment and check `https://<deploy>/api/health` → `db: "ok"`.
+- [ ] If the services build fails: deploy **frontend only** (`npx vercel --prod frontend`), set `VITE_API_BASE_URL` to the Fly backend, and rebuild.
+- [ ] Walk the full path on the deployed URL: query → grid → villain → pick → checkout → receipt.
+
+**Done when:** either the combined deployment serves `/api/health` with `db: "ok"`, or the frontend-only deployment works against a reachable backend — and `docs/status.md` says which one is live.
+
+**Known risks:** Vercel Services is a newer config shape and may reject this file; the FastAPI function has a 60 s cap and SSE over serverless can buffer, so the search stream may arrive in one burst; cold starts add seconds the demo cannot afford. None of this blocks T6.
+
+---
+
+## A — check evidence and deploy
+
+The near-term lane is scheduled in [Next block](#next-block--scheduled-for-a-and-b-08151015-pt-2026-10-18). The two deploy items remain:
+
+- [ ] **Deploy to Fly — full steps in [T6](#t6--fly-deploy-the-real-demo-url).** The CLI is not installed and there are no credentials on this machine, so this needs an interactive login first. The Docker image already builds and serves the whole path locally, so this is a packaging/auth step, not a code step.
+- [ ] **Personal Vercel deploy — full steps in [T7](#t7--personal-vercel-deploy-fallback-frontend--api-in-one-project).** Only if Fly slips; `vercel.json` is already in the repo and the frontend falls back to same-origin `/api`.
+
+**Done when:** the public URL serves this build and `smoke_http.py` passes against it (or T7's Vercel URL does).
 
 ## B — docs, claims, Devpost
 
@@ -197,8 +250,9 @@ Everything else on A's plate is done (see "Already done"). One item remains:
 ## Shared gates — run before calling anything done
 
 ```powershell
-cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 237 passed
-cd frontend; npx vitest run; npm run build                       # 55 passed, clean
+cd backend;  .\.venv\Scripts\python.exe -m pytest -q            # 264 passed
+cd frontend; npx vitest run; npm run build                       # 82 passed (19 files), clean
+cd dub-spectrum; bun test; bunx tsc --noEmit                     # 27 passed, clean
 backend\.venv\Scripts\python.exe scripts\replay_offline.py       # exit 0, frozen numbers
 git ls-files | Select-String -Pattern "\.env"                    # only .env.example
 ```
@@ -217,6 +271,21 @@ Do **not** run the suite with `OFFLINE=1` exported; 13 tests read ambient settin
 | 6 | Purge danger | villain card disappears |
 | 7 | Checkout | sandbox banner, passkey, receipt |
 | 8 | Optional refusal | try the villain; server refuses with a code |
+
+## Live pens demo (the one to show off)
+
+The demo query is **`TUL pens at Office Depot`** (D-034). Measured over HTTP on `a/atlas-durable`: **ready in 3.2–5.1 s**, 9 listings (5 Office Depot + 4 eBay), **8 of 9 on the merchant's own product page**, best pick the Office Depot TUL BP Series Retractable Ballpoint Pens at **$12.49**, checkout `201`, `GET /api/checkout/{id}` `200`. If the flow asks a budget question, answer above **$12.49** (or skip); a lower cap filters the pen out. A bare `pens` query does not surface Office Depot in the top 9 — say "at Office Depot".
+
+| Step | Action | Expected |
+|---|---|---|
+| 1 | Query `TUL pens at Office Depot`, then click **Skip questions** | 9 cards; most labelled `officedepot.com`. Skipping keeps the query exact, so SerpAPI's cache (and the quota budget) is used; answering a budget appends `under $X` and needs a live search. |
+| 2 | Hover over a card | It **flips**; the back shows the safety score (or **Verified** for an allowlisted store) and `N passed · N warning · N failed`. Nothing static is left behind under the turn |
+| 3 | Click the best pick's link | Opens the real product page on officedepot.com |
+| 4 | Checkout | Sandbox banner, mandate, then the **"Pay on your phone"** link |
+| 5 | Copy the link, open it on the phone | `/pay/<checkout_id>` shows merchant, amount, trust badge, `Approve with passkey` |
+| 6 | Approve on the phone | Lands on `/r/<share_id>`, the same receipt the desktop would have produced |
+
+**Phone on the LAN:** start Vite with `--host` (`npx vite --host`) and Uvicorn with `--host 0.0.0.0`; open the **LAN IP** (`http://192.168.x.x:5173/`) on the computer too, because `apiBase()` uses `window.location.hostname` (D-036). Opening via `localhost` on the desktop and then the raw IP on the phone means the phone's page still calls the right API, but the copied link inherits whichever host is in the address bar — use the IP so both devices agree.
 
 ## Cut list
 
@@ -243,3 +312,19 @@ Live page fetching → Reddit → SerpAPI → Mongo → page flags.
 - [x] Two Mongo-only bugs fixed — naive datetimes on hydrate, and an empty `idempotency_key` colliding on the unique index — with regression tests (backend now 234)
 - [x] Five trust checks, deterministic scoring, recommendation, checkout → passkey → receipt, public share, refusal paths
 - [x] Offline replay reproduces the frozen numbers: 9 listings, 8 trusted, 1 danger, pick `lst_tgt_bsp`, median $374.49, savings $194.50
+- [x] Every listing is clickable: the card, the best pick, and the public receipt link to the real `product_url`; a Google-hosted result opens the Google Shopping results page for the query (the top result, no `prds` catalog token) and is labelled "View on Google Shopping". The URL uses the current shopping vertical `?udm=28&q=…`; the legacy `?ibp=oshop&q=…` that SerpAPI returns renders an empty page in a browser; merchant URLs are labelled with the domain. Spaces are encoded so a text message keeps the whole link, listing ids stay distinct when results share a URL, and SerpAPI no longer invents `https://<retailer>/item/…` 404s.
+- [x] `/api/health` reports `offline`, and `dev.cmd` refuses to reuse an offline backend for a live run — the trap that made a live demo silently serve the catalog
+- [x] Search is localized to **Seattle, Washington, United States** (`SERPAPI_LOCATION`, override with `SERPAPI_GL` / `SERPAPI_HL`). The market goes in SerpAPI's `location` parameter, never appended to `q`. Verified live: `location=Seattle%2C+Washington%2C+United+States` on the request, ready in 10.9 s.
+- [x] A bodyless text bridge exists (`dub-spectrum/src/agent.ts`): numbered budget question → answers → poll → pick, price, merchant, reason, `product_url`. 9 unit tests; not yet exercised by a real text.
+- [x] **Real merchant links** (D-034): one immersive lookup per listing, concurrent, 3.5 s cap; a store's URL is used only when its host exactly equals the listing's merchant host, so a marketplace reselling the item (the DoorDash case) cannot relabel a listing. `office depot`, `staples`, and `jetpens` are known sources. Verified: `TUL pens at Office Depot` → 8/9 real links, best pick's `officedepot.com` URL.
+- [x] **Cards flip to site stats** (D-035, superseded by D-041): the hover flip was removed after the user found it made browsing annoying; the tally now sits on the row and the full checks live in the expanded counter card.
+- [x] **Pay on your phone** (D-036): `GET /api/checkout/{id}` read-only summary + `/pay/<id>` page; the mandate step copies/shares the link. `apiBase()` follows the page hostname so a LAN phone reaches Uvicorn.
+- [x] **Out of searches is its own failure** (D-037): a 429 whose body says "run out of searches" raises `SearchQuotaExhausted`, is not retried, and reaches the UI as `SEARCH_QUOTA_EXHAUSTED` in ~0.2 s. A rate-limit 429 stays retryable. Resolved merchant links are cached per listing id for the process, so a re-run costs one search instead of ten.
+- [x] **Questions can be skipped** (D-038): a **Skip questions** action submits `skip_remaining: true`, keeping the query exact — required to reach SerpAPI's cached results while the key is exhausted.
+- [x] **Whole-ticket flip, one marigold edge, Send to phone** (D-039): the flip wraps the link too; only the best pick wears the hard offset; the review offers Pay and Send to phone.
+- [x] **Still hover and automatic pay text** (D-040): compact `size-10`/`p-2.5` cards with a verdict-colored left edge and tint; hover is a marigold wash plus a darker border and never moves the card. **Send to phone** posts the pay text to the bridge's `POST /send`, which messages the conversation the shopper already texted (or `MY_PHONE` in `dub-spectrum/.env`, gitignored). A failed send shows the bridge's reason and the copyable link. `MY_PHONE` is set in the gitignored `dub-spectrum/.env`, `/health` reports `target: my-phone`, and a confirmation text was delivered.
+- [x] **Items on the right, each card with Visit and Send** (D-042): results split into a 21rem detail column and a two-up item grid. Each card shows the photo, title, merchant, price, badge, and tally; **Visit site** opens the item's own merchant page, **Send** texts that page to the phone. Hover flips the card surface (not the footer) to the safety score, verdict, tally, and top reason; touch and reduced motion keep it flat.
+- [x] **Deal alerts require a Y/N text** (D-044): the **Deal alerts** field (now in the header, D-045) posts a number to the local bridge, which texts "Reply Y to opt in, or N to skip" and stores only a consent id plus the Spectrum space id in the gitignored `.phone-consent.json`. Y confirms, N declines, STOP revokes, and pending requests expire after 15 minutes. `POST /notify/{id}` refuses unless confirmed; the Send buttons and pay-link text prefer the confirmed chat. The number is never written to disk, Mongo, FastAPI, or `localStorage`. Bridge **27 passed**; the live Y/N round trip still needs a real phone.
+- [x] **Header phone field and sliding screens** (D-045): Deal alerts now sits in the sticky header, top right, so it is visible from the landing screen; the landing, each question, and the results slide in from the right in sequence (`ScreenSlide`, 420 ms, keyed by step so SSE updates do not replay it); picking an item slides the site-stats panel over the item grid, and **Back to items** (or picking the same card) slides the grid back. The stats panel is inert until an item is picked. Frontend **82 passed**, build clean.
+- [x] **Every listing is inspected** (D-043): the orchestrator runs all five checks for allowlisted merchants too; the allowlist only exempts the score floor, so an allowlisted card reads **Verified** instead of `0`. Live check: Office Depot and eBay passed SSL, Safe Browsing, domain age, and Reddit; `page_flags` skipped because the fetch timed out (reported honestly). The flip faces carry the verdict tint and edge, so no static colored surface shows behind the rotation. Landing and question buttons scale 1.02–1.05× on hover.
+- [x] **No flip, more color** (D-041): the row shows title, merchant, badge, tally, price, and a circular `↗` link on one face; hover is a marigold wash and a darker border, never movement. Sky and berry tokens tint the landing pillars and starter chips; the best pick gets a marigold label and a marigold-washed row.

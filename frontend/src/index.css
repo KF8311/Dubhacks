@@ -6,29 +6,34 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --ink: #1e2a24;
-  --canvas: #dce8e0;
-  --paper: #f7f3ea;
-  --marigold: #e8a317;
-  --marigold-ink: #1e2a24;
-  --leaf: #1f6b4a;
-  --background: #dce8e0;
-  --foreground: #1e2a24;
-  --card: #f7f3ea;
-  --card-foreground: #1e2a24;
-  --popover: #f7f3ea;
-  --popover-foreground: #1e2a24;
-  --primary: #e8a317;
-  --primary-foreground: #1e2a24;
-  --secondary: #cfe0d4;
-  --secondary-foreground: #1e2a24;
-  --muted: #cfe0d4;
-  --muted-foreground: #3d4f46;
-  --accent: #1f6b4a;
-  --accent-foreground: #f7f3ea;
+  --ink: #17251e;
+  --canvas: #cfeade;
+  --paper: #fffaf0;
+  --marigold: #f2a71b;
+  --marigold-ink: #17251e;
+  --marigold-wash: color-mix(in srgb, var(--marigold) 18%, var(--paper));
+  --leaf: #0f7a52;
+  --sky: #2f8fce;
+  --sky-wash: #d9eefb;
+  --berry: #d5487a;
+  --berry-wash: #fbe0ea;
+  --background: #cfeade;
+  --foreground: #17251e;
+  --card: #fffaf0;
+  --card-foreground: #17251e;
+  --popover: #fffaf0;
+  --popover-foreground: #17251e;
+  --primary: #f2a71b;
+  --primary-foreground: #17251e;
+  --secondary: #c2e7d3;
+  --secondary-foreground: #17251e;
+  --muted: #c2e7d3;
+  --muted-foreground: #35503f;
+  --accent: #0f7a52;
+  --accent-foreground: #fffaf0;
   --destructive: #b42318;
-  --border: #b7c9bc;
-  --input: #b7c9bc;
+  --border: #a9cfba;
+  --input: #a9cfba;
   --ring: #e8a317;
   --chart-1: #e8a317;
   --chart-2: #1f6b4a;
@@ -130,14 +135,14 @@
 }
 
 :root {
-  --trust-trusted: #1f6b4a;
-  --trust-trusted-bg: #d5ede0;
+  --trust-trusted: #0f7a52;
+  --trust-trusted-bg: #cdf0dd;
   --trust-caution: #9a5b12;
-  --trust-caution-bg: #f8e6c0;
+  --trust-caution-bg: #fbe7bc;
   --trust-danger: #8a1c12;
-  --trust-danger-bg: #f8d4d0;
-  --trust-pending: #3d4f46;
-  --trust-pending-bg: #cfe0d4;
+  --trust-danger-bg: #fbd3ce;
+  --trust-pending: #35503f;
+  --trust-pending-bg: #c2e7d3;
 }
 
 .app-canvas {
@@ -486,32 +491,192 @@
     0 18px 40px -28px rgb(30 42 36 / 35%);
 }
 
+/* Soft, lifted paper. The layered shadow reads as float; the only hard
+   shadow in the system is the marigold offset under the single best pick. */
 .ticket {
   background: var(--paper);
   border: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgb(30 42 36 / 6%);
+  box-shadow:
+    0 1px 0 rgb(30 42 36 / 6%),
+    0 14px 30px -26px rgb(30 42 36 / 45%);
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.ticket:hover {
+  border-color: color-mix(in srgb, var(--leaf) 40%, var(--border));
 }
 
 .ticket-best {
-  background: var(--paper);
+  background: color-mix(in srgb, var(--marigold) 14%, var(--paper));
   border: 1px solid rgb(30 42 36 / 18%);
-  box-shadow: 6px 6px 0 var(--marigold);
+  box-shadow:
+    5px 5px 0 var(--marigold),
+    0 18px 32px -24px rgb(30 42 36 / 40%);
 }
 
-.shelf-row {
+.ticket-selected {
+  border-color: rgb(30 42 36 / 28%);
+  box-shadow:
+    0 0 0 1px rgb(30 42 36 / 10%),
+    0 14px 30px -24px rgb(30 42 36 / 45%);
+}
+
+/* ProductCard supplies its own row padding. The verdict becomes a color edge
+   and a tint; hover answers with a wash and a stronger border, never with
+   movement. */
+.product-card {
+  padding: 0;
+  gap: 0;
+  border-left-width: 4px;
   transition:
-    transform 160ms ease,
-    box-shadow 160ms ease;
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.product-card[data-verdict="trusted"] {
+  background: color-mix(in srgb, var(--trust-trusted-bg) 55%, var(--paper));
+  border-left-color: var(--trust-trusted);
+}
+
+.product-card[data-verdict="caution"] {
+  background: color-mix(in srgb, var(--trust-caution-bg) 55%, var(--paper));
+  border-left-color: var(--trust-caution);
+}
+
+.product-card[data-verdict="danger"] {
+  background: color-mix(in srgb, var(--trust-danger-bg) 65%, var(--paper));
+  border-left-color: var(--trust-danger);
+}
+
+.product-card[data-verdict="pending"] {
+  border-left-color: var(--border);
+}
+
+.product-card:hover {
+  background: var(--marigold-wash);
+  border-color: rgb(23 37 30 / 30%);
+}
+
+.product-card[data-verdict="trusted"]:hover {
+  border-left-color: var(--trust-trusted);
+}
+
+.product-card[data-verdict="caution"]:hover {
+  border-left-color: var(--trust-caution);
+}
+
+.product-card[data-verdict="danger"]:hover {
+  border-left-color: var(--trust-danger);
+}
+
+/* The flip cards carry their tint and verdict edge on the faces themselves.
+   Nothing colored sits still behind the turn: the whole visible surface
+   rotates, while the Visit/Send footer below stays put. */
+.product-flip,
+.product-flip:hover {
+  background: transparent;
+  border-width: 0;
+}
+
+.product-flip .flip-front,
+.product-flip .flip-back {
+  border-left: 4px solid var(--border);
+  background: var(--paper);
+}
+
+.product-flip[data-verdict="trusted"] .flip-front {
+  background: color-mix(in srgb, var(--trust-trusted-bg) 55%, var(--paper));
+  border-left-color: var(--trust-trusted);
+}
+
+.product-flip[data-verdict="trusted"] .flip-back {
+  background: color-mix(in srgb, var(--trust-trusted-bg) 30%, var(--paper));
+  border-left-color: var(--trust-trusted);
+}
+
+.product-flip[data-verdict="caution"] .flip-front {
+  background: color-mix(in srgb, var(--trust-caution-bg) 55%, var(--paper));
+  border-left-color: var(--trust-caution);
+}
+
+.product-flip[data-verdict="caution"] .flip-back {
+  background: color-mix(in srgb, var(--trust-caution-bg) 30%, var(--paper));
+  border-left-color: var(--trust-caution);
+}
+
+.product-flip[data-verdict="danger"] .flip-front {
+  background: color-mix(in srgb, var(--trust-danger-bg) 65%, var(--paper));
+  border-left-color: var(--trust-danger);
+}
+
+.product-flip[data-verdict="danger"] .flip-back {
+  background: color-mix(in srgb, var(--trust-danger-bg) 30%, var(--paper));
+  border-left-color: var(--trust-danger);
+}
+
+.product-flip[data-verdict="pending"] .flip-front,
+.product-flip[data-verdict="pending"] .flip-back {
+  border-left-color: var(--border);
 }
 
 .shelf-row:hover {
-  transform: translateY(-4px) rotate(-0.35deg);
-  box-shadow: 5px 8px 0 var(--marigold);
+  box-shadow:
+    0 1px 0 rgb(23 37 30 / 8%),
+    0 18px 32px -24px rgb(23 37 30 / 55%);
+}
+
+.ticket-best.shelf-row:hover {
+  box-shadow:
+    5px 5px 0 var(--marigold),
+    0 18px 32px -24px rgb(23 37 30 / 45%);
+}
+
+/* The right-hand item card turns over on hover to show the merchant's trust
+   score. The footer with Visit and Send sits outside this box, so the actions
+   never rotate away from the pointer. Both faces share one grid cell, which
+   keeps the card at the taller face's height. */
+.flip-card {
+  display: block;
+  width: 100%;
+  perspective: 1200px;
+}
+
+.flip-inner {
+  display: grid;
+  transition: transform 460ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transform-style: preserve-3d;
+}
+
+.flip-face {
+  grid-area: 1 / 1;
+  min-width: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.flip-back {
+  transform: rotateY(180deg);
+}
+
+.flip-card:hover .flip-inner {
+  transform: rotateY(180deg);
+}
+
+@media (hover: none) {
+  .flip-card:hover .flip-inner {
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .shelf-row:hover,
-  .check-tab:hover {
+  .flip-inner {
+    transition: none;
+  }
+  .flip-card:hover .flip-inner {
     transform: none;
     box-shadow: none;
   }
@@ -532,6 +697,30 @@ input:focus-visible,
 a:focus-visible {
   outline: 2px solid var(--marigold);
   outline-offset: 2px;
+}
+
+/* Each step of the shop slides in from the right, as if the next screen were
+   handed across the counter. The old screen is replaced, so the new panel
+   carries the movement. */
+@keyframes screen-enter {
+  from {
+    opacity: 0;
+    transform: translateX(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.screen-enter {
+  animation: screen-enter 420ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-enter {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

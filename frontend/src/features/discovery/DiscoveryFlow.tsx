@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { ShopWindow } from "@/components/ShopWindow.tsx"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ScreenSlide } from "@/components/ScreenSlide.tsx"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createSession, getSnapshot, submitAnswers } from "@/lib/api.ts"
 import { go } from "@/lib/path.ts"
@@ -12,7 +13,32 @@ type Props = {
   onStarted: (sessionId: string) => void
 }
 
-const STARTERS = ["Headphones", "Pens", "Water bottles"]
+const PILLARS = [
+  {
+    title: "Five trust checks",
+    body: "Domain age, SSL, Safe Browsing, Reddit, and page flags on every merchant.",
+    tint: "var(--marigold-wash)",
+    line: "var(--marigold)",
+  },
+  {
+    title: "Cheapest trusted",
+    body: "The pick is the lowest price that passed — not the cheapest listing on the page.",
+    tint: "var(--sky-wash)",
+    line: "var(--sky)",
+  },
+  {
+    title: "Sandbox checkout",
+    body: "A simulated Visa mandate, passkey, and receipt. No real card is charged.",
+    tint: "var(--berry-wash)",
+    line: "var(--berry)",
+  },
+]
+
+const STARTERS = [
+  { label: "Headphones", tint: "var(--marigold-wash)" },
+  { label: "Pens", tint: "var(--sky-wash)" },
+  { label: "Water bottles", tint: "var(--berry-wash)" },
+]
 
 export function DiscoveryFlow({ onStarted }: Props) {
   const setQuery = useSessionStore((state) => state.setQuery)
@@ -66,23 +92,14 @@ export function DiscoveryFlow({ onStarted }: Props) {
     return null
   }
 
-  async function onNext() {
-    const answer = currentAnswer()
-    if (!question || !answer || !sessionId) return
-    const nextAnswers = [...answers, answer]
-    setAnswers(nextAnswers)
-    setPicked(null)
-    setFreeText("")
-    if (index < questions.length - 1) {
-      setIndex(index + 1)
-      return
-    }
+  async function submit(finalAnswers: Answer[], skipRemaining: boolean) {
+    if (!sessionId) return
     setPhase("submitting")
     setError(null)
     try {
       const submitted = await submitAnswers(sessionId, {
-        answers: nextAnswers,
-        skip_remaining: false,
+        answers: finalAnswers,
+        skip_remaining: skipRemaining,
       })
       const snapshot = await getSnapshot(submitted.session_id)
       startSession(snapshot, {
@@ -97,75 +114,117 @@ export function DiscoveryFlow({ onStarted }: Props) {
     }
   }
 
+  async function onNext() {
+    const answer = currentAnswer()
+    if (!question || !answer || !sessionId) return
+    const nextAnswers = [...answers, answer]
+    setAnswers(nextAnswers)
+    setPicked(null)
+    setFreeText("")
+    if (index < questions.length - 1) {
+      setIndex(index + 1)
+      return
+    }
+    await submit(nextAnswers, false)
+  }
+
   if (phase === "submitting") {
     return (
-      <div className="shop-floor">
-        <div className="ticket mx-auto max-w-2xl space-y-4 rounded-lg p-6 sm:p-8" aria-busy="true">
+      <ScreenSlide step="submitting">
+        <div className="ticket mx-auto max-w-2xl space-y-4 rounded-3xl p-6 sm:p-8" aria-busy="true">
           <p className="text-lg font-medium">Looking at retailers…</p>
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />
         </div>
-      </div>
+      </ScreenSlide>
     )
   }
 
   if (phase === "query" || !question) {
     return (
-      <>
-        <ShopWindow>
-          <form
-            className="space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void onFindProducts()
-            }}
-          >
-            <label className="block text-lg font-semibold tracking-tight" htmlFor="query">
-              What do you want to buy?
-            </label>
-            <p className="shop-lede max-w-lg text-sm leading-relaxed text-muted-foreground">
-              Search real listings, then only offer to pay a merchant the checks can verify.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                id="query"
-                value={query}
-                placeholder="What are you looking for?"
-                onChange={(event) => setLocalQuery(event.target.value)}
-                disabled={asking}
-                className="h-12 flex-1 rounded-md bg-[var(--paper)] px-4 text-base md:text-base"
-              />
+      <ScreenSlide step="query">
+        <section className="mx-auto max-w-3xl">
+        <p className="inline-flex rounded-full bg-[var(--marigold-wash)] px-3 py-1 text-sm font-semibold text-foreground ring-1 ring-[color-mix(in_srgb,var(--marigold)_45%,transparent)]">
+          Sykes shops with you
+        </p>
+        <h1 className="mt-2 max-w-xl font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
+          Find a deal you can actually pay for
+        </h1>
+        <form
+          className="ticket mt-8 space-y-4 rounded-3xl p-5 sm:p-7"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void onFindProducts()
+          }}
+        >
+          <label className="block text-lg font-semibold tracking-tight" htmlFor="query">
+            What do you want to buy?
+          </label>
+          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+            Search real listings, then only offer to pay a merchant the checks can verify.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Input
+              id="query"
+              value={query}
+              placeholder="What are you looking for?"
+              onChange={(event) => setLocalQuery(event.target.value)}
+              disabled={asking}
+              className="h-12 flex-1 rounded-full bg-[var(--paper)] px-5 text-base md:text-base"
+            />
+            <Button
+              type="submit"
+              disabled={asking || query.trim().length === 0}
+              className="h-12 rounded-full px-6 text-base font-semibold transition-all duration-200 ease-out hover:scale-[1.03]"
+            >
+              {asking ? "Asking a few questions…" : "Find products"}
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {STARTERS.map((starter) => (
               <Button
-                type="submit"
-                disabled={asking || query.trim().length === 0}
-                className="h-12 rounded-md px-6 text-base font-semibold"
+                key={starter.label}
+                type="button"
+                variant="outline"
+                className="h-9 rounded-full border-[color-mix(in_srgb,var(--ink)_14%,transparent)] px-4 transition-all duration-200 ease-out hover:scale-[1.05]"
+                style={{ background: starter.tint }}
+                disabled={asking}
+                onClick={() => setLocalQuery(starter.label)}
               >
-                {asking ? "Asking a few questions…" : "Find products"}
+                {starter.label}
               </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {STARTERS.map((starter) => (
-                <Button
-                  key={starter}
-                  type="button"
-                  variant="outline"
-                  className="h-9 rounded-full bg-[var(--paper)]"
-                  disabled={asking}
-                  onClick={() => setLocalQuery(starter)}
-                >
-                  {starter}
-                </Button>
-              ))}
-            </div>
-            {error ? (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </form>
-        </ShopWindow>
-      </>
+            ))}
+          </div>
+          {error ? (
+            <p className="text-sm text-destructive" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </form>
+        <ul className="mt-8 grid gap-4 sm:grid-cols-3">
+          {PILLARS.map((pillar) => (
+            <li
+              key={pillar.title}
+              className="rounded-3xl p-4"
+              style={{ background: pillar.tint, borderTop: `3px solid ${pillar.line}` }}
+            >
+              <p className="text-sm font-semibold">{pillar.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{pillar.body}</p>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 text-sm">
+          <button
+            type="button"
+            className="inline-block font-medium text-accent underline transition-all duration-200 ease-out hover:scale-[1.02]"
+            onClick={() => go("/how")}
+          >
+            How Sykes checks a store
+          </button>
+        </p>
+        </section>
+      </ScreenSlide>
     )
   }
 
@@ -174,8 +233,8 @@ export function DiscoveryFlow({ onStarted }: Props) {
   const progress = ((index + 1) / questions.length) * 100
 
   return (
-    <div className="shop-floor">
-    <div className="ticket mx-auto max-w-xl space-y-5 rounded-lg p-6 sm:p-8">
+    <ScreenSlide step={`q-${index}`}>
+      <div className="ticket mx-auto max-w-xl space-y-5 rounded-3xl p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Question {index + 1} of {questions.length}
@@ -204,7 +263,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
               key={option.id}
               type="button"
               variant={selected ? "default" : "outline"}
-              className="h-11 rounded-full px-4"
+              className="h-11 rounded-full px-4 transition-all duration-200 ease-out hover:scale-[1.04]"
               onClick={() => {
                 setPicked(option.id)
                 setFreeText("")
@@ -218,7 +277,7 @@ export function DiscoveryFlow({ onStarted }: Props) {
       <Input
         value={freeText}
         placeholder="Or type your own answer"
-        className="h-11 rounded-md bg-[var(--paper)] px-4"
+        className="h-11 rounded-full bg-[var(--paper)] px-5"
         onChange={(event) => {
           setFreeText(event.target.value)
           setPicked(null)
@@ -229,10 +288,26 @@ export function DiscoveryFlow({ onStarted }: Props) {
           {error}
         </p>
       ) : null}
-      <Button type="button" disabled={!ready} className="h-11 rounded-md px-5 font-semibold" onClick={() => void onNext()}>
-        {last ? "See results" : "Next"}
-      </Button>
-    </div>
-    </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <Button
+          type="button"
+          disabled={!ready}
+          className="h-11 rounded-full px-5 font-semibold transition-all duration-200 ease-out hover:scale-[1.03]"
+          onClick={() => void onNext()}
+        >
+          {last ? "See results" : "Next"}
+        </Button>
+        {phase === "questions" ? (
+          <button
+            type="button"
+            className="inline-block text-sm font-medium text-muted-foreground underline underline-offset-4 transition-all duration-200 ease-out hover:scale-[1.02] hover:text-foreground"
+            onClick={() => void submit(answers, true)}
+          >
+            Skip questions
+          </button>
+        ) : null}
+      </div>
+      </div>
+    </ScreenSlide>
   )
 }

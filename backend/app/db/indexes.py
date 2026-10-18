@@ -7,11 +7,23 @@ SESSION_TTL_S = 2 * 3600  # documents already carry expires_at; TTL 0 uses that 
 CACHE_TTL_FIELD = "expires_at"
 
 
+async def _drop_unique_index(collection, key: str) -> None:
+    """Remove a unique index an older build created on a now-shared field."""
+    for name, info in (await collection.index_information()).items():
+        if info.get("key") == [(key, 1)] and info.get("unique"):
+            await collection.drop_index(name)
+
+
 async def ensure_indexes(db) -> None:
     await db.sessions.create_index("expires_at", expireAfterSeconds=0)
     await db.sessions.create_index("updated_at")
 
-    await db.listings.create_index("product_url", unique=True)
+    # Listings are keyed by _id. product_url is not unique: every Google
+    # Shopping result for a query now points at the same results page (D-030),
+    # and a unique index turned the second save into a DuplicateKeyError that
+    # killed the orchestrator mid-session.
+    await _drop_unique_index(db.listings, "product_url")
+    await db.listings.create_index("product_url")
     await db.listings.create_index("merchant_domain")
 
     await db.investigations.create_index("listing_id")
