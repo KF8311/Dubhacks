@@ -13,16 +13,16 @@ One shared checklist. Personal scratch notes do not belong here.
 
 > **This is the live working document.** `docs/team-split-3.md` is the original ownership map and task numbering — useful for "who owns Task 23" and the cut order, not for "what do I do next." When the two disagree, this file and `status.md` win.
 
-## Where we are now — 19:30 PT (after the Block 4 A + B merge)
+## Where we are now — 18:30 PT (after the Block 4 A + B + C merge)
 
 | Thing | State |
 |---|---|
-| `main` | **Everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, and the frozen refusal paths. **152 backend / 9 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
+| `main` | **Everything merged**: scaffold, session routes, SSE, `search()`, all five checks, `score_investigation()`, `recommend()`, orchestrator fan-out, payability guard, checkout/confirm, receipts, the live frontend, the offline replay, and the frozen refusal paths. **153 backend / 22 frontend tests pass**, `npm run build` clean, `scripts/replay_offline.py` exits 0. |
 | Follow-on branch | **None. `main` is the source of truth** — branch from it for the checkout UI (`c/checkout-ui`). `scratch/integration` is stale; do not reuse it. |
 | Live API | Sessions create/answers/snapshot/events; **`POST /api/checkout`**, **`POST /api/checkout/{checkout_id}/confirm`**, `GET /api/receipts/{id}`, `GET /api/public/receipts/{share_id}`, `POST /api/demo/reset`. |
-| Frontend | Live by default. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI from `data/mock-session.json`. |
-| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 server-side is in place and proven over HTTP**; only C's checkout/receipt screens remain. |
-| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `b/block4-refusals` all merged into `main`. `scratch/integration` is stale (main is ahead of it) — do not reuse it. |
+| Frontend | Live by default, and the checkout sheet + receipt page call the live endpoints. `?mock=1` (or `VITE_USE_MOCK=1`) runs the whole UI, including checkout, from `data/mock-session.json`. |
+| Gates | G0 partial (health live, contracts not frozen). **G1, G2, G3 proven server-side and wired in the browser client.** **G4 is merged end to end** — server proven over HTTP, C's screens wired to it. The only thing left is one browser click-through. |
+| Dead branches | `b/trust`, `richard-dev`, `2026-10-17-6c1c`, `b/recommendation`, `b/domain-age`, `b/ssl-safe-browsing`, `b/page-flags`, `b/reddit-sentiment`, `agent_backend`, `c/web`, `merge/agent-backend`, `integration/hookup`, `integration/block4`, `integration/block4-ui`, `b/block4-refusals` all merged into `main`. `scratch/integration` is stale (main is ahead of it) — do not reuse it. |
 
 **Before anyone starts:** `git checkout main && git pull`. There is nothing left to merge — if you are on an older branch, rebase onto `main` before writing code.
 
@@ -41,7 +41,7 @@ One shared checklist. Personal scratch notes do not belong here.
   .venv/Scripts/python -m pip install -r requirements.txt
   ```
 - [ ] Frontend deps: `cd frontend && npm ci`.
-- [ ] Baseline both suites before you change anything: `pytest -q` → **152 passed**; `npx vitest run` → 9 passed. If your baseline differs, stop and ask — someone's work is missing.
+- [ ] Baseline both suites before you change anything: `pytest -q` → **153 passed**; `npx vitest run` → **22 passed**. If your baseline differs, stop and ask — someone's work is missing.
 
 ## 2. Universal — every commit
 
@@ -192,7 +192,7 @@ Five-minute sync at the end of each block: each person says *done / blocked / ne
 | G1 Listings to browser | Sat 15:30 | 🟢 live `EventSource` client wired; one browser screenshot still owed | A + B + C |
 | G2 Investigation + score | Sat 18:00 | 🟢 server proof + `check.completed` rendering; browser click-through owed | A + B + C |
 | G3 Recommendation | Sat 19:30 | 🟢 server proof + `BestPick` and best-pick ring; browser click-through owed | A + B + C |
-| G4 Checkout → receipt | Sat 21:00 | 🟡 server proof over HTTP; UI pending | A + C |
+| G4 Checkout → receipt | Sat 21:00 | 🟡 merged end to end; browser click-through pending | A + C |
 | G5 Devpost draft | Sat 22:30 | ⬜ | B |
 | G6 Freeze | Sun 02:00 | ⬜ | all |
 | G7 Submit | Sun 09:50 | ⬜ | all |
@@ -215,12 +215,12 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 
 ## 9. Block 4 — G4 checkout · start here
 
-**State:** everything through **G4 server-side** is merged and green — checkout, confirm, receipts, and the refusal paths were proven over HTTP on merged `main`. G4 is blocked on exactly one thing: **C's checkout sheet and receipt page**, which now have real endpoints to call. A owes a Fly redeploy; B owes the audit and the Devpost.
+**State:** **all of Block 4 is merged** — A's checkout/confirm/receipts, B's refusal paths and offline replay, and C's checkout sheet and receipt page, reconciled against the live JSON contract in PR #14. G4 is blocked on exactly one thing: **a browser click-through** of the merged flow. A owes a Fly redeploy; B owes the audit and the Devpost.
 
 **First 15 minutes of the block, every person:**
 
 1. `git checkout main && git pull`
-2. Run your baseline: backend `pytest -q` → **152 passed**; frontend `npx vitest run` → **9 passed**; `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0.
+2. Run your baseline: backend `pytest -q` → **153 passed**; frontend `npx vitest run` → **22 passed**; `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → exit 0.
 3. Say out loud what you are taking from the lists below, then work top to bottom. Each person owns their column; nobody waits on another column.
 
 **Your next action, in one line:**
@@ -228,10 +228,10 @@ Cut in this order: live page fetching → Reddit → SerpAPI → Mongo → page 
 | Owner | Next action | Unblocks |
 |---|---|---|
 | **A** | Redeploy Fly from the repo root; then `POST /api/demo/reset` and free-text budget parsing | G4 on the public URL |
-| **C** | Click through the live flow once and screenshot it, then wire the checkout sheet + receipt page to the live endpoints | G1–G3 proof, G4 |
+| **C** | Click through the live flow once and screenshot it; then polish skipped/failed states | G1–G4 proof |
 | **B** | Task 29 VEYZL audit + `README.md`; Devpost technical section | G5 |
 
-**Handoff contract, now live (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`; a declined passkey is `402 PAYMENT_DECLINED`. The confirm path is **`POST /api/checkout/{checkout_id}/confirm`** (singular `checkout`), and every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label. C renders `code` and `message` verbatim. If the JSON shape has to change, say it in the channel before committing.
+**Handoff contract, now live (do not improvise this):** every refusal is `409` with `{"code": <PayabilityCode>, "message": <human string>, "details": {...}}`; a declined passkey is `402 PAYMENT_DECLINED`. The confirm path is **`POST /api/checkout/{checkout_id}/confirm`** (singular `checkout`) and takes `{passkey_assertion: {credential_id, client_data}, idempotency_key}`. Confirm returns a **pointer** (`receipt_id`, `receipt_url`); the receipt itself is `GET /api/public/receipts/{share_id}`. Every response carries `processor: "mock-vic"`, `mode: "sandbox"`, and the sandbox label. The frontend's request/response mapping is pinned in `frontend/src/lib/api.test.ts` — if the shape has to change, say it in the channel before committing.
 
 ### A — checkout backend (done; two follow-ups)
 
@@ -242,17 +242,20 @@ Remaining:
 1. `fly deploy` from the **repo root** so the public URL carries checkout and receipts; then run `backend/scripts/smoke_http.py` against it.
 2. Parse a budget out of free text (`"under $300"` currently yields `budget_max_cents: null`).
 
-**Proof:** the Fly health URL plus a checkout on the public URL; `pytest -q` still 152.
+**Proof:** the Fly health URL plus a checkout on the public URL; `pytest -q` still 153.
 
-### C — browser proof and the last two screens
+### C — browser proof (Tasks 25–26 are merged in PR #14)
 
-1. Run `uvicorn app.main:app --port 8000 --workers 1` and `npm run dev`, open `http://localhost:5173`, answer **$150–$300**, and confirm: villain card red, its five rows named, `Best pick` = Target $179.99 with $194.50 savings. **Screenshot it** — that closes G1, G2, G3.
-2. Verify `?mock=1` still renders the old mock session (the demo fallback).
-3. **Task 25** checkout sheet: cap, sandbox banner, passkey step, disabled when the server refuses, and the server's `PayabilityCode` shown on screen.
-4. **Task 26** receipt page: merchant, checks, score (or `Verified` when allowlisted), last4 only, sandbox line.
-5. Polish: render `skipped` as "Could not verify", name failed checks on a danger card, add the "why this one" panel.
+✅ **Task 25 and Task 26 are merged** — checkout sheet, mandate card, passkey dialog, processing state, receipt page, `/r/:share_id` route. The live path now sends the contracted mandate and passkey assertion, follows `receipt_url` to the public receipt, and renders the server's `PayabilityCode` beside a human message.
 
-**Proof:** click a trusted listing → passkey → receipt; then click the villain → visible refusal with the server's code.
+Remaining:
+
+1. Run `uvicorn app.main:app --port 8000 --workers 1` and `npm run dev`, open `http://localhost:5173`, answer **$150–$300**, and confirm: villain card red, its five rows named, `Best pick` = Target $179.99 with $194.50 savings. **Screenshot it** — that closes G1–G3.
+2. Click **Pay → passkey → receipt** on the best pick; confirm the receipt shows score, `4242`, and the sandbox line. **Screenshot that** — that closes G4.
+3. Verify `?mock=1` still renders the whole flow from the mock (the demo fallback).
+4. Polish: render `skipped` as "Could not verify", name failed checks on a danger card, add the "why this one" panel.
+
+**Proof:** click a trusted listing → passkey → receipt; then try the villain and see the server's code on screen.
 
 ### B — audit, README, Devpost (Block 4 half is done)
 
@@ -287,8 +290,8 @@ Remaining in Block 4:
 **Gate check before each rehearsal:**
 
 ```bash
-cd backend && .venv/Scripts/python.exe -m pytest -q                     # 152 passed
-cd frontend && npx vitest run && npm run build                          # 9 passed, clean
+cd backend && .venv/Scripts/python.exe -m pytest -q                     # 153 passed
+cd frontend && npx vitest run && npm run build                          # 22 passed, clean
 backend/.venv/Scripts/python.exe scripts/replay_offline.py              # exit 0
 ```
 
