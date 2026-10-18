@@ -12,6 +12,7 @@ from app.core.ids import new_id
 from app.core.timeouts import CHECK_CONCURRENCY, INVESTIGATION_BUDGET_S, MAX_LISTINGS, SEARCH_S
 from app.domain.enums import SessionStage, TrustStatus, Verdict
 from app.domain.models import Investigation, Listing, Session, SessionStats, TrustCheckResult
+from app.search.catalog import load_catalog
 from app.search.service import search as default_search
 from app.services.llm import narrate
 from app.sessions.events import EventBus
@@ -64,22 +65,28 @@ class SessionOrchestrator:
             "search.started",
             {"query": session.search_spec.query, "providers": ["catalog"]},
         )
-        try:
-            listings, source = await asyncio.wait_for(
-                self.search(session.search_spec, MAX_LISTINGS),
-                timeout=SEARCH_S,
-            )
-        except Exception:
-            listings, source = [], "catalog"
-            self.bus.publish(
-                session_id,
-                "session.error",
-                {
-                    "code": "SEARCH_FAILED",
-                    "message": "Search failed; no listings.",
-                    "recoverable": True,
-                },
-            )
+        settings = self.config or get_settings()
+        if getattr(settings, "offline", False):
+            # Replay and refusal tests must stay on the curated catalog even
+            # when a search key is present in the environment.
+            listings, source = load_catalog()[:MAX_LISTINGS], "catalog"
+        else:
+            try:
+                listings, source = await asyncio.wait_for(
+                    self.search(session.search_spec, MAX_LISTINGS),
+                    timeout=SEARCH_S,
+                )
+            except Exception:
+                listings, source = [], "catalog"
+                self.bus.publish(
+                    session_id,
+                    "session.error",
+                    {
+                        "code": "SEARCH_FAILED",
+                        "message": "Search failed; no listings.",
+                        "recoverable": True,
+                    },
+                )
 
         self.bus.publish(
             session_id,

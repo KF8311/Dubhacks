@@ -6,9 +6,11 @@ from datetime import datetime, timezone
 EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I)
 PHONE_RE = re.compile(r"\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b")
 CARD_RE = re.compile(r"\b(?:\d[ -]*?){13,19}\b")
+QUERY_SECRET_RE = re.compile(r"((?:api_key|x-goog-api-key)=)[^&\s\"\\]+", re.I)
 
 
 def redact(text: str) -> str:
+    text = QUERY_SECRET_RE.sub(r"\1[redacted]", text)
     text = EMAIL_RE.sub("[redacted]", text)
     text = PHONE_RE.sub("[redacted]", text)
     return CARD_RE.sub("[redacted-card]", text)
