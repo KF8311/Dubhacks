@@ -1,4 +1,6 @@
-from app.checks.base import CheckTarget
+from types import SimpleNamespace
+
+from app.checks.base import CheckContext, CheckTarget
 from app.checks.domain_age import DomainAgeCheck
 from app.domain.enums import CheckId, TrustStatus
 
@@ -89,6 +91,29 @@ async def test_villain_fixture_needs_no_network():
     result = await DomainAgeCheck().run(
         target("premium-audio-deals.shop"), ctx=None
     )
+
+    assert result.status == TrustStatus.FAILED
+    assert result.source == "fixture"
+
+
+async def test_offline_mode_does_not_reach_rdap_or_whois(monkeypatch):
+    async def blow_up(*args, **kwargs):
+        raise AssertionError("offline mode must not make a network call")
+
+    monkeypatch.setattr("app.checks.domain_age.fetch_rdap", blow_up)
+    monkeypatch.setattr("app.checks.domain_age.fetch_whois", blow_up)
+    ctx = CheckContext(config=SimpleNamespace(offline=True))
+
+    result = await DomainAgeCheck().run(target("bestbuy.com"), ctx=ctx)
+
+    assert result.status == TrustStatus.SKIPPED
+    assert result.source == "unavailable"
+
+
+async def test_offline_mode_still_reads_the_villain_fixture():
+    ctx = CheckContext(config=SimpleNamespace(offline=True))
+
+    result = await DomainAgeCheck().run(target("premium-audio-deals.shop"), ctx=ctx)
 
     assert result.status == TrustStatus.FAILED
     assert result.source == "fixture"

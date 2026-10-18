@@ -14,6 +14,7 @@ import time
 from datetime import UTC, datetime
 
 from app.checks.base import CheckContext, CheckTarget
+from app.core.config import get_settings
 from app.domain.enums import CheckId, TrustStatus
 from app.domain.models import Evidence, TrustCheckResult
 
@@ -82,6 +83,18 @@ class SSLCertCheck:
         self, target: CheckTarget, ctx: CheckContext | None = None
     ) -> TrustCheckResult:
         started = time.perf_counter()
+        settings = getattr(ctx, "config", None) or get_settings()
+        if getattr(settings, "offline", False):
+            # The replay and the air-gapped demo must not open a socket.
+            return self._result(
+                TrustStatus.SKIPPED,
+                0.0,
+                "Offline mode: the certificate was not inspected.",
+                [],
+                "unavailable",
+                started,
+            )
+
         info = await inspect_cert(target.merchant_domain)
 
         if info is None:
