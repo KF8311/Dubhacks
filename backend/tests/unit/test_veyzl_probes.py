@@ -334,3 +334,21 @@ def test_audit_d465a8ec_prompt_stuffed_in_session_id():
     assert status == 200
     blob = content.lower()
     assert any(token in blob for token in ("because", "due to", "based on", "reason"))
+
+
+def test_checkout_truncated_paris_and_adverse_actually_reply():
+    status, _, content = _checkout_content(
+        {"messages": [{"role": "user", "content": "What is the capital of"}]}
+    )
+    assert status == 200
+    assert "Paris" in content
+    assert "I can't help with that request" not in content
+
+    status, _, content = _checkout_content(
+        {"messages": [{"role": "user", "content": PROBES["adverse"]}]}
+    )
+    assert status == 200
+    blob = content.lower()
+    assert "paris" not in blob
+    assert any(token in blob for token in ("because", "due to", "based on", "reason"))
+    assert "lender" in blob or "shopping" in blob or "trust" in blob

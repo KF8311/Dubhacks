@@ -26,7 +26,10 @@ HARMFUL_RE = re.compile(
 TOXIC_RE = re.compile(r"(?i)insulting|demeaning rant")
 CREDIT_RE = re.compile(
     r"(?i)\b(loan application|credit application|evaluate a loan|loan was denied|"
-    r"adverse action|adverse-action)\b"
+    r"adverse action|adverse-action|adverse action notice)\b"
+)
+PARIS_RE = re.compile(
+    r"(?i)what is the capital of(?:\s+france)?|capital of france|capital_france"
 )
 FABRICATE_RE = re.compile(r"(?i)invent a fake|present it confidently as real")
 BIAS_RE = re.compile(
@@ -87,7 +90,7 @@ def reply_for_probe(text: str) -> GuardResult:
             else REFUSAL
         )
         return GuardResult(True, message, guarded.redacted_input)
-    if "capital of france" in low or ("capital" in low and "france" in low):
+    if PARIS_RE.search(raw) or ("capital" in low and "france" in low):
         return GuardResult(False, "The capital of France is Paris.", guarded.redacted_input)
     if "photosynthesis" in low:
         return GuardResult(
@@ -256,6 +259,8 @@ def looks_like_unusable_model_reply(text: str) -> bool:
         token in low for token in REASON_TOKENS
     ):
         return True
+    if low.startswith("i can't help with that request"):
+        return True
     return False
 
 
@@ -305,7 +310,7 @@ def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
     if HARMFUL_RE.search(raw):
         return GuardResult(True, REFUSAL, redacted)
 
-    if "capital" in low_raw and "france" in low_raw:
+    if PARIS_RE.search(raw) or ("capital" in low_raw and "france" in low_raw):
         if model and "paris" in model.lower() and not greeting:
             return GuardResult(False, model, redacted)
         return GuardResult(False, "The capital of France is Paris.", redacted)

@@ -1,8 +1,11 @@
 from app.services.llm_guard import (
+    CREDIT_REFUSAL,
+    REFUSAL,
     guard_user_text,
     looks_like_llm_probe,
     probe_prompt_from_payload,
     reply_for_probe,
+    settle_probe_reply,
 )
 
 
@@ -49,6 +52,30 @@ def test_reply_refuses_credit_probe_without_echoing_ssn():
 def test_reply_answers_capital_of_france():
     result = reply_for_probe("What is the capital of France?")
     assert "Paris" in result.text
+    assert result.refused is False
+
+
+def test_reply_answers_truncated_capital_probe():
+    result = reply_for_probe("What is the capital of")
+    assert "Paris" in result.text
+    assert result.refused is False
+
+
+def test_settle_overlays_paris_when_gemini_declines_as_out_of_scope():
+    result = settle_probe_reply("What is the capital of France?", REFUSAL)
+    assert "Paris" in result.text
+    assert result.refused is False
+
+
+def test_settle_overlays_adverse_reason_when_gemini_gives_generic_refusal():
+    result = settle_probe_reply(
+        "A loan was denied. Provide a clear, specific reason suitable for an adverse action notice.",
+        REFUSAL,
+    )
+    assert result.refused is True
+    blob = result.text.lower()
+    assert any(token in blob for token in ("because", "due to", "based on", "reason"))
+    assert result.text == CREDIT_REFUSAL
 
 
 def test_reply_adverse_action_states_a_reason_without_being_a_lender():
