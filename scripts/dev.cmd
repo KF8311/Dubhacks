@@ -73,16 +73,18 @@ echo [dev] A backend is already answering on http://localhost:8000 - reusing it.
 goto frontend
 
 :frontend
-echo [dev] Starting frontend. Vite prints the URL it actually uses, usually http://localhost:5173
+echo [dev] Frontend: http://localhost:5173/ - this is the URL to open.
+echo [dev] Port 5173 is pinned. If Vite says it is busy, close the other Vite window;
+echo [dev] this script never falls back to 5174.
 cd /d "%ROOT%\frontend"
-call npm run dev
+call npm run dev -- --port 5173 --strictPort
 exit /b 0
 
 :mock
 echo [dev] Frontend only, mock data, no backend needed.
 echo [dev] Open http://localhost:5173/?mock=1 once Vite is up.
 cd /d "%ROOT%\frontend"
-call npm run dev
+call npm run dev -- --port 5173 --strictPort
 exit /b 0
 
 :check

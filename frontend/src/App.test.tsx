@@ -1,9 +1,34 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import App from "./App.tsx"
+import { useSessionStore } from "@/store/sessionStore.ts"
 
 beforeEach(() => {
   // Mock mode is opt-in now, so the tests ask for it explicitly.
   window.history.replaceState({}, "", "/?mock=1")
+  useSessionStore.getState().reset()
+})
+
+afterEach(() => {
+  useSessionStore.getState().reset()
+})
+
+test("live search shows a loading state instead of unrelated products", () => {
+  useSessionStore.setState({ stage: "searching", query: "kayak", listings: [] })
+  render(<App />)
+  expect(screen.getByText(/searching live listings/i)).toBeInTheDocument()
+  expect(screen.queryByText(/checking listings/i)).not.toBeInTheDocument()
+})
+
+test("a failed live search offers a retry instead of the catalog", () => {
+  useSessionStore.setState({
+    stage: "failed",
+    query: "kayak",
+    listings: [],
+    error: "Live search is taking too long. We did not substitute unrelated products — start over to try again.",
+  })
+  render(<App />)
+  expect(screen.getByText(/live search is taking too long/i)).toBeInTheDocument()
+  expect(screen.getAllByRole("button", { name: /start over/i }).length).toBeGreaterThan(0)
 })
 
 test("renders the app shell", () => {

@@ -10,7 +10,7 @@ from app.sessions.store import SessionRegistry
 async def test_orchestrator_start_finishes_before_return_on_vercel(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
 
-    async def search(_spec, _limit):
+    async def search(_spec, _limit, **_kwargs):
         return [
             Listing(
                 id="lst_phone",
@@ -65,7 +65,7 @@ async def test_orchestrator_retries_search_after_one_timeout():
         source="serpapi",
     )
 
-    async def flaky(_spec, _limit):
+    async def flaky(_spec, _limit, **_kwargs):
         calls["n"] += 1
         if calls["n"] == 1:
             raise TimeoutError("first try")
@@ -108,7 +108,7 @@ async def test_orchestrator_retries_when_first_search_returns_catalog():
         source="catalog",
     )
 
-    async def flaky(_spec, _limit):
+    async def flaky(_spec, _limit, **_kwargs):
         calls["n"] += 1
         if calls["n"] == 1:
             return [headphones], "catalog"
@@ -126,8 +126,8 @@ async def test_orchestrator_retries_when_first_search_returns_catalog():
 
 
 @pytest.mark.asyncio
-async def test_orchestrator_falls_back_to_catalog_when_search_times_out():
-    async def boom(_spec, _limit):
+async def test_orchestrator_fails_honestly_instead_of_showing_the_catalog():
+    async def boom(_spec, _limit, **_kwargs):
         raise TimeoutError("search budget")
 
     store, bus = SessionRegistry(), EventBus()
@@ -136,8 +136,14 @@ async def test_orchestrator_falls_back_to_catalog_when_search_times_out():
     session.search_spec = SearchSpec(query="purple t shirt")
     store.update(session)
     await orch._run(session.id)
-    found = [event for event in [e async for e in bus.subscribe(session.id)] if event.type == "listing.found"]
-    assert found, "timed-out SerpAPI must still show catalog listings"
+
+    events = [event async for event in bus.subscribe(session.id)]
+    assert not [event for event in events if event.type == "listing.found"]
+    error = [event for event in events if event.type == "session.error"][0]
+    assert error.payload["code"] == "SEARCH_UNAVAILABLE"
+    assert error.payload["recoverable"] is False
+    assert store.get(session.id).stage.value == "failed"
+    assert store.listings(session.id) == []
 
 
 @pytest.mark.asyncio
