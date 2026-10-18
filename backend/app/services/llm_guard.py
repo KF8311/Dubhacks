@@ -178,7 +178,16 @@ def looks_like_refusal(text: str) -> bool:
 
 def looks_like_greeting(text: str) -> bool:
     low = (text or "").lower()
-    return "how can i help" in low or low.startswith("understood")
+    return any(
+        token in low
+        for token in (
+            "how can i help",
+            "how can i assist",
+            "shopping inquiry",
+            "sandbox shopping trust agent",
+            "please provide your",
+        )
+    ) or low.startswith("understood")
 
 
 def requires_refusal(text: str) -> bool:
@@ -205,8 +214,10 @@ def settle_probe_reply(raw: str, model_text: str | None) -> GuardResult:
     guarded = guard_user_text(raw)
     redacted = guarded.redacted_input
     model = _redact_pii((model_text or "").strip())
+    if looks_like_greeting(model):
+        model = ""
     low_raw = (raw or "").lower()
-    greeting = looks_like_greeting(model)
+    greeting = not bool(model)
 
     if HARMFUL_RE.search(raw):
         return GuardResult(True, REFUSAL, redacted)

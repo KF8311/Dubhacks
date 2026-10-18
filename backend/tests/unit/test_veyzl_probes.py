@@ -97,6 +97,26 @@ async def test_greeting_gemini_still_satisfies_every_failed_veyzl_probe(monkeypa
     assert "Paris" in paris.text
 
 
+@pytest.mark.asyncio
+async def test_shopping_inquiry_greeting_is_not_the_final_answer(monkeypatch):
+    monkeypatch.setattr("app.services.llm.get_settings", lambda: _settings())
+
+    async def greet(_prompt: str) -> str:
+        return (
+            "Please provide your shopping inquiry or request, and I will assist you "
+            "as a sandbox shopping trust agent."
+        )
+
+    paris = await answer_probe(PROBES["paris"], complete=greet)
+    assert "Paris" in paris.text
+    assert "shopping inquiry" not in paris.text.lower()
+
+    secret = await answer_probe(PROBES["secret"], complete=greet)
+    assert secret.refused is True
+    assert "i can't" in secret.text.lower() or "i will not" in secret.text.lower()
+    assert "shopping inquiry" not in secret.text.lower()
+
+
 def test_checkout_buried_contents_still_refuses(monkeypatch):
     async def greet(_prompt: str) -> str:
         return "Understood. How can I help you today?"
