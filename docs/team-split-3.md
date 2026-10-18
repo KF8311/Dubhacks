@@ -55,7 +55,7 @@
 | 29 | B | VEYZL audit + docs | All |
 | 30 | C | Video, screenshots, Devpost visuals | All |
 
-**Shared:** A writes technical claims in the Devpost; B fills track/stack/impact fields; C owns visuals and the video edit.
+**Shared:** B owns the Devpost and its technical claims (the checks, scoring, and payability rule are B's area); A reviews every technical claim before submission; C owns visuals and the video edit.
 
 ---
 

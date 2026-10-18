@@ -20,10 +20,10 @@ This is the only file that claims to be current.
 | Offline replay | `backend/.venv/Scripts/python.exe scripts/replay_offline.py` → same numbers as the live run, exit 0. Exits 1 if the demo drifts. |
 | Routes | Sessions create/answer/snapshot/events, orchestrator fan-out, payability guard and mandates, **checkout/confirm (Task 23)**, **receipts + public share (Task 24)**. The frontend calls all of them live; `?mock=1` is the fallback. |
 | Owners | A: platform + orchestrator + payments. B: trust + data + **Mongo persistence (Task 27, D-016)**. C: frontend. |
-| Blockers | Two Block 5 first actions: A redeploys Fly, C clicks the merged flow through once |
+| Blockers | A redeploys Fly; C clicks the merged flow through once; B has Task 29 (VEYZL) left |
 | Branches | **`main` carries everything through Block 4 for A, B, and C** (PRs #1–#14). No branch is ahead of `main`. Branch from `main` for Block 5. |
 
-Last updated: 2026-10-17 18:45 PT
+Last updated: 2026-10-17 19:05 PT
 
 ## Gate board
 
@@ -60,7 +60,7 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 |---|---|---|---|---|
 | A | Fly redeploy from repo root; free-text budget parsing | 18:25 | 20:00 | Turns commits into a public URL |
 | C | Browser click-through + screenshot of the merged checkout sheet and receipt page | 18:25 | 20:00 | Tasks 25–26 merged in PR #14; `?mock=1` remains the fallback |
-| B | VEYZL audit, README, Devpost technical section | 18:40 | 21:00 | Block 4 done; Task 29 next |
+| B | Devpost draft, README, VEYZL audit | 18:40 | 22:00 | ✅ `docs/devpost.md` and `README.md` written; Task 29 open |
 
 ## Done since last update
 
@@ -78,6 +78,8 @@ Frontend: `npx vitest run` → 6 files / 9 tests, `tsc --noEmit` clean, `npm run
 - [x] C: Tasks 25–26 — checkout sheet, mandate card, passkey dialog, processing state, receipt page, `/r/:share_id` (PR #14)
 - [x] Hookup: C's client now sends the contracted mandate and passkey assertion, follows `receipt_url`, and renders the server's `PayabilityCode`; response shapes pinned in `frontend/src/lib/api.test.ts`
 - [x] Hookup: refusal messages are human copy instead of the bare code
+- [x] B: `docs/devpost.md` drafted with every number checked against the code; placeholders only for the URL, video, and screenshots
+- [x] B: `README.md` rewritten — setup, env vars, API table, demo script, tests, offline replay, and the honesty notes (sandbox, no model in the path, in-memory store)
 
 ## Next three actions
 
