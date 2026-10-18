@@ -134,6 +134,13 @@ export interface SessionSnapshot {
   stats: SessionStats
 }
 
+export interface StreamEvent {
+  type: string
+  seq: number
+  payload?: Record<string, unknown>
+  [key: string]: unknown
+}
+
 export interface CreateSessionResponse {
   session_id: string
   stage: SessionStage
