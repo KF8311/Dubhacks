@@ -113,7 +113,7 @@ The demo run must answer **$300–$600**. Measured on the merged build: `Under $
 |---|---|---|
 | Checkout not reachable over HTTP | **cleared** | Tasks 23–26 merged; Fly still needs redeploy |
 | Fly serves the pre-merge build | **yes** | Redeploy from `main` in Block 5 |
-| **`main` is protected by a required check nothing reports** | **yes** | `git push origin main` is rejected (`Required status check "VEYZL Audit" is expected`) and PR #20 is `BLOCKED` with zero checks. A must install/run VEYZL so the check reports, or the repo owner drops the rule. **No merge can land until this is resolved.** |
+| **`main` is protected by a required check nothing reports** | **yes** | `git push origin main` is rejected (`Required status check "VEYZL Audit" is expected`) and PR #20 is `BLOCKED` with zero checks. A local VEYZL run cannot post a check run; only the installed GitHub App can. A installs the app (or the owner drops the rule). **No merge can land until this is resolved** — the demo, Fly deploy, and test suites are unaffected because they run from the local tree. |
 | SerpAPI key unavailable | yes | Catalog-only in the deploy. D-021 adds a live path that is **untested against a real key** — run the spike before claiming live search |
 | Contracts still open | yes | `Question` shape is the only unresolved item |
 | An empty budget filter falls back to the full catalog | yes | D-022: an over-budget listing can be recommended and paid. Say "closest match" on stage; do not call the budget a hard cap |
